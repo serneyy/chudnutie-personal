@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=10">
+<link rel="stylesheet" href="styles.css?v=12">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -161,6 +161,7 @@
       <div class="quick-foods-grid">
        <button type="button" data-quick-food="whey">Proteín</button>
        <button type="button" data-quick-food="skyr">Skyr</button>
+       <button type="button" data-quick-food="scrambled_eggs">Praženica</button>
        <button type="button" data-quick-food="banana">Banán</button>
        <button type="button" data-quick-food="cappuccino">Cappuccino</button>
       </div>
@@ -177,8 +178,26 @@
      <label class="food-simple-label" for="foodMeal">Kedy si to jedol?</label>
      <select id="foodMeal" aria-label="Typ jedla"><option value="ranajky">Raňajky</option><option value="desiata">Desiata</option><option value="obed">Obed</option><option value="olovrant">Olovrant</option><option value="vecera">Večera</option><option value="ine">Ostatné</option></select>
     </div>
-    <div class="amount-heading">Koľko si zjedol?</div>
-    <div class="quantity-row">
+    <div id="eggRecipe" class="egg-recipe" hidden>
+     <div class="egg-recipe-title">Z koľkých vajec bola praženica?</div>
+     <div class="egg-count-row">
+      <button type="button" id="eggMinus" aria-label="O jedno vajce menej">−</button>
+      <div class="egg-count-text"><strong id="eggCountText">3</strong><span id="eggCountLabel">vajcia</span></div>
+      <button type="button" id="eggPlus" aria-label="O jedno vajce viac">+</button>
+     </div>
+     <label class="egg-fat-label" for="eggFatSelect">Čo si dal na panvicu?
+      <select id="eggFatSelect">
+       <option value="none">Bez masla a oleja</option>
+       <option value="butter5">Maslo, asi 5 g</option>
+       <option value="butter10">Maslo, asi 10 g</option>
+       <option value="oil5">Olej, asi 5 g</option>
+       <option value="oil10">Olej, asi 10 g</option>
+      </select>
+     </label>
+     <p class="egg-recipe-note">Počítame 1 väčšie vajce ≈ 50 g. Chlieb, mlieko či slaninu zapíš navyše.</p>
+    </div>
+    <div class="amount-heading" id="amountHeading">Koľko si zjedol?</div>
+    <div class="quantity-row" id="amountControls">
      <button type="button" class="quantity-step" id="amountMinus" aria-label="Znížiť množstvo o 25 gramov">−</button>
      <div class="quantity-input"><input id="foodGrams" type="number" inputmode="decimal" min="1" max="10000" step="any" value="100" required aria-label="Množstvo porcie"><span id="portionUnit">g</span><input type="hidden" id="foodUnit" value="g"></div>
      <button type="button" class="quantity-step" id="amountPlus" aria-label="Zvýšiť množstvo o 25 gramov">+</button>
@@ -240,6 +259,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=11"></script>
+<script defer src="app.js?v=12"></script>
 </body>
 </html>
