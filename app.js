@@ -441,6 +441,7 @@ function applyFoodSuggestion(item){
  renderFoodPreview();updateFoodSaveState();
 }
 
+const FORMA_FOOD_SEARCH_URL="https://forma-food-search.threadid.workers.dev/search";
 const SUPPORTED_FOOD_BRANDS=new Set(["kinder","milka","alpro","oreo","nutella","ferrero","activia","actimel","lindt","danone","muller","nesquik","nestea","coca cola","pepsi","red bull","monster","haribo","proteinella","skyr"]);
 function matchingFoodBrand(query){
  const q=normalizeTerm(query);
@@ -497,10 +498,15 @@ async function remoteFoodSearch(query,token,local,{force=false}={}){
  }
  searchNetworkHistory.push(now);lastSearchAt=now;
  searchAbort=new AbortController();
- const ctrl=searchAbort,timer=setTimeout(()=>ctrl.abort(),9000);
+ const ctrl=searchAbort,timer=setTimeout(()=>ctrl.abort(),19500);
  const fields=foodSearchFields();
  const brand=matchingFoodBrand(q);
  const endpoints=[];
+ // Dedicated proxy uses server-side queries (avoids upstream CORS), caches
+ // validated product results and has been verified from GitHub Actions.
+ const cachedProxy=new URL(FORMA_FOOD_SEARCH_URL);
+ cachedProxy.searchParams.set("q",q);
+ endpoints.push(cachedProxy);
  if(brand){
   // API v2 supports structured brand filtering and is independent of legacy full text.
   const url=new URL("https://world.openfoodfacts.org/api/v2/search");
@@ -508,11 +514,8 @@ async function remoteFoodSearch(query,token,local,{force=false}={}){
   url.searchParams.set("page_size","24");url.searchParams.set("fields",fields);
   endpoints.push(url);
  }
- // Search-a-licious currently omits Access-Control-Allow-Origin (verified
- // 2026-11-08 with a real GitHub Actions HTTP probe), so browsers cannot read
- // its responses. Do not attempt it here: it previously used up the 6.5 s
- // timeout and aborted the actual working legacy search before trying it.
- // Open Food Facts' legacy CGI currently returns Access-Control-Allow-Origin: *.
+ // Legacy Open Food Facts is the fallback for temporary proxy failures.
+ // A first-party proxy also avoids noisy API errors from browser CORS.
  const legacy=new URL("https://world.openfoodfacts.org/cgi/search.pl");
  legacy.searchParams.set("search_terms",q);
  legacy.searchParams.set("search_simple","1");
@@ -538,7 +541,7 @@ async function remoteFoodSearch(query,token,local,{force=false}={}){
    const known=findKnownProducts(q);
    renderFoodSuggestions(local,known,false,local.length||known.length?"":"V online katalógu sa nenašla nová zhoda. Skús iný názov alebo čiarový kód.");
   }else{
-   if([429,500,502,503,504].includes(lastError?.httpStatus))remoteSearchPauseUntil=Date.now()+20000;
+   if([429,500,502,503,504].includes(lastError?.httpStatus))remoteSearchPauseUntil=Date.now()+10000;
    console.warn("Open Food Facts vyhľadávanie:",lastError?.message||"Nedostupné");
    const known=findKnownProducts(q);
    if(local.length||known.length){
