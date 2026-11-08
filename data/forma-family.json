@@ -99,6 +99,28 @@
         "weights": [],
         "workouts": []
       }
+    },
+    {
+      "id": "02c947bf-dd36-4ddc-bf9d-2a0a055c0ac0",
+      "name": "Dedko",
+      "createdAt": "2026-11-08",
+      "updatedAt": "2026-11-08T21:32:10.595Z",
+      "data": {
+        "profile": {
+          "weight": 80,
+          "target": 55,
+          "height": 145,
+          "age": 66,
+          "sex": "female",
+          "activity": 1.2,
+          "rate": 0.3,
+          "mode": "lose",
+          "lossTarget": 55
+        },
+        "foods": [],
+        "weights": [],
+        "workouts": []
+      }
     }
   ]
 }
