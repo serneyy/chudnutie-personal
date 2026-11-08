@@ -1,0 +1,37 @@
+name: FORMA - production food proxy connectivity
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'cloudflare/forma-food-search.js'
+      - '.github/workflows/check-food-proxy.yml'
+      - 'app.js'
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Real Worker response, nutrition search and CORS
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, urllib.error
+          base="https://forma-food-search.threadid.workers.dev"
+          origin="https://serneyy.github.io"
+          for term in ["health", "search?q=chocolate", "search?q=%C4%8Doko", "search?q=kinder"]:
+            url=base+"/"+term
+            req=urllib.request.Request(url,headers={"Origin":origin,"Accept":"application/json","User-Agent":"FORMA-Search-Probe/1.0"})
+            try:
+              with urllib.request.urlopen(req,timeout=30) as response:
+                data=json.loads(response.read().decode())
+                products=data.get("products",[])
+                print("PROBE",term,"STATUS",response.status,"CORS",response.headers.get("Access-Control-Allow-Origin"),"OK",data.get("ok"),"COUNT",len(products),"SAMPLE",json.dumps([{"name":p.get("product_name"),"kcal":p.get("nutriments",{}).get("energy-kcal_100g")} for p in products[:2]],ensure_ascii=False))
+                assert response.headers.get("Access-Control-Allow-Origin")==origin
+                assert data.get("ok") is True
+                if term != "health":
+                  assert len(products)>0,"Empty food search result for "+term
+                  assert all(p.get("nutriments",{}).get("energy-kcal_100g",0)>=0 for p in products)
+            except urllib.error.HTTPError as e:
+              print("PROBE",term,"HTTP ERROR",e.code,"BODY",e.read().decode(errors="replace")[:800])
+              raise
+          PY

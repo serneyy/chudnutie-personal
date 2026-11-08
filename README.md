@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 27
+# FORMA. Personal · verzia 28
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -51,6 +51,15 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Dôležité:** nasadenie Cloudflare Worker robí vlastník ručne. Kým Worker nebeží a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
 - Prvá synchronizácia lokálne dáta nevymaže; profily sa zlúčia podľa času poslednej úpravy, pri zlyhaní servera sa zachovajú v `localStorage`. Mobilné testy simulujú dve zariadenia a nedostupný server.
 - Upozornenie: verejný GitHub repo umožňuje komukoľvek prezerať údaje v histórii commitov. Endpoint POST nie je autentifikovaný na strane používateľa (požiadavka na rodinný prototyp); CORS/Origin nie je bezpečnostné overenie klienta, takže endpoint nie je vhodný pre produkčné osobné údaje.
+
+## FORMA v28: overený proxy katalóg
+
+- Open Food Facts Search-a-licious nemá na odpovediach CORS, a priame volania world.openfoodfacts.org môžu byť nespoľahlivé. Preto aplikácia používa **samostatný Cloudflare Worker** na `https://forma-food-search.threadid.workers.dev/search?q=...`, ktorý volá Open Food Facts zo servera, validuje nutričné výsledky, vracia vlastné správne CORS hlavičky a úspešné odpovede cacheuje na 6 hodín.
+- Worker **nie je** existujúca synchronizácia profilov; má len `/health` a `/search`, číta len verejné údaje potravín, nepozná profily, heslá ani jedálniček. Zdrojový súbor: `cloudflare/forma-food-search.js`.
+- **Reálne externé overenie:** GitHub Actions test `.github/workflows/check-food-proxy.yml` z 8. novembra 2026 potvrdil HTTP 200, CORS a výsledky s nutričnými údajmi pre `chocolate`, `čoko`, `kinder`. Ide o živý test nového Worker endpointu, nie mock.
+- Ak Worker krátkodobo vypadne, prehliadač ešte môže skúsiť priamo staré Open Food Facts CGI. Lokálne uložené a základné jedlá sa zobrazujú okamžite.
+- Pred používaním musí byť Worker publikovaný na subdoméne threadid.workers.dev; pri zmene účtu Cloudflare treba endpoint v `FORMA_FOOD_SEARCH_URL` aktualizovať. Samotný Workers účet je ThreadID, nie teenwear-eu.
+- Zmena sa týka iba vyhľadávania potravín; nezasahuje do rodinnej cloudovej synchronizácie ani uložených jedál.
 
 ## FORMA v27: oprava opakovaných chýb online katalógu
 
