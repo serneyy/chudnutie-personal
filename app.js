@@ -424,7 +424,9 @@ async function fetchOFFProducts(url,signal){
   error.httpStatus=response.status;throw error;
  }
  const data=await response.json();
- return (Array.isArray(data.products)?data.products:[])
+ // Legacy/API v2 returns products; Search-a-licious returns hits.
+ const rows=Array.isArray(data.products)?data.products:Array.isArray(data.hits)?data.hits:[];
+ return rows.map(p=>p?._source||p?.source||p)
   .filter(p=>p&&p.nutriments&&(p.product_name||p.product_name_sk||p.product_name_en))
   .map(nutritionFromOFF).filter(p=>p.name&&p.kcal!==null&&validNum(p.kcal,0,2000)&&p.portion>0)
   .slice(0,8);
@@ -469,6 +471,14 @@ async function remoteFoodSearch(query,token,local,{force=false}={}){
   url.searchParams.set("page_size","24");url.searchParams.set("fields",fields);
   endpoints.push(url);
  }
+ // The old full-text CGI frequently returns 503; prefer the documented search service.
+ // Keep the legacy endpoint as a fallback for a stale or unavailable search index.
+ const modern=new URL("https://search.openfoodfacts.org/search");
+ modern.searchParams.set("q",q);
+ modern.searchParams.set("page_size","12");
+ modern.searchParams.set("langs","en,de,fr");
+ modern.searchParams.set("fields",fields);
+ endpoints.push(modern);
  const legacy=new URL("https://world.openfoodfacts.org/cgi/search.pl");
  legacy.searchParams.set("search_terms",q);
  legacy.searchParams.set("search_simple","1");
