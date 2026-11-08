@@ -163,7 +163,7 @@
    <div class="food-simplified">
     <div class="food-search-wrap">
      <label class="block-label food-main-name" for="foodName">Čo si jedol?
-      <input id="foodName" maxlength="100" placeholder="Napr. tikka masala, pizza, proteín…" required autocomplete="off" autocapitalize="sentences" aria-autocomplete="list" aria-expanded="false" aria-controls="foodSuggestions" role="combobox">
+      <input id="foodName" maxlength="100" placeholder="Napr. slepačí vývar, rožok, proteín…" required autocomplete="off" autocapitalize="sentences" aria-autocomplete="list" aria-expanded="false" aria-controls="foodSuggestions" role="combobox">
      </label>
      <p class="food-search-help" id="foodSearchHelp">Začni písať alebo vyber niečo z rýchlej ponuky.</p>
      <div id="foodSuggestions" class="food-suggestions" role="listbox" aria-label="Návrhy potravín" hidden></div>
@@ -171,14 +171,30 @@
     <div class="quick-foods" id="quickFoods">
       <div class="quick-foods-label">RÝCHLY VÝBER</div>
       <div class="quick-foods-grid">
-       <button type="button" data-quick-food="whey">Proteín</button>
-       <button type="button" data-quick-food="skyr">Skyr</button>
-       <button type="button" data-quick-food="scrambled_eggs">Praženica</button>
-       <button type="button" data-quick-food="banana">Banán</button>
        <button type="button" data-quick-food="roll">Rožok</button>
-       <button type="button" data-quick-food="cappuccino">Cappuccino</button>
+       <button type="button" data-quick-food="whey">Proteín</button>
+       <button type="button" data-quick-food="sk_chicken_noodles">Slepačí vývar</button>
+       <button type="button" data-quick-food="banana">Banán</button>
       </div>
-      <details class="quick-dishes-expand" id="quickSlovakSoupExpand"><summary>Slovenské polievky <span aria-hidden="true">⌄</span></summary>
+      <div id="recentFoods" class="recent-foods"></div>
+      <details class="food-catalog" id="foodCatalog">
+       <summary aria-label="Prehliadať všetky kategórie jedál">
+        <span class="food-catalog-prompt"><strong>Prehliadať kategórie</strong><small>Polievky, mäsité jedlá, proteíny a ďalšie</small></span>
+        <span class="food-catalog-arrow" aria-hidden="true">⌄</span>
+       </summary>
+       <div class="food-catalog-categories" id="foodCatalogCategories">
+        <button type="button" data-food-category="quickSlovakSoupExpand" aria-controls="quickSlovakSoupExpand"><strong>Polievky</strong><small>Vývary, kapustnica, cesnačka</small></button>
+        <button type="button" data-food-category="quickSlovakMeatExpand" aria-controls="quickSlovakMeatExpand"><strong>Mäsité jedlá</strong><small>Rezne, guláše, pečené mäso</small></button>
+        <button type="button" data-food-category="quickSlovakClassicExpand" aria-controls="quickSlovakClassicExpand"><strong>Slovenské klasiky</strong><small>Halušky, pirohy, lokše</small></button>
+        <button type="button" data-food-category="quickVeinyExpand" aria-controls="quickVeinyExpand"><strong>Veiny Galaxy</strong><small>Proteíny podľa príchute</small></button>
+        <button type="button" data-food-category="quickVoxbergExpand" aria-controls="quickVoxbergExpand"><strong>Voxberg</strong><small>Proteíny podľa príchute</small></button>
+        <button type="button" data-food-category="quickBakeryExpand" aria-controls="quickBakeryExpand"><strong>Pečivo</strong><small>Lidl, rožky, žemle</small></button>
+        <button type="button" data-food-category="quickDishesExpand" aria-controls="quickDishesExpand"><strong>Ďalšie jedlá</strong><small>Pizza, cestoviny a iné</small></button>
+       </div>
+       <div class="food-catalog-active" id="foodCatalogActive" hidden>
+        <button type="button" class="food-catalog-back" id="foodCatalogBack">← Všetky kategórie</button>
+        <h3 id="foodCatalogTitle" tabindex="-1">Vybraná kategória</h3>
+        <details class="quick-dishes-expand" id="quickSlovakSoupExpand"><summary>Slovenské polievky <span aria-hidden="true">⌄</span></summary>
        <p class="quick-category-note">Orientačné kalórie na 100 g. Pre presnosť uprav gramáž a recept.</p><div class="quick-foods-grid quick-dishes-grid">
         <button type="button" data-quick-food="sk_chicken_noodles">Slepačí vývar</button>
         <button type="button" data-quick-food="sk_chicken_meat_noodles">Vývar s mäsom</button>
@@ -243,9 +259,10 @@
        <button type="button" data-quick-food="pizza_margherita">Pizza</button>
        <button type="button" data-quick-food="chicken_rice">Kuracie s ryžou</button>
       </div></details>
-      <div id="recentFoods" class="recent-foods"></div>
-    </div>
-    <div id="selectedProductVisual" class="selected-product-visual" hidden><div class="selected-product-picture" id="selectedProductPicture"></div><div class="selected-product-description"><strong id="selectedProductLabel">Vybraný výrobok</strong><small id="selectedProductPhotoNote">Fotografia obalu z Open Food Facts.</small><a id="selectedProductPhotoCredit" href="#" target="_blank" rel="noopener noreferrer" hidden></a></div></div>
+       </div>
+      </details>
+     </div>
+        <div id="selectedProductVisual" class="selected-product-visual" hidden><div class="selected-product-picture" id="selectedProductPicture"></div><div class="selected-product-description"><strong id="selectedProductLabel">Vybraný výrobok</strong><small id="selectedProductPhotoNote">Fotografia obalu z Open Food Facts.</small><a id="selectedProductPhotoCredit" href="#" target="_blank" rel="noopener noreferrer" hidden></a></div></div>
     <a id="foodNutritionSource" class="food-nutrition-source" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
     <div class="food-choice">
      <label class="food-simple-label" for="foodMeal">Pridať do</label>
@@ -340,6 +357,6 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script defer src="slovak-foods.js?v=30"></script>
-<script defer src="app.js?v=30"></script>
+<script defer src="app.js?v=31"></script>
 </body>
 </html>
