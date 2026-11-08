@@ -289,6 +289,21 @@ const fs=require("node:fs");
   assert.equal(await page.locator("#homeCalories").innerText(),"0");
   assert.equal(await page.locator("#profileHeaderBtn").innerText(),"M");
   assert((await page.locator("#heroWeights").innerText()).includes("Udržať"));
+  // A higher target weight must create a valid muscle gain profile during registration.
+  await page.locator("#profileHeaderBtn").click();
+  await page.locator("#toggleNewProfile").click();
+  await page.locator("#newProfileName").fill("Silak");
+  await page.locator("#newProfileWeight").fill("76");
+  await page.locator("#newProfileTarget").fill("82");
+  assert.equal(await page.locator("#newProfileGoal").inputValue(),"gain","Higher target must auto-select gaining");
+  await page.locator("#newProfileHeight").fill("180");
+  await page.locator("#newProfileAge").fill("26");
+  await page.locator("#newProfileSex").selectOption("male");
+  await page.locator("#newProfileForm button[type=submit]").click();
+  await page.locator("#profileOverlay").waitFor({state:"hidden"});
+  await page.locator('[data-nav="plan"]').first().click();
+  assert(await page.locator("#modeGain").isChecked(),"New profile must keep gain mode");
+  assert.equal(await page.locator("#pTarget").inputValue(),"82");
   await page.locator("#profileHeaderBtn").click();
   await page.locator('#profileList [data-profile-select]').filter({hasText:"Daniel"}).click();
   assert.equal(await page.locator("#homeCalories").innerText(),"646");
@@ -307,6 +322,10 @@ const fs=require("node:fs");
 
   assert(await page.locator("#selectedProductVisual").isVisible(),"Selected online product should show front-of-pack photo");
   assert((await page.locator("#portionHint").innerText()).includes("1 ml ≈ 1 g"),"ml must be identified as an approximation");
+  await page.locator("#closeFood").click();
+  await page.locator("#homeAdd").click();
+  await page.locator("#foodName").fill("kak");
+  assert((await page.locator("#foodSuggestions").innerText()).includes("Proteínové kakao"),"Previously fetched product must appear instantly, even for a prefix");
   await page.locator("#closeFood").click();
   // Complete restaurant meals: "tikka masala" and versions with/without rice.
   await page.locator("#homeAdd").click();
