@@ -23,7 +23,7 @@ jobs:
           s=Path("index.html").read_text(encoding="utf-8")
           j=Path("app.js").read_text(encoding="utf-8")
           assert '<html lang="sk">' in s
-          assert 'src="app.js?v=3"' in s
+          assert 'src="app.js?v=4"' in s
           assert Path("styles.css").exists()
           assert Path("manifest.webmanifest").exists()
           class Check(HTMLParser):
@@ -44,7 +44,7 @@ jobs:
           PY
       - name: Instalacia browser testov
         run: |
-          npm install --no-save playwright@1.56.1
+          npm install --no-save playwright@1.56.1 bwip-js@4
           npx playwright install --with-deps chromium
       - name: Spustenie lokalneho webu
         run: |
