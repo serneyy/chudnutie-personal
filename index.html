@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=21">
+<link rel="stylesheet" href="styles.css?v=22">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -50,7 +50,7 @@
         <div class="hero-track"><div id="heroTrack"></div></div><p class="hero-activity-note" id="heroActivityNote">Orientačne 25 min svižnej chôdze. Nie je to povinnosť ani kalórie navyše na jedenie.</p>
         <span class="hero-caption" id="heroCaption">Každý záznam ťa posúva ďalej.</span>
       </div>
-      <button type="button" class="cloud-home-status" id="cloudHomeStatus" data-level="neutral"><span class="cloud-home-dot"></span><span id="cloudHomeText">GitHub záloha nie je pripojená. Ťukni na nastavenie.</span><span aria-hidden="true">›</span></button>
+      
       <div class="section-heading"><h2>Kalorický rozpočet</h2><span class="date-chip" id="todayTag">Dnes</span></div>
       <div class="card energy-card">
         <div class="energy-main"><div class="energy-number"><span>DNES SI PRIJAL</span><strong id="homeCalories">0</strong><small>z <b id="homeCaloriesGoal">2 100</b> kcal</small></div><div class="energy-ring" id="energyRing"><div><strong id="homeRemaining">2 100</strong><small>zostáva kcal</small></div></div></div>
@@ -111,7 +111,7 @@
 
     <section class="view" id="view-settings">
       <div class="intro"><span class="eyebrow">NASTAVENIA</span><h1>Tvoje dáta. Tvoje pravidlá.</h1><p>Rodinné profily a voliteľná synchronizácia cez GitHub.</p></div>
-      <div class="card" id="profilesSettings"><div class="card-heading"><span class="round-icon"><svg><use href="#ic-settings"/></svg></span><div><h2>Používateľské profily</h2><p>Osobné záznamy oddelené podľa mena</p></div></div><p class="card-sub">Aktívny profil: <strong id="currentProfileLabel">–</strong></p><div class="action-stack"><button class="secondary-button" id="changeProfileBtn">Zmeniť používateľa</button><button class="outline-button" id="renameProfileBtn">Premenovať môj profil</button></div><p class="card-sub">Profily nemajú heslá. Keď je GitHub server aktívny, používajú rovnakú JSON databázu aj rôzne zariadenia.</p></div>
+      <div class="card" id="profilesSettings"><div class="card-heading"><span class="round-icon"><svg><use href="#ic-settings"/></svg></span><div><h2>Používateľské profily</h2><p>Osobné záznamy oddelené podľa mena</p></div></div><p class="card-sub">Aktívny profil: <strong id="currentProfileLabel">–</strong></p><div class="action-stack"><button class="secondary-button" id="renameProfileBtn">Upraviť meno profilu</button><button class="outline-button" id="changeProfileBtn">Prepnúť profil</button><button class="outline-button profile-logout" id="logoutProfileBtn">Odhlásiť sa z profilu</button></div><form id="profileRenameForm" class="profile-rename-form" hidden><label class="block-label" for="profileRenameInput">Nové meno<input id="profileRenameInput" type="text" maxlength="30" autocomplete="off" required></label><div class="profile-rename-actions"><button type="submit" class="secondary-button" id="profileRenameSave">Uložiť meno</button><button type="button" class="outline-button" id="profileRenameCancel">Zrušiť</button></div></form><p class="card-sub">Odhlásením iba zatvoríš aktuálny profil. Jedlá, váha ani GitHub záloha sa nezmažú. Profily nemajú heslá.</p></div>
       <div class="card github-card" id="githubSyncSettings">
         <div class="card-heading"><span class="round-icon"><svg><use href="#ic-upload"/></svg></span><div><h2>Automatická GitHub záloha</h2><p>Cloudflare Worker • data/forma-family.json</p></div></div>
         <p class="card-sub">Jedlá, váhu a profily si aplikácia vždy najprv uloží do tohto zariadenia. Po aktivácii servera sa zálohujú aj do GitHubu. V aplikácii nie je potrebný žiadny GitHub token.</p>
@@ -154,7 +154,7 @@
 
 <div class="overlay" id="foodOverlay" aria-modal="true" role="dialog" aria-labelledby="foodTitle" hidden>
  <div class="food-sheet">
-  <div class="sheet-title"><div><span class="eyebrow" id="foodStep">JEDNODUCHÝ ZÁPIS JEDLA</span><h2 id="foodTitle">Pridať jedlo</h2></div><button class="round-action" id="closeFood" aria-label="Zavrieť"><svg><use href="#ic-close"/></svg></button></div>
+  <div class="sheet-title"><div><span class="eyebrow" id="foodStep">JEDÁLNIČEK</span><h2 id="foodTitle">Pridať jedlo</h2></div><button class="round-action" id="closeFood" aria-label="Zavrieť"><svg><use href="#ic-close"/></svg></button></div>
   <form id="foodForm">
    <input type="hidden" id="foodEditId">
    <div id="foodLookupMessage" class="lookup-message" aria-live="polite" hidden></div>
@@ -163,11 +163,11 @@
      <label class="block-label food-main-name" for="foodName">Čo si jedol?
       <input id="foodName" maxlength="100" placeholder="Napr. tikka masala, pizza, proteín…" required autocomplete="off" autocapitalize="sentences" aria-autocomplete="list" aria-expanded="false" aria-controls="foodSuggestions" role="combobox">
      </label>
-     <p class="food-search-help" id="foodSearchHelp">Vyhľadaj potravinu alebo celé jedlo, napríklad tikka masala.</p>
+     <p class="food-search-help" id="foodSearchHelp">Začni písať alebo vyber niečo z rýchlej ponuky.</p>
      <div id="foodSuggestions" class="food-suggestions" role="listbox" aria-label="Návrhy potravín" hidden></div>
     </div>
     <div class="quick-foods" id="quickFoods">
-      <div class="quick-foods-label">VYBER BEŽNÉ JEDLO</div>
+      <div class="quick-foods-label">RÝCHLY VÝBER</div>
       <div class="quick-foods-grid">
        <button type="button" data-quick-food="whey">Proteín</button>
        <button type="button" data-quick-food="skyr">Skyr</button>
@@ -175,18 +175,17 @@
        <button type="button" data-quick-food="banana">Banán</button>
        <button type="button" data-quick-food="cappuccino">Cappuccino</button>
       </div>
-      <div class="quick-foods-label quick-dishes-label">HOTOVÉ JEDLÁ</div>
-      <div class="quick-foods-grid quick-dishes-grid">
+      <details class="quick-dishes-expand" id="quickDishesExpand"><summary>Ďalšie jedlá a hotové pokrmy <span aria-hidden="true">⌄</span></summary><div class="quick-foods-grid quick-dishes-grid">
        <button type="button" data-quick-food="tikka_rice">Tikka masala s ryžou</button>
        <button type="button" data-quick-food="spaghetti_bolo">Špagety bolognese</button>
        <button type="button" data-quick-food="pizza_margherita">Pizza</button>
        <button type="button" data-quick-food="chicken_rice">Kuracie s ryžou</button>
-      </div>
+      </div></details>
       <div id="recentFoods" class="recent-foods"></div>
     </div>
     <div id="selectedProductVisual" class="selected-product-visual" hidden><div class="selected-product-picture" id="selectedProductPicture"></div><div class="selected-product-description"><strong id="selectedProductLabel">Vybraný výrobok</strong><small>Fotografia obalu z Open Food Facts, ak je dostupná</small></div></div>
     <div class="food-choice">
-     <label class="food-simple-label" for="foodMeal">Kedy si to jedol?</label>
+     <label class="food-simple-label" for="foodMeal">Pridať do</label>
      <select id="foodMeal" aria-label="Typ jedla"><option value="ranajky">Raňajky</option><option value="desiata">Desiata</option><option value="obed">Obed</option><option value="olovrant">Olovrant</option><option value="vecera">Večera</option><option value="ine">Ostatné</option></select>
     </div>
     <div id="eggRecipe" class="egg-recipe" hidden>
@@ -207,7 +206,7 @@
      </label>
      <p class="egg-recipe-note">Počítame 1 väčšie vajce ≈ 50 g. Chlieb, mlieko či slaninu zapíš navyše.</p>
     </div>
-    <div class="amount-heading" id="amountHeading">Koľko si zjedol?</div>
+    <div class="amount-heading" id="amountHeading">Množstvo porcie</div>
     <div class="quantity-row" id="amountControls">
      <button type="button" class="quantity-step" id="amountMinus" aria-label="Znížiť množstvo o 25 gramov">−</button>
      <div class="quantity-input"><input id="foodGrams" type="number" inputmode="decimal" min="1" max="10000" step="any" value="100" required aria-label="Množstvo porcie"><span id="portionUnit">g</span><input type="hidden" id="foodUnit" value="g"></div>
@@ -225,7 +224,7 @@
     <div class="food-preview"><span>PRIDÁŠ DO DENNÍKA</span><strong id="foodPreviewCalories">0 kcal</strong><small id="foodPreviewMacros">Bielkoviny 0 g · Sacharidy 0 g · Tuky 0 g</small></div>
    </div>
    <details class="food-more" id="foodDetails">
-    <summary>Nenašiel si jedlo? Zadaj hodnoty ručne <svg><use href="#ic-forward"/></svg></summary>
+    <summary>Upraviť výživové hodnoty alebo dátum <svg><use href="#ic-forward"/></svg></summary>
     <div class="food-more-body">
      <label class="block-label">Dátum<input id="foodDate" type="date" required></label>
      <label class="block-label">Čiarový kód (voliteľné)<input id="foodEAN" inputmode="numeric" maxlength="14" placeholder="EAN"></label>
@@ -265,12 +264,12 @@
       </div>
       <p class="profile-note">Ak nechceš chudnúť, nastav rovnakú aktuálnu a cieľovú váhu. Plán môžeš zmeniť neskôr.</p>
     </form>
-    <button class="outline-button stretch profile-github-open" id="profileGithubConnect" type="button">Načítať rodinné profily z GitHubu</button>
+    <button class="outline-button stretch profile-github-open" id="profileGithubConnect" type="button">Skontrolovať synchronizáciu profilov</button>
     <button class="profile-cancel" id="closeProfile" type="button">Späť do aplikácie</button>
-    <p class="profile-privacy">Profily sa ukladajú lokálne. Ak zapneš GitHub synchronizáciu v Nastaveniach, prenesú sa aj medzi zariadeniami.</p>
+    <p class="profile-privacy">Profily sa ukladajú lokálne aj do GitHubu, keď je záloha aktívna. Odhlásenie nezmaže žiadne údaje.</p>
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=21"></script>
+<script defer src="app.js?v=22"></script>
 </body>
 </html>
