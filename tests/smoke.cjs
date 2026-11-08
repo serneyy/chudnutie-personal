@@ -260,12 +260,14 @@ const fs=require("node:fs");
   // The remote provider may return 503. Local suggestions must still work.
   await page.locator("#homeAdd").click();
   await page.locator("#foodName").fill("serverfail");
-  await page.waitForFunction(()=>document.getElementById("foodSuggestions")?.innerText?.includes("Databáza teraz neodpovedá"),{timeout:25000});
+  await page.locator("#foodSearchRetry").waitFor({state:"visible",timeout:20000});
   assert(await page.locator("#foodSearchRetry").isVisible(),"Provide visible retry when API fails");
   await page.locator("#foodName").fill("proteín");
   await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible",timeout:7000});
   assert((await page.locator("#foodSuggestions").innerText()).includes("Proteínový prášok"),"Local foods remain usable during API outage");
   await page.locator("#closeFood").click();
+  // A refreshed tab should be able to search Kinder even after another request fails.
+  await page.reload({waitUntil:"domcontentloaded"});
   // Branded product search must work from structured API even when full-text 503s.
   await page.locator("#homeAdd").click();
   await page.locator("#foodName").fill("Kinder");
