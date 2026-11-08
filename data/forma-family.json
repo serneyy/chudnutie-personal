@@ -108,28 +108,6 @@
       }
     },
     {
-      "id": "02c947bf-dd36-4ddc-bf9d-2a0a055c0ac0",
-      "name": "Dedko",
-      "createdAt": "2026-11-08",
-      "updatedAt": "2026-11-08T21:35:30.872Z",
-      "data": {
-        "profile": {
-          "weight": 94,
-          "target": 88,
-          "height": 189,
-          "age": 22,
-          "sex": "male",
-          "activity": 1.2,
-          "rate": 0.3,
-          "mode": "lose",
-          "lossTarget": 88
-        },
-        "foods": [],
-        "weights": [],
-        "workouts": []
-      }
-    },
-    {
       "id": "8f3fe7b7-81cd-4fce-8c88-b91ddb3e002e",
       "name": "Berny",
       "createdAt": "2026-11-08",
@@ -145,30 +123,6 @@
           "rate": 0.3,
           "mode": "gain",
           "lossTarget": 100
-        },
-        "foods": [],
-        "weights": [],
-        "workouts": []
-      }
-    },
-    {
-      "id": "72ad0033-2104-47de-9991-e3665e8f1cfd",
-      "name": "Môj pôvodný profil",
-      "createdAt": "2026-11-08",
-      "updatedAt": "2026-11-08T21:53:27.392Z",
-      "password": null,
-      "data": {
-        "profile": {
-          "weight": 94,
-          "target": 88,
-          "height": 189,
-          "age": 22,
-          "sex": "male",
-          "activity": 1.2,
-          "rate": 0.3,
-          "mode": "lose",
-          "gainRate": "moderate",
-          "lossTarget": 88
         },
         "foods": [],
         "weights": [],
