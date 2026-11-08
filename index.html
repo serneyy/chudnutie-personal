@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=16">
+<link rel="stylesheet" href="styles.css?v=17">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -46,8 +46,8 @@
     <section class="view active" id="view-home">
       <div class="hero">
         <div class="hero-top"><div><span class="light-eyebrow">TVÔJ CIEĽ</span><h2 id="heroWeights">94 <span>→</span> 88 <small>kg</small></h2></div><span class="hero-pill" id="heroStreak"><svg><use href="#ic-bolt"/></svg> Začíname</span></div>
-        <div class="hero-bottom"><div><strong id="heroRemaining">6 kg</strong><span id="heroRemainingLabel">zostáva do cieľa</span></div><div><strong id="heroWeeks">20</strong><span id="heroWeeklyLabel">týždňov (odhad)</span></div></div>
-        <div class="hero-track"><div id="heroTrack"></div></div>
+        <div class="hero-bottom"><div><strong id="heroRemaining">6 kg</strong><span id="heroRemainingLabel">zostáva do cieľa</span></div><div><strong id="heroWeeks">20</strong><span id="heroWeeklyLabel">týždňov (odhad)</span></div><div class="hero-activity-goal"><strong id="heroActivityTarget">200 <small>kcal</small></strong><span>pohyb denne</span><small id="heroActivityProgress">0 kcal dnes</small></div></div>
+        <div class="hero-track"><div id="heroTrack"></div></div><p class="hero-activity-note" id="heroActivityNote">Orientačne 25 min svižnej chôdze. Nie je to povinnosť ani kalórie navyše na jedenie.</p>
         <span class="hero-caption" id="heroCaption">Každý záznam ťa posúva ďalej.</span>
       </div>
       <div class="section-heading"><h2>Kalorický rozpočet</h2><span class="date-chip" id="todayTag">Dnes</span></div>
@@ -57,7 +57,7 @@
         <button class="primary-button stretch" id="homeAdd"><svg><use href="#ic-plus"/></svg> Pridať jedlo</button>
       </div>
       <div class="section-heading"><h2>Dnešné makrá</h2><span class="muted-mini">podľa jedál</span></div>
-      <div class="macros" id="homeMacros"></div><div class="nutrient-extras" id="homeExtras" aria-label="Cukry a vláknina"></div><p class="nutrition-help">Celkové cukry zahŕňajú aj prirodzené cukry z ovocia a mlieka. Hodnota 90 g je európsky referenčný príjem, nie zdravotný limit. Pre voľné cukry platí prísnejšie odporúčanie (pozri Plán).</p>
+      <div class="macros" id="homeMacros"></div><div class="nutrient-extras" id="homeExtras" aria-label="Cukry a vláknina"></div>
       <div class="section-heading"><h2>Čo si dnes jedol</h2><button class="text-button" data-nav="diary">Denník <svg><use href="#ic-forward"/></svg></button></div>
       <div class="card" id="homeMealList"></div>
       <div class="quote-card"><svg><use href="#ic-spark"/></svg><div><strong id="quoteTitle">Konzistentnosť je tvoja výhoda.</strong><p id="quoteText">Záznam jedla je malý krok, ktorý vieš zopakovať každý deň.</p></div></div>
@@ -278,6 +278,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=16"></script>
+<script defer src="app.js?v=17"></script>
 </body>
 </html>
