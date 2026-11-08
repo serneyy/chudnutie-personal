@@ -49,6 +49,16 @@ const fs=require("node:fs");
   await page.locator("#profileOverlay").waitFor({state:"hidden"});
   assert.equal((await page.locator("#homeCalories").innerText()).trim(),"0");
   assert.equal((await page.locator("#profileHeaderBtn").innerText()).trim(),"D");
+  assert.equal(await page.locator("#homeMacros .nutrient-ring").count(),3,"Three macros need circular progress");
+  assert.equal(await page.locator("#homeExtras .nutrient-ring").count(),2,"Sugar and fiber need circular progress");
+  assert.equal(await page.locator("#homeMacros .nutrient-ring.protein .nutrient-ring-center strong").innerText(),"114");
+  assert.equal(await page.locator("#homeExtras .nutrient-ring.fiber .nutrient-ring-center strong").innerText(),"25");
+  assert(!(await page.locator("#view-home").innerText()).includes("Celkové cukry zahŕňajú aj prirodzené cukry"),"Remove verbose sugar footnote");
+  const activityGoal=Number((await page.locator("#heroActivityTarget").innerText()).replace(/[^0-9]/g,""));
+  assert(activityGoal>=75&&activityGoal<=400,"Estimated activity kcal should be proportional to user weight");
+  assert.equal(await page.locator("#heroActivityProgress").innerText(),"0 / "+activityGoal+" kcal dnes");
+  assert((await page.locator("#heroActivityNote").innerText()).includes("nepripočítava"),"Activity calories must not increase food allowance");
+
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
   assert(overflow<=2,"Mobile layout overflow "+overflow);
   await page.locator("#homeAdd").click();
@@ -91,8 +101,8 @@ const fs=require("node:fs");
   assert((await page.locator("#homeExtras").innerText()).includes("Cukry celkom"));
   assert((await page.locator("#homeExtras").innerText()).includes("Vláknina"));
   assert((await page.locator("#homeExtras").innerText()).includes("90 g"),"Total sugars must show 90 g adult EU reference");
-  assert((await page.locator("#homeExtras").innerText()).includes("nie pevný limit"),"Reference must not be presented as a safe upper limit");
-  assert(Number(await page.locator(".nutrient-card.sugar .nutrient-progress i").evaluate(el=>parseFloat(el.style.width)))>0);
+  assert((await page.locator("#homeExtras").innerText()).includes("nie limit"),"Total sugar reference must not be treated as a fixed limit");
+  assert((await page.locator(".nutrient-ring.sugar").getAttribute("style")).includes("--ring-fill:"),"Circular sugar progress needs filled arc");
 
   await page.locator('[data-nav="diary"]').first().click();
   assert((await page.locator("#diarySections").innerText()).includes("Jogurt vlastný"));
