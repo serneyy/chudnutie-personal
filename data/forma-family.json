@@ -5,7 +5,13 @@
       "id": "67389e4b-74d1-4736-9a2d-c1e0b1ecf02e",
       "name": "Suško",
       "createdAt": "2026-11-08",
-      "updatedAt": "2026-11-08T21:38:38.094Z",
+      "updatedAt": "2026-11-08T21:46:20.469Z",
+      "password": {
+        "algorithm": "PBKDF2-SHA256",
+        "iterations": 210000,
+        "salt": "8ca741490f6bfe88e154fb07b795b0d5",
+        "hash": "1f7f412c580bdd769546418cc720ed7b1b551c9fedb1884cbe7aec7ce2499156"
+      },
       "data": {
         "profile": {
           "weight": 93,
@@ -16,6 +22,7 @@
           "activity": 1.2,
           "rate": 0.3,
           "mode": "lose",
+          "gainRate": "moderate",
           "lossTarget": 88
         },
         "foods": [
