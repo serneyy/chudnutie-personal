@@ -584,7 +584,7 @@ function renderProfileList(){
  const list=$("profileList");
  if(!profileStore.profiles.length){list.innerHTML='<div class="profile-empty">Ešte nemáš profil. Vytvor si ho podľa svojho mena.</div>'}
  else list.innerHTML=profileStore.profiles.map(p=>
-  '<button type="button" class="profile-entry" data-profile-select="'+escapeHTML(p.id)+'"><span class="profile-initial">'+escapeHTML(p.name[0].toLocaleUpperCase("sk-SK"))+'</span><span><strong>'+escapeHTML(p.name)+'</strong><small>Otvoriť svoj denník</small></span>'+icon("forward")+'</button>'
+  '<button type="button" class="profile-entry" data-profile-select="'+escapeHTML(p.id)+'"><span class="profile-initial">'+escapeHTML(p.name[0].toLocaleUpperCase("sk-SK"))+'</span><span><strong>'+escapeHTML(p.name)+'</strong><small>'+(p.password?'Zamknutý profil · heslo':'Otvoriť svoj denník')+'</small></span>'+icon("forward")+'</button>'
  ).join("");
  $("closeProfile").hidden=!activeProfileId;
 }
@@ -592,6 +592,7 @@ function openProfiles(){
  if(!$("scanOverlay").hidden)closeScan();
  if(!$("foodOverlay").hidden)closeFood();
  renderProfileList();
+ $("profileUnlockForm").hidden=true;pendingUnlockId=null;
  $("newProfileForm").hidden=profileStore.profiles.length>0;
  $("profileOverlay").hidden=false;
  bodyLock();
@@ -606,10 +607,27 @@ function syncProfileBadge(){
  $("profileHeaderBtn").textContent=name?name[0].toLocaleUpperCase("sk-SK"):"?";
  $("profileHeaderBtn").title=name?"Profil: "+name:"Vybrať profil";
  $("currentProfileLabel").textContent=name||"Žiadny";
+ if($("profilePasswordState"))renderPasswordSettings();
 }
-function switchProfile(id){
+function switchProfile(id,verified=false){
  const target=profileStore.profiles.find(p=>p.id===id);
  if(!target)return;
+ if(target.password&&!verified){
+  pendingUnlockId=id;
+  $("profileUnlockName").textContent=target.name;
+  $("profileUnlockPassword").value="";
+  $("profileUnlockError").textContent="";
+  $("profileUnlockForm").hidden=false;
+  $("profileList").hidden=true;
+  $("toggleNewProfile").hidden=true;
+  $("newProfileForm").hidden=true;
+  $("profileUnlockPassword").focus();
+  return;
+ }
+ unlockedProfileId=id;
+ $("profileUnlockForm").hidden=true;
+ $("profileList").hidden=false;
+ $("toggleNewProfile").hidden=false;
  activeProfileId=id;
  sessionStorage.removeItem(PROFILE_LOGGED_OUT_KEY);
  localStorage.setItem(PROFILE_ACTIVE_KEY,id);
@@ -617,9 +635,9 @@ function switchProfile(id){
  lossTargetDraft=state.profile.lossTarget||state.profile.target;
  selectedDay=today;
  closeProfiles();
- syncProfileBadge();render();setView("home");
+ syncProfileBadge();renderPasswordSettings();render();setView("home");
 }
-function createProfile(e){
+async function createProfile(e){
  e.preventDefault();
  const name=sanitizeProfileName($("newProfileName").value);
  const weight=Number($("newProfileWeight").value),height=Number($("newProfileHeight").value);
@@ -629,10 +647,13 @@ function createProfile(e){
  data.profile={weight,height,target,age,sex,activity:1.2,rate:.3,gainRate:"moderate",mode:weight===target?"maintain":"lose",lossTarget:target};
  if(!validProfile(data.profile)||target>weight){notify("Skontroluj údaje. Cieľ nesmie byť väčší než aktuálna váha.");return}
  if(profileStore.profiles.length>=25){notify("Maximum je 25 miestnych profilov.");return}
+ const password=$("newProfilePassword").value;
+ if(password&&password.length<6){notify("Heslo musí mať aspoň 6 znakov.");return}
+ const auth=password?await createPasswordRecord(password):null;
  const id=String(uid());
- profileStore.profiles.push({id,name,createdAt:today,updatedAt:new Date().toISOString(),data});
+ profileStore.profiles.push({id,name,createdAt:today,updatedAt:new Date().toISOString(),password:auth,data});
  if(!saveProfiles()){profileStore.profiles.pop();return}
- switchProfile(id);
+ switchProfile(id,true);
  notify("Profil "+name+" je pripravený.");
 }
 function renameProfile(){
@@ -660,6 +681,7 @@ function submitProfileRename(e){
  notify("Meno profilu zmenené.");
 }
 function logoutProfile(){
+ unlockedProfileId=null;
  // The logout affects only the active UI selection. Saved data, profiles and
  // background cloud sync stay untouched; no deletions are sent to GitHub.
  sessionStorage.setItem(PROFILE_LOGGED_OUT_KEY,"1");
@@ -669,6 +691,57 @@ function logoutProfile(){
  syncProfileBadge();
  setView("home");
  openProfiles();
+}
+
+async function unlockProfile(e){
+ e.preventDefault();
+ const profile=profileStore.profiles.find(p=>p.id===pendingUnlockId);
+ if(!profile){$("profileUnlockForm").hidden=true;return}
+ const submit=$("profileUnlockForm").querySelector('[type="submit"]');
+ submit.disabled=true;
+ try{
+  const ok=await verifyProfilePassword($("profileUnlockPassword").value,profile.password);
+  $("profileUnlockPassword").value="";
+  if(!ok){$("profileUnlockError").textContent="Nesprávne heslo.";return}
+  $("profileList").hidden=false;
+  $("toggleNewProfile").hidden=false;
+  pendingUnlockId=null;
+  switchProfile(profile.id,true);
+ }catch(error){$("profileUnlockError").textContent="Overenie hesla sa nepodarilo."}
+ finally{submit.disabled=false}
+}
+function cancelProfileUnlock(){
+ pendingUnlockId=null;
+ $("profileUnlockPassword").value="";
+ $("profileUnlockForm").hidden=true;
+ $("profileList").hidden=false;
+ $("toggleNewProfile").hidden=false;
+}
+function renderPasswordSettings(){
+ const profile=findActiveProfile(),secured=Boolean(profile?.password);
+ $("profilePasswordState").textContent=secured?"Heslo je nastavené":"Heslo zatiaľ nie je nastavené";
+ $("profileOldPasswordWrap").hidden=!secured;
+ $("profileOldPassword").required=secured;
+ $("profileNewPassword").required=true;
+ $("profileConfirmPassword").required=true;
+}
+async function saveProfilePassword(e){
+ e.preventDefault();
+ const profile=findActiveProfile();if(!profile)return;
+ const current=$("profileOldPassword").value,next=$("profileNewPassword").value,confirmNext=$("profileConfirmPassword").value;
+ if(next.length<6||next!==confirmNext){notify("Heslo musí mať aspoň 6 znakov a obe polia sa musia zhodovať.");return}
+ const btn=$("profilePasswordForm").querySelector('[type="submit"]');btn.disabled=true;
+ try{
+  if(profile.password&&!await verifyProfilePassword(current,profile.password)){notify("Súčasné heslo je nesprávne.");return}
+  const record=await createPasswordRecord(next);
+  profile.password=record;
+  unlockedProfileId=profile.id;
+  saveProfiles({touch:true});
+  $("profilePasswordForm").reset();
+  renderPasswordSettings();
+  notify("Heslo profilu je uložené. Pri ďalšom otvorení sa bude vyžadovať.");
+ }catch(error){notify("Heslo sa nepodarilo uložiť.")}
+ finally{btn.disabled=false}
 }
 
 /* Voliteľná synchronizácia do GitHub JSON.
@@ -1458,6 +1531,9 @@ $("githubRefreshBtn").addEventListener("click",()=>void githubRestoreSession());
 document.addEventListener("visibilitychange",()=>{
  if(!document.hidden&&Date.now()-githubSyncLastRead>30000)void githubRestoreSession();
 });
+$("profileUnlockForm").addEventListener("submit",unlockProfile);
+$("profileUnlockCancel").addEventListener("click",cancelProfileUnlock);
+$("profilePasswordForm").addEventListener("submit",saveProfilePassword);
 $("profileHeaderBtn").addEventListener("click",openProfiles);
 $("changeProfileBtn").addEventListener("click",openProfiles);
 $("renameProfileBtn").addEventListener("click",renameProfile);
