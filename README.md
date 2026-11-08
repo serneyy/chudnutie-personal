@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 8
+# FORMA. Personal · verzia 9
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -17,6 +17,15 @@ Ak web nie je aktívny, v **Settings → Pages → Deploy from a branch → main
 - Ak na tejto adrese v tomto prehliadači už boli údaje z predošlej verzie, automaticky sa nakopírujú do profilu **Môj pôvodný profil**. Je možné ho premenovať.
 - JSON záloha v Nastaveniach obsahuje **iba údaje práve otvoreného profilu**.
 - **Nie je to účet s heslom ani synchronizovaná databáza.** Profily nie sú súkromné pred iným človekom na tom istom telefóne a nebudú dostupné na inom zariadení bez exportu/importu. Na synchronizáciu medzi tvojím telefónom a maminým by bolo potrebné pridať autentifikovaný online backend.
+
+## Jednoduché ovládanie pre rodinu
+
+- **Dnes → Pridať jedlo**: vyber **Proteín, Skyr, Banán alebo Cappuccino** jedným ťuknutím. Prípadne začni písať a vyber zo zoznamu.
+- Bežné potraviny fungujú aj bez Open Food Facts. Pridali sme aj whey proteín, proteínový nápoj, tyčinku, puding, tvaroh, cottage, jogurt, zemiaky a iné základné potraviny.
+- **Množstvo → Uložiť jedlo**: nutričné hodnoty sa prepočítajú automaticky. Posledné jedlá sa ponúknu na opätovné vloženie.
+- **Nenašiel si jedlo?** Ťukni na položku na manuálne zadanie výživových hodnôt.
+- Vstupy na iPhone sú nastavené na minimálne 16px, aby sa formulár pri kliknutí svojvoľne nepribližoval. Veľké tlačidlá sú vhodnejšie aj na starší mobil.
+- Hodnoty pri základných jedlách (obzvlášť proteínový prášok/tyčinky) sú **iba orientačné**, líšia sa podľa výrobcu. Pri balenom produkte radšej naskenuj obal.
 
 ## Funkcie
 
