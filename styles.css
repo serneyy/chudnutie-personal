@@ -369,3 +369,26 @@ input,select,textarea{min-height:44px}
 .cloud-home-status[data-level="busy"] .cloud-home-dot{background:#d4a95e}
 .cloud-home-status[data-level="error"]{background:#fff2e9;color:#9b5f4a;border-color:#ead9d1}
 .cloud-home-status[data-level="error"] .cloud-home-dot{background:#c57655}
+
+
+/* FORMA v22: clearer food entry and non-destructive profile controls */
+.profile-rename-form[hidden]{display:none}
+.profile-rename-form{background:#f7faf4;border:1px solid #dae8d5;padding:14px;border-radius:14px;margin:12px 0 0}
+.profile-rename-form .block-label input{font-size:16px;min-height:48px}
+.profile-rename-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.profile-rename-actions button{min-width:0;min-height:46px;font-size:12px}
+.profile-logout{color:#8e655f!important}
+.quick-dishes-expand{border-top:1px solid #e7ece3;margin-top:10px;padding-top:5px}
+.quick-dishes-expand summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;color:#5c785f;font-size:12px;font-weight:800;padding:11px 3px;min-height:42px}
+.quick-dishes-expand summary::-webkit-details-marker{display:none}
+.quick-dishes-expand summary span{font-size:19px;line-height:1;transition:transform .2s ease}
+.quick-dishes-expand[open] summary span{transform:rotate(180deg)}
+.quick-dishes-expand .quick-foods-grid{padding:4px 0 12px}
+.food-simplified .food-search-wrap{margin-bottom:12px}
+.food-simplified .food-main-name{font-size:13px;font-weight:800}
+.food-simplified .food-search-help{font-size:11px;line-height:1.5;margin-top:6px}
+.food-simplified .quick-foods{background:#f9faf6;border:1px solid #e5ebe0;border-radius:16px;padding:12px;margin-bottom:14px}
+.food-simplified .quick-foods-label{font-size:10px;letter-spacing:.09em}
+.food-simplified .food-choice{margin-top:12px}
+.food-simplified .food-preview{border-radius:15px}
+.food-more summary{font-size:12px}
