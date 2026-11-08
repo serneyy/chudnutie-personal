@@ -5,7 +5,7 @@
       "id": "67389e4b-74d1-4736-9a2d-c1e0b1ecf02e",
       "name": "Suško",
       "createdAt": "2026-11-08",
-      "updatedAt": "2026-11-08T22:31:07.323Z",
+      "updatedAt": "2026-11-08T22:31:27.038Z",
       "password": {
         "algorithm": "PBKDF2-SHA256",
         "iterations": 210000,
@@ -122,7 +122,12 @@
             "eggFat": "none"
           }
         ],
-        "weights": [],
+        "weights": [
+          {
+            "date": "2026-11-08",
+            "kg": 93
+          }
+        ],
         "workouts": []
       }
     },
