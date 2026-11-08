@@ -15,15 +15,18 @@ const fs=require("node:fs");
  const mockKinder=JSON.stringify({count:1,products:[{code:"4008400320328",product_name:"Kinder Bueno",brands:"Kinder",image_front_small_url:photoUrl,nutriments:{"energy-kcal_100g":572,"proteins_100g":8.6,"carbohydrates_100g":49.5,"fat_100g":37.3,"sugars_100g":41.2,"fiber_100g":3.4}}]});
  const mockSearch=JSON.stringify({count:1,products:[{code:"9876543210123",product_name:"Proteínové kakao",brands:"Testová značka",serving_size:"250 ml",serving_quantity:"250",serving_quantity_unit:"ml",image_front_small_url:photoUrl,nutriments:{"energy-kcal_100g":62,"proteins_100g":6,"carbohydrates_100g":7,"fat_100g":1.4,"sugars_100g":6.2,"fiber_100g":0.6}}]});
  const mockSearchalicious=JSON.stringify({count:1,hits:JSON.parse(mockSearch).products});
+ const offRequests={modern:0,legacy:[]};
  async function setup(page){
   const errors=[];
   page.on("pageerror",e=>errors.push(e.message));
   page.on("console",m=>{if(m.type()==="error")console.error("BROWSER:",m.text())});
   await page.route("https://world.openfoodfacts.org/**",r=>{
    const url=r.request().url(),broken=url.includes("serverfail");
+   if(url.includes("/cgi/search.pl"))offRequests.legacy.push(url);
    return r.fulfill({status:broken?503:200,contentType:"application/json",headers:{"Access-Control-Allow-Origin":"*"},body:broken?'{"error":"temporarily unavailable"}':url.includes("/api/v2/search")&&url.includes("brands_tags=kinder")?mockKinder:url.includes("/cgi/search.pl")?mockSearch:mockProduct});
   });
   await page.route("https://search.openfoodfacts.org/**",r=>{
+   offRequests.modern++;
    const url=r.request().url(),broken=url.includes("serverfail")||url.includes("legacyonly");
    return r.fulfill({status:broken?503:200,contentType:"application/json",headers:{"Access-Control-Allow-Origin":"*"},body:broken?'{"error":"temporarily unavailable"}':mockSearchalicious});
   });
@@ -362,6 +365,18 @@ const fs=require("node:fs");
   assert.equal(await page.locator("#fKcal").inputValue(),"274");
   assert.equal(await page.locator("#foodGrams").inputValue(),"70");
   await page.locator("#closeFood").click();
+  // Browser must preserve the accent when querying Open Food Facts, and should
+  // never call Search-a-licious directly (it currently omits CORS headers).
+  await page.locator("#homeAdd").click();
+  await page.locator("#foodName").fill("čoko");
+  await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible"});
+  const chocolateResults=await page.locator("#foodSuggestions").innerText();
+  assert(chocolateResults.includes("Mliečna čokoláda"),"Basic chocolate suggestion must work before any network search");
+  assert(chocolateResults.includes("Kakao"),"Cocoa suggestion must work offline");
+  await page.waitForTimeout(3200);
+  assert(offRequests.legacy.some(url=>url.includes("search_terms=%C4%8Doko")),"Remote search must preserve the diacritic in čoko");
+  assert.equal(offRequests.modern,0,"Browser cannot call Search-a-licious directly without CORS");
+  await page.locator("#closeFood").click();
   // Complete restaurant meals: "tikka masala" and versions with/without rice.
   await page.locator("#homeAdd").click();
   await page.locator("#foodName").fill("tikka masala");
@@ -400,7 +415,7 @@ const fs=require("node:fs");
   assert(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=2,"320px food modal overflow");
   assert((await page.locator("#quickFoods [data-quick-food]").count())===17);
   await page.locator("#closeFood").click();
-  // Search-a-licious 503 should transparently fall back to legacy full-text search.
+  // Legacy full-text is the primary browser endpoint; Search-a-licious omits CORS headers.
   await page.locator("#homeAdd").click();
   await page.locator("#foodName").fill("legacyonly");
   await page.waitForFunction(()=>document.getElementById("foodSuggestions")?.innerText?.includes("Proteínové kakao"),{timeout:15000});
