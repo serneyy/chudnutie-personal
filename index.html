@@ -2,7 +2,7 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#F6F7F2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=6">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -44,10 +44,9 @@
   </header>
   <main id="main" tabindex="-1">
     <section class="view active" id="view-home">
-      <div class="intro"><span class="eyebrow">TVOJA CESTA K LEPŠEJ FORME</span><h1 id="homeHeading">Dnes sa počíta.</h1><p>Nie dokonalosť. Len ďalší dobrý krok.</p></div>
       <div class="hero">
         <div class="hero-top"><div><span class="light-eyebrow">TVÔJ CIEĽ</span><h2 id="heroWeights">94 <span>→</span> 88 <small>kg</small></h2></div><span class="hero-pill" id="heroStreak"><svg><use href="#ic-bolt"/></svg> Začíname</span></div>
-        <div class="hero-bottom"><div><strong id="heroRemaining">6 kg</strong><span>zostáva do cieľa</span></div><div><strong id="heroWeeks">20</strong><span>týždňov (odhad)</span></div></div>
+        <div class="hero-bottom"><div><strong id="heroRemaining">6 kg</strong><span id="heroRemainingLabel">zostáva do cieľa</span></div><div><strong id="heroWeeks">20</strong><span id="heroWeeklyLabel">týždňov (odhad)</span></div></div>
         <div class="hero-track"><div id="heroTrack"></div></div>
         <span class="hero-caption" id="heroCaption">Každý záznam ťa posúva ďalej.</span>
       </div>
@@ -58,7 +57,7 @@
         <button class="primary-button stretch" id="homeAdd"><svg><use href="#ic-plus"/></svg> Pridať jedlo</button>
       </div>
       <div class="section-heading"><h2>Dnešné makrá</h2><span class="muted-mini">podľa jedál</span></div>
-      <div class="macros" id="homeMacros"></div>
+      <div class="macros" id="homeMacros"></div><div class="nutrient-extras" id="homeExtras" aria-label="Cukry a vláknina"></div><p class="nutrition-help">Cukry = všetky cukry z potravín, nielen pridané. Vláknina podporuje trávenie a sýtosť.</p>
       <div class="section-heading"><h2>Čo si dnes jedol</h2><button class="text-button" data-nav="diary">Denník <svg><use href="#ic-forward"/></svg></button></div>
       <div class="card" id="homeMealList"></div>
       <div class="quote-card"><svg><use href="#ic-spark"/></svg><div><strong id="quoteTitle">Konzistentnosť je tvoja výhoda.</strong><p id="quoteText">Záznam jedla je malý krok, ktorý vieš zopakovať každý deň.</p></div></div>
@@ -66,7 +65,7 @@
 
     <section class="view" id="view-diary">
       <div class="intro"><span class="eyebrow">JEDÁLNIČEK</span><h1>Čo si dnes jedol?</h1><p>Každé jedlo na jednom mieste.</p></div>
-      <div class="card diary-summary"><div class="day-select"><button class="arrow-action" id="prevDay" aria-label="Predchádzajúci deň"><svg><use href="#ic-back"/></svg></button><span id="diaryDate"></span><button class="arrow-action" id="nextDay" aria-label="Nasledujúci deň"><svg><use href="#ic-forward"/></svg></button></div><div class="diary-total"><div><strong id="diaryCalories">0</strong><span>prijaté kcal</span></div><div><strong id="diaryRemaining">2 100</strong><span>zostáva kcal</span></div></div><div class="slim-progress"><div id="diaryFill"></div></div><p id="diaryMacroText"></p></div>
+      <div class="card diary-summary"><div class="day-select"><button class="arrow-action" id="prevDay" aria-label="Predchádzajúci deň"><svg><use href="#ic-back"/></svg></button><span id="diaryDate"></span><button class="arrow-action" id="nextDay" aria-label="Nasledujúci deň"><svg><use href="#ic-forward"/></svg></button></div><div class="diary-total"><div><strong id="diaryCalories">0</strong><span>prijaté kcal</span></div><div><strong id="diaryRemaining">2 100</strong><span>zostáva kcal</span></div></div><div class="slim-progress"><div id="diaryFill"></div></div><p id="diaryMacroText"></p><p id="diaryExtrasText" class="diary-extras"></p></div>
       <div id="diarySections"></div>
     </section>
 
@@ -75,21 +74,22 @@
       <div class="card plan-form-card">
         <div class="card-heading"><span class="round-icon"><svg><use href="#ic-target"/></svg></span><div><h2>Moje údaje</h2><p>Uprav a prepočítaj plán</p></div></div>
         <form id="planForm" class="form-grid">
+          <fieldset class="mode-field full-span"><legend>Čo chceš dosiahnuť?</legend><div class="mode-switch"><label><input type="radio" name="goalMode" id="modeLose" value="lose" checked><span>Schudnúť</span></label><label><input type="radio" name="goalMode" id="modeMaintain" value="maintain"><span>Udržať váhu</span></label></div></fieldset>
           <label>Aktuálna váha <small>kg</small><input id="pWeight" type="number" min="35" max="300" step="0.1" required></label>
-          <label>Cieľová váha <small>kg</small><input id="pTarget" type="number" min="35" max="300" step="0.1" required></label>
+          <label id="pTargetWrap">Cieľová váha <small>kg</small><input id="pTarget" type="number" min="35" max="300" step="0.1" required></label>
           <label>Výška <small>cm</small><input id="pHeight" type="number" min="120" max="230" required></label>
           <label>Vek <small>roky</small><input id="pAge" type="number" min="18" max="95" required></label>
           <label>Pohlavie pre vzorec<select id="pSex"><option value="male">Muž</option><option value="female">Žena</option></select></label>
           <label>Bežná aktivita<select id="pActivity"><option value="1.2">Sedavá</option><option value="1.375">Ľahká</option><option value="1.55">Stredná</option><option value="1.725">Vysoká</option></select></label>
-          <label class="full-span">Tempo chudnutia<select id="pRate"><option value="0.25">0,25 kg / týždeň · pozvoľné</option><option value="0.3">0,30 kg / týždeň · pozvoľné</option><option value="0.4">0,40 kg / týždeň · mierne</option><option value="0.5">0,50 kg / týždeň · mierne</option><option value="0.65">0,65 kg / týždeň · rýchlejšie</option><option value="0.75">0,75 kg / týždeň · rýchlejšie</option></select></label>
+          <label class="full-span" id="pRateWrap">Tempo chudnutia<select id="pRate"><option value="0.25">0,25 kg / týždeň · pozvoľné</option><option value="0.3">0,30 kg / týždeň · pozvoľné</option><option value="0.4">0,40 kg / týždeň · mierne</option><option value="0.5">0,50 kg / týždeň · mierne</option><option value="0.65">0,65 kg / týždeň · rýchlejšie</option><option value="0.75">0,75 kg / týždeň · rýchlejšie</option></select></label>
           <button type="submit" class="primary-button full-span stretch">Prepočítať môj plán <svg><use href="#ic-forward"/></svg></button>
         </form>
       </div>
       <div class="plan-result">
         <div class="plan-headline"><span>ODPORÚČANÝ DENNÝ PRÍJEM</span><strong><b id="planCalories">2 100</b> kcal</strong><p id="planSubtitle">Tvoj orientačný kalorický cieľ.</p></div>
-        <div class="stat-grid"><div class="stat-tile"><span>Udržanie váhy</span><strong id="planTdee">–</strong><small>kcal/deň</small></div><div class="stat-tile"><span>Denný deficit</span><strong id="planDeficit">–</strong><small>kcal/deň</small></div><div class="stat-tile"><span>Do cieľa</span><strong id="planWeeks">–</strong><small id="planDate">odhad</small></div></div>
+        <div class="stat-grid"><div class="stat-tile"><span>Udržanie váhy</span><strong id="planTdee">–</strong><small>kcal/deň</small></div><div class="stat-tile"><span>Denný deficit</span><strong id="planDeficit">–</strong><small id="planDeficitLabel">kcal/deň</small></div><div class="stat-tile"><span>Do cieľa</span><strong id="planWeeks">–</strong><small id="planDate">odhad</small></div></div>
       </div>
-      <div class="section-heading"><h2>Odporúčané makrá</h2></div><div class="card" id="planMacroCard"></div>
+      <div class="section-heading"><h2>Odporúčané makrá</h2></div><div class="card" id="planMacroCard"></div><div class="card fiber-guidance"><h3>Vláknina</h3><p>Skús dosiahnuť aspoň <strong>25 g vlákniny denne</strong> z bežnej stravy (zelenina, ovocie, strukoviny, celozrnné výrobky). Nie všetky produkty uvádzajú vlákninu.</p></div>
       <div class="card info-card"><h3>Cukry: dôležitý rozdiel</h3><p id="sugarAdvice"></p><small>Voľné cukry ≠ celkové cukry na etikete. Do celkových cukrov sa počítajú aj prirodzené cukry z ovocia a mlieka.</small></div>
       <div class="section-heading"><h2>Pohybový plán</h2><span class="mini-badge">Odporúčanie</span></div>
       <div class="activity-grid"><div class="activity-tile"><div class="activity-icon">02</div><strong>2× fitko</strong><span>týždenne • celé telo</span><small id="gymBurn">45 min · odhad</small></div><div class="activity-tile"><div class="activity-icon">150</div><strong>150 min chôdze</strong><span>týždenne • postupne</span><small id="walkBurn">30 min · odhad</small></div></div>
@@ -102,7 +102,7 @@
 
     <section class="view" id="view-progress">
       <div class="intro"><span class="eyebrow">TVÔJ PROGRES</span><h1>Pomaly. Ale dopredu.</h1><p>Nesleduj jeden deň. Sleduj trend.</p></div>
-      <div class="stats-3"><div class="stat-tile"><span>Štart</span><strong id="weightStart">94</strong><small>kg</small></div><div class="stat-tile accent"><span>Teraz</span><strong id="weightNow">94</strong><small>kg</small></div><div class="stat-tile"><span>Zostáva</span><strong id="weightLeft">6</strong><small>kg</small></div></div>
+      <div class="stats-3"><div class="stat-tile"><span>Štart</span><strong id="weightStart">94</strong><small>kg</small></div><div class="stat-tile accent"><span>Teraz</span><strong id="weightNow">94</strong><small>kg</small></div><div class="stat-tile"><span>Zostáva</span><strong id="weightLeft">6</strong><small id="weightLeftLabel">kg do cieľa</small></div></div>
       <div class="card chart-card"><div class="card-heading"><span class="round-icon"><svg><use href="#ic-chart"/></svg></span><div><h2>Vývoj hmotnosti</h2><p id="chartSummary">Zapíš váhu a uvidíš graf</p></div></div><svg id="weightChart" viewBox="0 0 340 198" class="chart" role="img" aria-label="Graf vývoja hmotnosti"></svg><div class="chart-foot"><span id="chartFirst"></span><span id="chartLast"></span></div></div>
       <div class="card"><h2>Nové váženie</h2><p class="card-sub">Najlepšie ráno za podobných podmienok.</p><form id="weightForm" class="form-grid"><label>Dátum<input id="weightDate" type="date" required></label><label>Hmotnosť (kg)<input id="weightNumber" type="number" min="35" max="300" step="0.1" placeholder="napr. 93.6" required></label><button class="primary-button stretch full-span" type="submit"><svg><use href="#ic-plus"/></svg> Uložiť váženie</button></form><div id="weightHistory"></div></div>
       <div class="quote-card"><svg><use href="#ic-spark"/></svg><div><strong>Neporovnávaj sa s včerajškom.</strong><p>Voda a jedlo v tráviacom trakte menia váhu. Pozeraj na viac týždňov.</p></div></div>
@@ -143,21 +143,48 @@
 
 <div class="overlay" id="foodOverlay" aria-modal="true" role="dialog" aria-labelledby="foodTitle" hidden>
  <div class="food-sheet">
-  <div class="sheet-title"><div><span class="eyebrow">DENNÍK JEDÁL</span><h2 id="foodTitle">Pridať jedlo</h2></div><button class="round-action" id="closeFood" aria-label="Zavrieť"><svg><use href="#ic-close"/></svg></button></div>
+  <div class="sheet-title"><div><span class="eyebrow" id="foodStep">JEDNODUCHÝ ZÁPIS JEDLA</span><h2 id="foodTitle">Pridať jedlo</h2></div><button class="round-action" id="closeFood" aria-label="Zavrieť"><svg><use href="#ic-close"/></svg></button></div>
   <form id="foodForm">
    <input type="hidden" id="foodEditId">
-   <div id="foodLookupMessage" class="lookup-message" hidden></div>
-   <div class="form-grid"><label>Typ jedla<select id="foodMeal"><option value="ranajky">Raňajky</option><option value="desiata">Desiata</option><option value="obed">Obed</option><option value="olovrant">Olovrant</option><option value="vecera">Večera</option><option value="ine">Ostatné</option></select></label><label>Dátum<input id="foodDate" type="date" required></label></div>
-   <label class="block-label">Názov produktu / jedla<input id="foodName" maxlength="100" placeholder="Napr. Jogurt s ovocím" required></label>
-   <div class="form-grid"><label>Množstvo (g/ml)<input id="foodGrams" type="number" min="1" max="10000" step="any" value="100" required></label><label>EAN (voliteľné)<input id="foodEAN" inputmode="numeric" maxlength="14" placeholder="Čiarový kód"></label></div>
-   <div class="per100"><span>VÝŽIVOVÉ HODNOTY NA 100 G / ML</span><small>Appka prepočíta množstvo automaticky</small></div>
-   <div class="form-grid nutrients"><label>Kalórie <small>kcal</small><input id="fKcal" type="number" min="0" max="2000" step="any" required placeholder="0"></label><label>Bielkoviny <small>g</small><input id="fProtein" type="number" min="0" max="100" step="any" value="0" required></label><label>Sacharidy <small>g</small><input id="fCarbs" type="number" min="0" max="100" step="any" value="0" required></label><label>Tuky <small>g</small><input id="fFat" type="number" min="0" max="100" step="any" value="0" required></label><label>Cukry celkom <small>g</small><input id="fSugar" type="number" min="0" max="100" step="any" value="0" required></label><label>Vláknina <small>g</small><input id="fFiber" type="number" min="0" max="100" step="any" placeholder="neznáme"></label></div>
-   <div class="food-preview"><span>Toto jedlo pridá</span><strong id="foodPreviewCalories">0 kcal</strong><small id="foodPreviewMacros">B 0 g · S 0 g · T 0 g</small></div>
-   <button class="primary-button stretch" type="submit" id="foodSave">Pridať do denníka <svg><use href="#ic-check"/></svg></button>
+   <div id="foodLookupMessage" class="lookup-message" aria-live="polite" hidden></div>
+   <div class="food-simplified">
+    <label class="block-label food-main-name">Čo si jedol?
+     <input id="foodName" maxlength="100" placeholder="Názov potraviny" required autocomplete="off">
+    </label>
+    <div class="food-choice">
+     <label class="food-simple-label" for="foodMeal">Kedy si to jedol?</label>
+     <select id="foodMeal" aria-label="Typ jedla"><option value="ranajky">Raňajky</option><option value="desiata">Desiata</option><option value="obed">Obed</option><option value="olovrant">Olovrant</option><option value="vecera">Večera</option><option value="ine">Ostatné</option></select>
+    </div>
+    <div class="amount-heading">Koľko si zjedol?</div>
+    <div class="quantity-row">
+     <button type="button" class="quantity-step" id="amountMinus" aria-label="Znížiť množstvo o 25 gramov">−</button>
+     <div class="quantity-input"><input id="foodGrams" type="number" inputmode="decimal" min="1" max="10000" step="any" value="100" required aria-label="Množstvo v gramoch alebo mililitroch"><span>g / ml</span></div>
+     <button type="button" class="quantity-step" id="amountPlus" aria-label="Zvýšiť množstvo o 25 gramov">+</button>
+    </div>
+    <div class="quantity-presets"><button type="button" data-grams="50">50 g</button><button type="button" data-grams="100">100 g</button><button type="button" data-grams="150">150 g</button><button type="button" data-grams="200">200 g</button></div>
+    <div class="food-preview"><span>PRIDÁŠ DO DENNÍKA</span><strong id="foodPreviewCalories">0 kcal</strong><small id="foodPreviewMacros">Bielkoviny 0 g · Sacharidy 0 g · Tuky 0 g</small></div>
+   </div>
+   <details class="food-more" id="foodDetails">
+    <summary>Upraviť výživové hodnoty alebo dátum <svg><use href="#ic-forward"/></svg></summary>
+    <div class="food-more-body">
+     <label class="block-label">Dátum<input id="foodDate" type="date" required></label>
+     <label class="block-label">Čiarový kód (voliteľné)<input id="foodEAN" inputmode="numeric" maxlength="14" placeholder="EAN"></label>
+     <div class="per100"><span>NA 100 G / 100 ML</span><small>údaje podľa etikety</small></div>
+     <div class="form-grid nutrients">
+      <label>Kalórie <small>kcal</small><input id="fKcal" type="number" min="0" max="2000" step="any" required placeholder="0"></label>
+      <label>Bielkoviny <small>g</small><input id="fProtein" type="number" min="0" max="100" step="any" value="0" required></label>
+      <label>Sacharidy <small>g</small><input id="fCarbs" type="number" min="0" max="100" step="any" value="0" required></label>
+      <label>Tuky <small>g</small><input id="fFat" type="number" min="0" max="100" step="any" value="0" required></label>
+      <label>Cukry <small>g</small><input id="fSugar" type="number" min="0" max="100" step="any" value="0" required></label>
+      <label>Vláknina <small>g</small><input id="fFiber" type="number" min="0" max="100" step="any" placeholder="ak je uvedená"></label>
+     </div>
+    </div>
+   </details>
+   <button class="primary-button stretch food-save" type="submit" id="foodSave">Uložiť jedlo <svg><use href="#ic-check"/></svg></button>
   </form>
  </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=5"></script>
+<script defer src="app.js?v=6"></script>
 </body>
 </html>
