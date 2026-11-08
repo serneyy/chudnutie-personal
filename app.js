@@ -102,7 +102,8 @@ const COMMON_FOODS=[
  {key:"rice",name:"Ryža uvarená",aliases:["ryza","rice"],unit:"g",portion:180,kcal:130,protein:2.7,carbs:28.2,fat:0.3,sugar:0.1,fiber:0.4},
  {key:"oats",name:"Ovsené vločky suché",aliases:["ovsene vlocky","vlocky","oats"],unit:"g",portion:50,kcal:379,protein:13.2,carbs:67.7,fat:6.5,sugar:1,fiber:10.1},
  {key:"chicken",name:"Kuracie prsia tepelne upravené",aliases:["kuracie","kuracie prsia","chicken"],unit:"g",portion:150,kcal:165,protein:31,carbs:0,fat:3.6,sugar:0,fiber:0},
- {key:"bread",name:"Chlieb pšenično-ražný",aliases:["chlieb","bread"],unit:"g",portion:40,kcal:240,protein:8,carbs:47,fat:2,sugar:3,fiber:5}
+ {key:"bread",name:"Chlieb pšenično-ražný",aliases:["chlieb","bread"],unit:"g",portion:40,kcal:240,protein:8,carbs:47,fat:2,sugar:3,fiber:5},
+ {key:"roll",name:"Biely rožok (bežný)",aliases:["rožok","rozok","rožky","rozky","biely rozok","biely rožok","rohlik","rohlík"],unit:"g",portion:50,kcal:275,protein:9,carbs:54,fat:2,sugar:2,fiber:2.5}
 ];
 let suggestions=[],suggestionCursor=-1,searchTimer=null,searchAbort=null,searchGeneration=0,searchNetworkHistory=[],lastSearchAt=0,selectedFoodName="";
 let recentQuickFoods=[],activeDishPortion=null;
