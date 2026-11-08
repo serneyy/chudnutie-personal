@@ -12,7 +12,8 @@ window.SLOVAK_FOODS=[
    "slepačí vývar",
    "kuraci vyvar",
    "vyvar s rezancami",
-   "domaci vyvar"
+   "domaci vyvar",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -38,7 +39,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "kuraci vyvar s masom",
    "vyvar s masom",
-   "polievka s rezancami a masom"
+   "polievka s rezancami a masom",
+   "polievka"
   ],
   "unit": "g",
   "portion": 320,
@@ -65,7 +67,8 @@ window.SLOVAK_FOODS=[
    "slepacia polievka",
    "slepačia polievka",
    "domaca slepacia polievka",
-   "kuracia polievka"
+   "kuracia polievka",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -92,7 +95,8 @@ window.SLOVAK_FOODS=[
    "hovadzi vyvar",
    "hovädzí vývar",
    "hovadzia polievka",
-   "hovadzie rezance"
+   "hovadzie rezance",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -102,11 +106,7 @@ window.SLOVAK_FOODS=[
   "fat": 1.2,
   "sugar": null,
   "fiber": null,
-  "nutritionNote": "Orientačný odhad hotového domáceho jedla na 100 g, nie overená receptúra. Olej, múka, smotana a podiel mäsa môžu čísla výrazne zmeniť. Zváž porciu.",
-  "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20noodle%20soup.jpg?width=320",
-  "imageCredit": "Debs / Wikimedia Commons, CC BY 2.0",
-  "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Chicken_noodle_soup.jpg",
-  "imageCategory": "dish"
+  "nutritionNote": "Orientačný odhad hotového domáceho jedla na 100 g, nie overená receptúra. Olej, múka, smotana a podiel mäsa môžu čísla výrazne zmeniť. Zváž porciu."
  },
  {
   "key": "sk_clear_broth",
@@ -116,7 +116,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "cisty vyvar",
    "vyvar bez rezancov",
-   "kurací vývar bez rezancov"
+   "kurací vývar bez rezancov",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -136,7 +137,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "pecenove halusky",
    "pecenova polievka",
-   "hovadzi vyvar s haluskami"
+   "hovadzi vyvar s haluskami",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -146,11 +148,7 @@ window.SLOVAK_FOODS=[
   "fat": 2.5,
   "sugar": null,
   "fiber": null,
-  "nutritionNote": "Orientačný odhad hotového domáceho jedla na 100 g, nie overená receptúra. Olej, múka, smotana a podiel mäsa môžu čísla výrazne zmeniť. Zváž porciu.",
-  "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20noodle%20soup.jpg?width=320",
-  "imageCredit": "Debs / Wikimedia Commons, CC BY 2.0",
-  "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Chicken_noodle_soup.jpg",
-  "imageCategory": "dish"
+  "nutritionNote": "Orientačný odhad hotového domáceho jedla na 100 g, nie overená receptúra. Olej, múka, smotana a podiel mäsa môžu čísla výrazne zmeniť. Zváž porciu."
  },
  {
   "key": "sk_kapustnica",
@@ -161,7 +159,8 @@ window.SLOVAK_FOODS=[
    "kapustnica",
    "kapustova polievka",
    "vianocna kapustnica",
-   "kapustnica s masom"
+   "kapustnica s masom",
+   "polievka"
   ],
   "unit": "g",
   "portion": 350,
@@ -187,7 +186,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "kapustnica postna",
    "postna kapustnica",
-   "bezmasa kapustnica"
+   "bezmasa kapustnica",
+   "polievka"
   ],
   "unit": "g",
   "portion": 320,
@@ -197,11 +197,7 @@ window.SLOVAK_FOODS=[
   "fat": 2.5,
   "sugar": null,
   "fiber": 2,
-  "nutritionNote": "Orientačný odhad hotového domáceho jedla na 100 g, nie overená receptúra. Olej, múka, smotana a podiel mäsa môžu čísla výrazne zmeniť. Zváž porciu.",
-  "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Kapustnica%20(Sauerkraut%20soup).jpg?width=320",
-  "imageCredit": "young shanahan / Wikimedia Commons, CC BY 2.0",
-  "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Kapustnica_(Sauerkraut_soup).jpg",
-  "imageCategory": "dish"
+  "nutritionNote": "Orientačný odhad hotového domáceho jedla na 100 g, nie overená receptúra. Olej, múka, smotana a podiel mäsa môžu čísla výrazne zmeniť. Zváž porciu."
  },
  {
   "key": "sk_cesnacka",
@@ -213,7 +209,8 @@ window.SLOVAK_FOODS=[
    "cesnakova polievka",
    "cesnecka",
    "cesnečka",
-   "cesnacka s krutonmi"
+   "cesnacka s krutonmi",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -240,7 +237,8 @@ window.SLOVAK_FOODS=[
    "drzkova polievka",
    "drzkova",
    "drzky",
-   "drzkovica"
+   "drzkovica",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -268,7 +266,8 @@ window.SLOVAK_FOODS=[
    "gulasovka",
    "gulášovka",
    "gulasova",
-   "hovadzia gulasova"
+   "hovadzia gulasova",
+   "polievka"
   ],
   "unit": "g",
   "portion": 350,
@@ -293,7 +292,8 @@ window.SLOVAK_FOODS=[
    "fazulova",
    "fazuľová",
    "fazulovica",
-   "fyzulnacka"
+   "fyzulnacka",
+   "polievka"
   ],
   "unit": "g",
   "portion": 350,
@@ -319,7 +319,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "fazulova s udenym",
    "fazuľovica s údeným",
-   "fazulovica s klobasou"
+   "fazulovica s klobasou",
+   "polievka"
   ],
   "unit": "g",
   "portion": 350,
@@ -344,7 +345,8 @@ window.SLOVAK_FOODS=[
    "sosovicova",
    "sosovicova polievka",
    "šošovica",
-   "šošovicová"
+   "šošovicová",
+   "polievka"
   ],
   "unit": "g",
   "portion": 320,
@@ -370,7 +372,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "sosovicova na kyslo",
    "sosovicova smotanova",
-   "kysla sosovicova"
+   "kysla sosovicova",
+   "polievka"
   ],
   "unit": "g",
   "portion": 350,
@@ -394,7 +397,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "hrachova",
    "hrachova polievka",
-   "hrachovica"
+   "hrachovica",
+   "polievka"
   ],
   "unit": "g",
   "portion": 350,
@@ -417,7 +421,8 @@ window.SLOVAK_FOODS=[
   "name": "Hrachová polievka s údeným",
   "aliases": [
    "hrachova s udenym",
-   "hrachova s klobasou"
+   "hrachova s klobasou",
+   "polievka"
   ],
   "unit": "g",
   "portion": 350,
@@ -427,11 +432,7 @@ window.SLOVAK_FOODS=[
   "fat": 4.2,
   "sugar": null,
   "fiber": 2.6,
-  "nutritionNote": "Orientačný odhad hotového domáceho jedla na 100 g, nie overená receptúra. Olej, múka, smotana a podiel mäsa môžu čísla výrazne zmeniť. Zváž porciu.",
-  "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Pea%20soup.jpg?width=320",
-  "imageCredit": "Wikimedia Commons (autor a licencia na odkaze)",
-  "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Pea_soup.jpg",
-  "imageCategory": "dish"
+  "nutritionNote": "Orientačný odhad hotového domáceho jedla na 100 g, nie overená receptúra. Olej, múka, smotana a podiel mäsa môžu čísla výrazne zmeniť. Zváž porciu."
  },
  {
   "key": "sk_zemiakova",
@@ -442,7 +443,8 @@ window.SLOVAK_FOODS=[
    "zemiakova polievka",
    "zemiakova",
    "zemiacka",
-   "zemiacka polievka"
+   "zemiacka polievka",
+   "polievka"
   ],
   "unit": "g",
   "portion": 350,
@@ -466,7 +468,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "kysla zemiakova",
    "zemiakova na kyslo",
-   "zemiakova smotanova"
+   "zemiakova smotanova",
+   "polievka"
   ],
   "unit": "g",
   "portion": 350,
@@ -490,7 +493,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "hubova polievka",
    "hribova polievka",
-   "hubovka"
+   "hubovka",
+   "polievka"
   ],
   "unit": "g",
   "portion": 320,
@@ -516,7 +520,8 @@ window.SLOVAK_FOODS=[
    "mačanka",
    "kysla hubova",
    "hribova macanka",
-   "vychodniarska macanka"
+   "vychodniarska macanka",
+   "polievka"
   ],
   "unit": "g",
   "portion": 350,
@@ -541,7 +546,8 @@ window.SLOVAK_FOODS=[
    "rajcinova polievka",
    "paradajkova polievka",
    "rajcinova",
-   "s cestovinou"
+   "s cestovinou",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -565,7 +571,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "zeleninova polievka",
    "zeleninova",
-   "zeleninovy vyvar"
+   "zeleninovy vyvar",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -589,7 +596,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "brokolicova",
    "brokolicova polievka",
-   "brokolicovy krem"
+   "brokolicovy krem",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -613,7 +621,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "karfiolova",
    "karfiolova polievka",
-   "karfiolacka"
+   "karfiolacka",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -633,7 +642,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "kelova",
    "kelova polievka",
-   "kelovica"
+   "kelovica",
+   "polievka"
   ],
   "unit": "g",
   "portion": 320,
@@ -657,7 +667,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "krupova polievka",
    "krupova",
-   "krupy polievka"
+   "krupy polievka",
+   "polievka"
   ],
   "unit": "g",
   "portion": 320,
@@ -681,7 +692,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "demikat",
    "bryndzovy demikat",
-   "bryndzova polievka"
+   "bryndzova polievka",
+   "polievka"
   ],
   "unit": "g",
   "portion": 320,
@@ -701,7 +713,8 @@ window.SLOVAK_FOODS=[
   "aliases": [
    "tekvicova polievka",
    "tekvicova",
-   "hokaido polievka"
+   "hokaido polievka",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -720,7 +733,8 @@ window.SLOVAK_FOODS=[
   "name": "Zeleninový vývar bez rezancov",
   "aliases": [
    "zeleninovy vyvar",
-   "vyvar zeleninovy"
+   "vyvar zeleninovy",
+   "polievka"
   ],
   "unit": "g",
   "portion": 300,
@@ -953,11 +967,7 @@ window.SLOVAK_FOODS=[
   "fat": 7,
   "sugar": null,
   "fiber": 1,
-  "nutritionNote": "Orientačný odhad hotového domáceho jedla na 100 g, nie overená receptúra. Olej, múka, smotana a podiel mäsa môžu čísla výrazne zmeniť. Zváž porciu.",
-  "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Bodruzalska%20hribova%20macanka.jpg?width=320",
-  "imageCredit": "Wikimedia Commons (autor a licencia na odkaze)",
-  "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Bodruzalska_hribova_macanka.jpg",
-  "imageCategory": "dish"
+  "nutritionNote": "Orientačný odhad hotového domáceho jedla na 100 g, nie overená receptúra. Olej, múka, smotana a podiel mäsa môžu čísla výrazne zmeniť. Zváž porciu."
  },
  {
   "key": "sk_pork_cream",
@@ -1069,11 +1079,7 @@ window.SLOVAK_FOODS=[
   "fiber": null,
   "sourceUrl": "https://www.kaloricketabulky.sk/potraviny/hovadzi-gulas-so-zemiakmi",
   "sourceLabel": "KalorickéTabuľky.sk",
-  "nutritionNote": "Referenčné nutričné údaje na 100 g z uvedenej databázy. Domáci recept, podiel mäsa, olej, smotana a prílohy sa môžu výrazne líšiť. Zváž svoju porciu.",
-  "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Goulash%20soup.jpg?width=320",
-  "imageCredit": "TastingPoland / Wikimedia Commons, CC BY-SA",
-  "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Goulash_soup.jpg",
-  "imageCategory": "dish"
+  "nutritionNote": "Referenčné nutričné údaje na 100 g z uvedenej databázy. Domáci recept, podiel mäsa, olej, smotana a prílohy sa môžu výrazne líšiť. Zváž svoju porciu."
  },
  {
   "key": "sk_pork_goulash",
@@ -1120,11 +1126,7 @@ window.SLOVAK_FOODS=[
   "fiber": 1,
   "sourceUrl": "https://www.kaloricketabulky.sk/potraviny/gulas-segedinsky",
   "sourceLabel": "KalorickéTabuľky.sk",
-  "nutritionNote": "Referenčné nutričné údaje na 100 g z uvedenej databázy. Domáci recept, podiel mäsa, olej, smotana a prílohy sa môžu výrazne líšiť. Zváž svoju porciu.",
-  "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Segedinsky%20gulas.JPG?width=320",
-  "imageCredit": "Maciarka / Wikimedia Commons, CC BY-SA 3.0",
-  "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Segedinsky_gulas.JPG",
-  "imageCategory": "dish"
+  "nutritionNote": "Referenčné nutričné údaje na 100 g z uvedenej databázy. Domáci recept, podiel mäsa, olej, smotana a prílohy sa môžu výrazne líšiť. Zváž svoju porciu."
  },
  {
   "key": "sk_segedin_dumpling",
