@@ -332,6 +332,20 @@ const fs=require("node:fs");
   await page.locator("#foodName").fill("kak");
   assert((await page.locator("#foodSuggestions").innerText()).includes("Proteínové kakao"),"Previously fetched product must appear instantly, even for a prefix");
   await page.locator("#closeFood").click();
+  // A Slovak white roll must work as a local suggestion and a quick-add item without a remote database.
+  await page.locator("#homeAdd").click();
+  await page.locator("#foodName").fill("rozok");
+  await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible"});
+  assert((await page.locator("#foodSuggestions").innerText()).includes("Biely rožok (bežný)"));
+  await page.locator("#foodSuggestions [data-suggest]").first().click();
+  assert.equal(await page.locator("#foodGrams").inputValue(),"50");
+  assert.equal(await page.locator("#fKcal").inputValue(),"275");
+  await page.locator("#closeFood").click();
+  await page.locator("#homeAdd").click();
+  await page.locator('[data-quick-food="roll"]').click();
+  assert.equal(await page.locator("#foodName").inputValue(),"Biely rožok (bežný)");
+  assert.equal(await page.locator("#foodGrams").inputValue(),"50");
+  await page.locator("#closeFood").click();
   // Complete restaurant meals: "tikka masala" and versions with/without rice.
   await page.locator("#homeAdd").click();
   await page.locator("#foodName").fill("tikka masala");
@@ -368,7 +382,7 @@ const fs=require("node:fs");
   assert(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=2,"320px screen must not overflow");
   await page.locator("#homeAdd").click();
   assert(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=2,"320px food modal overflow");
-  assert((await page.locator("#quickFoods [data-quick-food]").count())===9);
+  assert((await page.locator("#quickFoods [data-quick-food]").count())===10);
   await page.locator("#closeFood").click();
   // Search-a-licious 503 should transparently fall back to legacy full-text search.
   await page.locator("#homeAdd").click();
