@@ -1,4 +1,104 @@
 {
   "version": 1,
-  "profiles": []
+  "profiles": [
+    {
+      "id": "67389e4b-74d1-4736-9a2d-c1e0b1ecf02e",
+      "name": "Môj pôvodný profil",
+      "createdAt": "2026-11-08",
+      "updatedAt": "2026-11-08T17:28:31.381Z",
+      "data": {
+        "profile": {
+          "weight": 94,
+          "target": 88,
+          "height": 189,
+          "age": 22,
+          "sex": "male",
+          "activity": 1.2,
+          "rate": 0.3,
+          "mode": "lose",
+          "lossTarget": 88
+        },
+        "foods": [
+          {
+            "id": "54527b4c-242f-48e5-918d-41cda84d8db0",
+            "name": "Ryža uvarená",
+            "date": "2026-11-08",
+            "meal": "obed",
+            "grams": 180,
+            "kcal": 234,
+            "protein": 4.9,
+            "carbs": 50.8,
+            "fat": 0.5,
+            "sugar": 0.2,
+            "fiber": 0.7,
+            "code": "",
+            "image": "",
+            "unit": "g",
+            "dish": false,
+            "eggCount": null,
+            "eggFat": "none"
+          },
+          {
+            "id": "abfa1eaf-609b-4f58-b8e3-7a730b61230d",
+            "name": "Suklaanmakuinen soijajuoma",
+            "date": "2026-11-08",
+            "meal": "olovrant",
+            "grams": 250,
+            "kcal": 185,
+            "protein": 15,
+            "carbs": 16.3,
+            "fat": 7.5,
+            "sugar": 12.3,
+            "fiber": 3.3,
+            "code": "5411188133476",
+            "image": "",
+            "unit": "ml",
+            "dish": false,
+            "eggCount": null,
+            "eggFat": "none"
+          },
+          {
+            "id": "7d1e5f24-46fd-46d2-87f2-6752ed675913",
+            "name": "Chicken tikka masala s ryžou",
+            "date": "2026-11-08",
+            "meal": "obed",
+            "grams": 450,
+            "kcal": 675,
+            "protein": 36,
+            "carbs": 72,
+            "fat": 27,
+            "sugar": 11.3,
+            "fiber": 5.9,
+            "code": "",
+            "image": "",
+            "unit": "g",
+            "dish": true,
+            "eggCount": null,
+            "eggFat": "none"
+          },
+          {
+            "id": "0f9be36e-0503-4afc-8c6d-4ca7276ade4e",
+            "name": "Kinder Maxi",
+            "date": "2026-11-08",
+            "meal": "olovrant",
+            "grams": 21,
+            "kcal": 118.9,
+            "protein": 1.8,
+            "carbs": 11.2,
+            "fat": 7.4,
+            "sugar": 11.2,
+            "fiber": null,
+            "code": "4008400221021",
+            "image": "",
+            "unit": "g",
+            "dish": false,
+            "eggCount": null,
+            "eggFat": "none"
+          }
+        ],
+        "weights": [],
+        "workouts": []
+      }
+    }
+  ]
 }
