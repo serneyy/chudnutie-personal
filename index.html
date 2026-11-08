@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=23">
+<link rel="stylesheet" href="styles.css?v=24">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -82,6 +82,7 @@
           <label>Vek <small>roky</small><input id="pAge" type="number" min="18" max="95" required></label>
           <label>Pohlavie pre vzorec<select id="pSex"><option value="male">Muž</option><option value="female">Žena</option></select></label>
           <label>Bežná aktivita<select id="pActivity"><option value="1.2">Sedavá</option><option value="1.375">Ľahká</option><option value="1.55">Stredná</option><option value="1.725">Vysoká</option></select></label>
+          <label class="full-span" id="pGainRateWrap" hidden>Rýchlosť naberania svalov<select id="pGainRate"><option value="slow">Pomaly · +150 kcal/deň</option><option value="moderate">Stredne · +250 kcal/deň</option><option value="fast">Rýchlejšie · +350 kcal/deň</option></select><small>Väčší nadbytok môže znamenať viac tuku, nie rýchlejší rast svalov.</small></label>
           <label class="full-span" id="pRateWrap">Tempo chudnutia<select id="pRate"><option value="0.25">0,25 kg / týždeň · pozvoľné</option><option value="0.3">0,30 kg / týždeň · pozvoľné</option><option value="0.4">0,40 kg / týždeň · mierne</option><option value="0.5">0,50 kg / týždeň · mierne</option><option value="0.65">0,65 kg / týždeň · rýchlejšie</option><option value="0.75">0,75 kg / týždeň · rýchlejšie</option></select></label>
           <button type="submit" class="primary-button full-span stretch">Prepočítať môj plán <svg><use href="#ic-forward"/></svg></button>
         </form>
@@ -111,7 +112,8 @@
 
     <section class="view" id="view-settings">
       <div class="intro"><span class="eyebrow">NASTAVENIA</span><h1>Tvoje dáta. Tvoje pravidlá.</h1><p>Rodinné profily a voliteľná synchronizácia cez GitHub.</p></div>
-      <div class="card" id="profilesSettings"><div class="card-heading"><span class="round-icon"><svg><use href="#ic-settings"/></svg></span><div><h2>Používateľské profily</h2><p>Osobné záznamy oddelené podľa mena</p></div></div><p class="card-sub">Aktívny profil: <strong id="currentProfileLabel">–</strong></p><div class="action-stack"><button class="secondary-button" id="renameProfileBtn">Upraviť meno profilu</button><button class="outline-button" id="changeProfileBtn">Prepnúť profil</button><button class="outline-button profile-logout" id="logoutProfileBtn">Odhlásiť sa z profilu</button></div><form id="profileRenameForm" class="profile-rename-form" hidden><label class="block-label" for="profileRenameInput">Nové meno<input id="profileRenameInput" type="text" maxlength="30" autocomplete="off" required></label><div class="profile-rename-actions"><button type="submit" class="secondary-button" id="profileRenameSave">Uložiť meno</button><button type="button" class="outline-button" id="profileRenameCancel">Zrušiť</button></div></form><p class="card-sub">Odhlásením iba zatvoríš aktuálny profil. Jedlá, váha ani GitHub záloha sa nezmažú. Profily nemajú heslá.</p></div>
+      <div class="card" id="profilesSettings"><div class="card-heading"><span class="round-icon"><svg><use href="#ic-settings"/></svg></span><div><h2>Používateľské profily</h2><p>Osobné záznamy oddelené podľa mena</p></div></div><p class="card-sub">Aktívny profil: <strong id="currentProfileLabel">–</strong></p><div class="action-stack"><button class="secondary-button" id="renameProfileBtn">Upraviť meno profilu</button><button class="outline-button" id="changeProfileBtn">Prepnúť profil</button><button class="outline-button profile-logout" id="logoutProfileBtn">Odhlásiť sa z profilu</button></div><form id="profileRenameForm" class="profile-rename-form" hidden><label class="block-label" for="profileRenameInput">Nové meno<input id="profileRenameInput" type="text" maxlength="30" autocomplete="off" required></label><div class="profile-rename-actions"><button type="submit" class="secondary-button" id="profileRenameSave">Uložiť meno</button><button type="button" class="outline-button" id="profileRenameCancel">Zrušiť</button></div></form><p class="card-sub">Odhlásením iba zatvoríš aktuálny profil. Jedlá, váha ani GitHub záloha sa nezmažú. Heslo zamyká vstup do profilu v aplikácii, ale verejné údaje na GitHube nešifruje.</p></div>
+      <div class="card" id="profilePasswordCard"><div class="card-heading"><span class="round-icon"><svg><use href="#ic-settings"/></svg></span><div><h2>Heslo profilu</h2><p id="profilePasswordState">Zabezpečenie prístupu do profilu</p></div></div><form id="profilePasswordForm" class="profile-password-form"><label class="block-label" id="profileOldPasswordWrap" for="profileOldPassword" hidden>Súčasné heslo<input id="profileOldPassword" type="password" autocomplete="current-password"></label><label class="block-label" for="profileNewPassword">Nové heslo<input id="profileNewPassword" type="password" minlength="6" maxlength="128" autocomplete="new-password" placeholder="Aspoň 6 znakov"></label><label class="block-label" for="profileConfirmPassword">Potvrď nové heslo<input id="profileConfirmPassword" type="password" autocomplete="new-password" placeholder="Zopakuj heslo"></label><button class="secondary-button stretch" type="submit">Uložiť heslo profilu</button></form><p class="github-help">Heslo sa ukladá ako odvodený hash, nie ako text. <strong>Pozor:</strong> verejný GitHub JSON a Cloudflare API nie sú chránené týmto heslom. Slúži iba na zamknutie profilu v aplikácii.</p></div>
       <div class="card github-card" id="githubSyncSettings">
         <div class="card-heading"><span class="round-icon"><svg><use href="#ic-upload"/></svg></span><div><h2>Automatická GitHub záloha</h2><p>Cloudflare Worker • data/forma-family.json</p></div></div>
         <p class="card-sub">Jedlá, váhu a profily si aplikácia vždy najprv uloží do tohto zariadenia. Po aktivácii servera sa zálohujú aj do GitHubu. V aplikácii nie je potrebný žiadny GitHub token.</p>
@@ -255,11 +257,11 @@
     <span class="eyebrow">OSOBNÉ PROFILY</span>
     <h2 id="profileDialogTitle">Kto dnes používa FORMA.?</h2>
     <p class="profile-lead">Vyber svoje meno. Každý má vlastné jedlá, hmotnosť aj plán.</p>
-    <div id="profileList" class="profile-list"></div>
+    <div id="profileList" class="profile-list"></div><form id="profileUnlockForm" class="profile-unlock-form" hidden><label class="block-label" for="profileUnlockPassword">Heslo profilu <strong id="profileUnlockName"></strong><input id="profileUnlockPassword" type="password" autocomplete="current-password" required></label><p id="profileUnlockError" class="profile-unlock-error" role="alert"></p><div class="profile-rename-actions"><button type="submit" class="secondary-button">Otvoriť profil</button><button type="button" id="profileUnlockCancel" class="outline-button">Späť</button></div></form>
     <button class="outline-button stretch" id="toggleNewProfile" type="button"><svg><use href="#ic-plus"/></svg> Vytvoriť nový profil</button>
     <form id="newProfileForm" class="profile-create" hidden>
       <h3>Nový profil</h3>
-      <label class="block-label" for="newProfileName">Meno<input id="newProfileName" maxlength="30" placeholder="Napríklad Mama" required autocomplete="nickname"></label>
+      <label class="block-label" for="newProfileName">Meno<input id="newProfileName" maxlength="30" placeholder="Napríklad Mama" required autocomplete="nickname"></label><label class="block-label" for="newProfilePassword">Heslo profilu (voliteľné)<input id="newProfilePassword" type="password" minlength="6" maxlength="128" autocomplete="new-password" placeholder="Aspoň 6 znakov"></label>
       <div class="form-grid">
         <label>Aktuálna váha (kg)<input id="newProfileWeight" type="number" min="35" max="300" step="0.1" placeholder="Napr. 76" required></label>
         <label>Cieľová váha (kg)<input id="newProfileTarget" type="number" min="35" max="300" step="0.1" placeholder="Napr. 72" required></label>
@@ -276,6 +278,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=23"></script>
+<script defer src="app.js?v=24"></script>
 </body>
 </html>
