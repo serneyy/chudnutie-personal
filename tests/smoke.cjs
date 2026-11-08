@@ -270,7 +270,7 @@ const fs=require("node:fs");
   await page.locator("#homeAdd").click();
   await page.locator("#foodName").fill("kakao");
   await page.waitForFunction(()=>document.getElementById("foodSuggestions")?.innerText?.includes("Proteínové kakao"),{timeout:12000});
-  const cacheEntries=await page.evaluate(()=>JSON.parse(localStorage.getItem("forma-off-search-cache-v1")||"[]"));
+  const cacheEntries=await page.evaluate(()=>JSON.parse(localStorage.getItem("forma-off-search-cache-v2")||"[]"));
   assert(cacheEntries.some(([key,entry])=>key==="kakao"&&entry.products?.some(p=>p.name==="Proteínové kakao")),"Successful OFF search must be persisted locally");
   await page.locator("#closeFood").click();
 
