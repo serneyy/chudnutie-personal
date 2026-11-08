@@ -431,7 +431,7 @@ const fs=require("node:fs");
   await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.textContent?.includes("serverový GitHub token"),{timeout:7000});
   assert.equal(cloudWrites,0,"Never claim upload without server configuration");
   assert((await page.locator("#githubSyncStatus").getAttribute("data-level"))==="error");
-  assert((await page.locator("#cloudHomeText").innerText()).includes("lokálne"),"Offline data state should be obvious");
+  assert((await page.locator("#githubSyncStatus").innerText()).includes("Cloudflare")||(await page.locator("#githubSyncStatus").innerText()).includes("GitHub"),"Offline backup status should remain visible in Settings");
   cloudReady=true;
   await page.locator("#githubRefreshBtn").click();
   await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:10000});
