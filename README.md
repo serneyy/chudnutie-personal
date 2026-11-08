@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 26
+# FORMA. Personal · verzia 27
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -51,6 +51,15 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Dôležité:** nasadenie Cloudflare Worker robí vlastník ručne. Kým Worker nebeží a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
 - Prvá synchronizácia lokálne dáta nevymaže; profily sa zlúčia podľa času poslednej úpravy, pri zlyhaní servera sa zachovajú v `localStorage`. Mobilné testy simulujú dve zariadenia a nedostupný server.
 - Upozornenie: verejný GitHub repo umožňuje komukoľvek prezerať údaje v histórii commitov. Endpoint POST nie je autentifikovaný na strane používateľa (požiadavka na rodinný prototyp); CORS/Origin nie je bezpečnostné overenie klienta, takže endpoint nie je vhodný pre produkčné osobné údaje.
+
+## FORMA v27: oprava opakovaných chýb online katalógu
+
+- Diagnostika na živých Open Food Facts endpointoch z GitHub Actions 8. novembra 2026: `search.openfoodfacts.org/search` síce vracia HTTP 200, ale **bez `Access-Control-Allow-Origin`**, takže JavaScript v prehliadači jeho výsledky z inej domény nemôže čítať. `world.openfoodfacts.org/cgi/search.pl` vracal HTTP 200 a `Access-Control-Allow-Origin: *`. Niektoré API v2 požiadavky súčasne vracali HTTP 503.
+- Aplikácia predtým volala CORS-nefunkčný endpoint ako prvý a na celú sekvenciu mala iba 6,5-sekundový timeout. To často zabránilo akémukoľvek volaniu funkčného legacy vyhľadávania. Teraz v prehliadači používa priamo legacy CGI a 9-sekundový timeout, bez zbytočného volania Search-a-licious.
+- Pôvodné diakritické názvy sa do externého katalógu posielajú **bez odstraňovania diakritiky** (`čoko` zostane `čoko`), zatiaľ čo lokálne porovnávanie a cache zostávajú normalizované.
+- Lokálne základné návrhy fungujú ihneď. Pridané sú mliečna a horká čokoláda, Lidl Fin Carré 52 % a kakao, všetky so zdrojmi KalorickéTabuľky.sk a upozornením na orientačný charakter hodnôt.
+- Ak sa externý katalóg nepodarí načítať, ale miestne návrhy existujú, používateľ dostane tieto návrhy bez rušivej chybovej karty. Ak návrhy chýbajú, dostupné zostane manuálne zadanie a opakovanie pokusu.
+- Tretia strana môže stále krátkodobo vracať 503; bez vlastného backendu a plnej lokálnej potravinovej databázy nie je možné sľúbiť 100 % dostupnosť vyhľadávania všetkých výrobkov.
 
 ## FORMA v26: lokálne pečivo, Lidl a zdroje
 
