@@ -114,7 +114,11 @@ const COMMON_FOODS=[
  {"key":"croissant_butter_lidl","name":"Maslový croissant Lidl","aliases":["croissant","krosan","maslovy croissant","pecivo lidl"],"unit":"g","portion":60,"kcal":394,"protein":6.7,"carbs":40,"fat":23.3,"sugar":5,"fiber":1.5,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/maslovy-croissant-lidl","image":"https://commons.wikimedia.org/wiki/Special:FilePath/Croissant%20bread.jpg?width=320","imageCredit":"Wikimedia Commons (CC0)","imageCreditUrl":"https://commons.wikimedia.org/wiki/File:Croissant%20bread.jpg"},
  {"key":"pretzel_lidl","name":"Praclík Lidl","aliases":["praclik","praclík","brezel","preclik","pecivo lidl"],"unit":"g","portion":80,"kcal":291,"protein":9.1,"carbs":54.2,"fat":3.5,"sugar":3.7,"fiber":3.1,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/praclik-lidl","image":"https://commons.wikimedia.org/wiki/Special:FilePath/Mini%20pretzel.jpg?width=320","imageCredit":"Wikimedia Commons (CC0)","imageCreditUrl":"https://commons.wikimedia.org/wiki/File:Mini%20pretzel.jpg"},
  {"key":"baguette_plain","name":"Bageta biela (bežná)","aliases":["bageta","biela bageta","bageta biela","baguette"],"unit":"g","portion":100,"kcal":301,"protein":7.8,"carbs":60,"fat":2.9,"sugar":1.4,"fiber":2.5,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/bageta-biela","image":"https://commons.wikimedia.org/wiki/Special:FilePath/Baguette-246424.jpg?width=320","imageCredit":"Wikimedia Commons (CC0)","imageCreditUrl":"https://commons.wikimedia.org/wiki/File:Baguette-246424.jpg"},
- {"key":"pizza_pocket_lidl","name":"Pizza taštička Lidl","aliases":["pizza tasticka","pizza taštička","pecivo lidl"],"unit":"g","portion":100,"kcal":258,"protein":6.6,"carbs":27.4,"fat":13.1,"sugar":2.3,"fiber":2.2,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/pizza_tasticka"}
+ {"key":"pizza_pocket_lidl","name":"Pizza taštička Lidl","aliases":["pizza tasticka","pizza taštička","pecivo lidl"],"unit":"g","portion":100,"kcal":258,"protein":6.6,"carbs":27.4,"fat":13.1,"sugar":2.3,"fiber":2.2,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/pizza_tasticka"},
+ {"key":"chocolate_milk","name":"Mliečna čokoláda (orientačne, podľa M&S)","aliases":["coko","čoko","cokolada","čokoláda","mliecna cokolada","mliecna coko","chocolate","coko milka"],"unit":"g","portion":25,"kcal":566,"protein":7.2,"carbs":51,"fat":36.8,"sugar":50,"fiber":2.1,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/cokolada-mliecna"},
+ {"key":"chocolate_dark","name":"Horká čokoláda (bežná)","aliases":["coko","čoko","horka cokolada","tmava cokolada","dark chocolate","cokolada horka"],"unit":"g","portion":25,"kcal":542,"protein":4.38,"carbs":58.56,"fat":32.32,"sugar":47,"fiber":null,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/cokolada-horka"},
+ {"key":"chocolate_lidl_52","name":"Fin Carré horká čokoláda 52 % Lidl","aliases":["coko","čoko","cokolada lidl","fincare","fin carre","horka cokolada lidl"],"unit":"g","portion":25,"kcal":540,"protein":4.9,"carbs":48,"fat":35,"sugar":46,"fiber":8,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/cokolada-horka-52-lidl"},
+ {"key":"cocoa_powder","name":"Kakao (nesladené)","aliases":["kakao","coko","čoko","kakaovy prasok","cocoa powder","kakaovy napoj bez cukru"],"unit":"g","portion":10,"kcal":305,"protein":21,"carbs":12.3,"fat":11.8,"sugar":0.5,"fiber":34.6,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/kakao"}
 ];
 let suggestions=[],suggestionCursor=-1,searchTimer=null,searchAbort=null,searchGeneration=0,searchNetworkHistory=[],lastSearchAt=0,selectedFoodName="";
 let recentQuickFoods=[],activeDishPortion=null;
@@ -464,9 +468,11 @@ function foodSearchFields(){
 }
 async function remoteFoodSearch(query,token,local,{force=false}={}){
  const typed=normalizeTerm(query);
- const q=/^(capucino|kapucino|cappucino|kapuccino)$/.test(typed)?"cappuccino":typed;
- if(q.length<3||token!==searchGeneration)return;
- const cached=getCachedFoodSearch(q);
+ // Preserve Slovak accents when searching the remote catalog. "coko" and "čoko"
+ // normalize to the same local cache key, but the remote API must receive "čoko".
+ const q=/^(capucino|kapucino|cappucino|kapuccino)$/.test(typed)?"cappuccino":String(query||"").trim();
+ if(typed.length<3||token!==searchGeneration)return;
+ const cached=getCachedFoodSearch(typed);
  if(!force&&cached!==null){
   if(token===searchGeneration)renderFoodSuggestions(local,cached,false);
   return;
@@ -483,12 +489,15 @@ async function remoteFoodSearch(query,token,local,{force=false}={}){
    renderFoodSuggestions(local,findKnownProducts(q),true,"");
    return;
   }
-  if(token===searchGeneration)renderFoodSuggestions(local,findKnownProducts(q),false,"Online vyhľadávanie je dočasne obmedzené. Skús znova.");
+  if(token===searchGeneration){
+   const known=findKnownProducts(q);
+   renderFoodSuggestions(local,known,false,local.length||known.length?"":"Online vyhľadávanie je dočasne obmedzené. Skús znova.");
+  }
   return;
  }
  searchNetworkHistory.push(now);lastSearchAt=now;
  searchAbort=new AbortController();
- const ctrl=searchAbort,timer=setTimeout(()=>ctrl.abort(),6500);
+ const ctrl=searchAbort,timer=setTimeout(()=>ctrl.abort(),9000);
  const fields=foodSearchFields();
  const brand=matchingFoodBrand(q);
  const endpoints=[];
@@ -499,14 +508,11 @@ async function remoteFoodSearch(query,token,local,{force=false}={}){
   url.searchParams.set("page_size","24");url.searchParams.set("fields",fields);
   endpoints.push(url);
  }
- // The old full-text CGI frequently returns 503; prefer the documented search service.
- // Keep the legacy endpoint as a fallback for a stale or unavailable search index.
- const modern=new URL("https://search.openfoodfacts.org/search");
- modern.searchParams.set("q",q);
- modern.searchParams.set("page_size","12");
- modern.searchParams.set("langs","sk,cs,en,de,fr");
- modern.searchParams.set("fields",fields);
- endpoints.push(modern);
+ // Search-a-licious currently omits Access-Control-Allow-Origin (verified
+ // 2026-11-08 with a real GitHub Actions HTTP probe), so browsers cannot read
+ // its responses. Do not attempt it here: it previously used up the 6.5 s
+ // timeout and aborted the actual working legacy search before trying it.
+ // Open Food Facts' legacy CGI currently returns Access-Control-Allow-Origin: *.
  const legacy=new URL("https://world.openfoodfacts.org/cgi/search.pl");
  legacy.searchParams.set("search_terms",q);
  legacy.searchParams.set("search_simple","1");
@@ -525,15 +531,22 @@ async function remoteFoodSearch(query,token,local,{force=false}={}){
   }
   if(token!==searchGeneration)return;
   if(products.length){
-   rememberFoodSearch(q,products);
+   rememberFoodSearch(typed,products);
    renderFoodSuggestions(local,products,false);
   }else if(foundHealthyResponse){
    // Do not persist an empty query for 24 h: database search availability varies.
-   renderFoodSuggestions(local,findKnownProducts(q),false,"V online katalógu sa nenašla nová zhoda. Skús iný názov alebo čiarový kód.");
+   const known=findKnownProducts(q);
+   renderFoodSuggestions(local,known,false,local.length||known.length?"":"V online katalógu sa nenašla nová zhoda. Skús iný názov alebo čiarový kód.");
   }else{
    if([429,500,502,503,504].includes(lastError?.httpStatus))remoteSearchPauseUntil=Date.now()+20000;
    console.warn("Open Food Facts vyhľadávanie:",lastError?.message||"Nedostupné");
-   renderFoodSuggestions(local,findKnownProducts(q),false,"Online databáza je dočasne nedostupná. Použi návrhy alebo skús znova.");
+   const known=findKnownProducts(q);
+   if(local.length||known.length){
+    $("foodSearchHelp").textContent="Zobrazujem základné potraviny a predchádzajúce výsledky. Online katalóg teraz neodpovedá.";
+    renderFoodSuggestions(local,known,false);
+   }else{
+    renderFoodSuggestions(local,known,false,"Online katalóg teraz neodpovedá. Skús znova alebo zadaj jedlo ručne.");
+   }
   }
  }finally{
   clearTimeout(timer);
@@ -563,7 +576,7 @@ function foodNameChanged(){
  $("foodSearchHelp").textContent="Vyhľadávam: "+value+". Miestne jedlá sú dostupné ihneď aj bez internetu.";
  if(normalizeTerm(value).length<3)return;
  // Show known matches immediately; delay new requests until typing has stopped.
- const wait=850;
+ const wait=1100;
  searchTimer=setTimeout(()=>remoteFoodSearch(value,token,local),wait);
 }
 function foodNameKeys(e){
