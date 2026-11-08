@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 20
+# FORMA. Personal · verzia 22
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -51,6 +51,12 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Dôležité:** nasadenie Cloudflare Worker robí vlastník ručne. Kým Worker nebeží a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
 - Prvá synchronizácia lokálne dáta nevymaže; profily sa zlúčia podľa času poslednej úpravy, pri zlyhaní servera sa zachovajú v `localStorage`. Mobilné testy simulujú dve zariadenia a nedostupný server.
 - Upozornenie: verejný GitHub repo umožňuje komukoľvek prezerať údaje v histórii commitov. Endpoint POST nie je autentifikovaný na strane používateľa (požiadavka na rodinný prototyp); CORS/Origin nie je bezpečnostné overenie klienta, takže endpoint nie je vhodný pre produkčné osobné údaje.
+
+## FORMA v22: nastavenia a pridávanie jedla
+
+- Stav GitHub zálohy zostáva v **Nastavenia → Automatická GitHub záloha**; z domovskej obrazovky je odstránený.
+- Meno aktívneho profilu sa upravuje priamo v Nastaveniach cez formulár (bez systémového promptu). Tlačidlo **Odhlásiť sa z profilu** iba odstráni aktívny výber z tejto relácie a zobrazí zoznam profilov; neodstraňuje profily, jedlá ani cloudovú databázu.
+- Pridávanie jedla je kompaktnejšie: vyhľadávanie a 5 rýchlych volieb sú na prvom mieste, ďalšie hotové jedlá sa otvoria cez detail, príslušná porcia a výživové údaje zostávajú funkčné.
 
 ## Denník: výživové súčty podľa jedla
 
