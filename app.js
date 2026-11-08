@@ -308,7 +308,8 @@ function renderFoodSuggestions(local=[],remote=[],loading=false,error=""){
  const localItems=suggestions.filter(x=>x.source==="estimate"||x.source==="dish"||x.source==="recipe"),remoteItems=suggestions.filter(x=>x.source==="off");
  if(localItems.length)html+='<div class="food-suggestions-heading">Jedlá a nápoje (orientačné údaje)</div>'+localItems.map(x=>row(x,suggestions.indexOf(x))).join("");
  if(remoteItems.length)html+='<div class="food-suggestions-heading">Konkrétne výrobky z databázy</div>'+remoteItems.map(x=>row(x,suggestions.indexOf(x))).join("");
- if(loading)html+='<div class="food-search-empty">Hľadám ďalšie produkty…</div>';
+ if(loading)html+='<div class="food-search-empty">Hľadám výrobky v databáze…</div>';
+ if(!loading&&error)html+='<button type="button" class="food-search-retry" id="foodSearchRetry">Skúsiť znova vyhľadať <span>↻</span></button>';
  else if(error)html+='<div class="food-search-empty">'+escapeHTML(error)+'</div>';
  else if(!suggestions.length)html+='<div class="food-search-empty">Nič som nenašiel. Môžeš jedlo zadať ručne.</div>';
  out.innerHTML=html;out.hidden=false;$("foodName").setAttribute("aria-expanded","true");
@@ -359,73 +360,95 @@ function applyFoodSuggestion(item){
  $("quickFoods").hidden=true;
  renderFoodPreview();updateFoodSaveState();
 }
-async function remoteFoodSearch(query,token,local){
+
+const SUPPORTED_FOOD_BRANDS=new Set(["kinder","milka","alpro","oreo","nutella","ferrero","activia","actimel","lindt","danone","muller","nesquik","nestea","coca cola","pepsi","red bull","monster","haribo","proteinella","skyr"]);
+function matchingFoodBrand(query){
+ const q=normalizeTerm(query);
+ for(const name of SUPPORTED_FOOD_BRANDS){
+  if(q===name||q.startsWith(name+" ")||name.startsWith(q)&&q.length>=4)return name;
+ }
+ return "";
+}
+async function fetchOFFProducts(url,signal){
+ const response=await fetch(url.toString(),{signal,headers:{Accept:"application/json"},cache:"no-store"});
+ if(!response.ok){
+  const error=new Error("Open Food Facts vrátilo "+response.status);
+  error.httpStatus=response.status;throw error;
+ }
+ const data=await response.json();
+ return (Array.isArray(data.products)?data.products:[])
+  .filter(p=>p&&p.nutriments&&(p.product_name||p.product_name_sk||p.product_name_en))
+  .map(nutritionFromOFF).filter(p=>p.name&&p.kcal!==null&&validNum(p.kcal,0,2000)&&p.portion>0)
+  .slice(0,8);
+}
+function foodSearchFields(){
+ return "code,product_name,product_name_sk,product_name_en,brands,serving_size,serving_quantity,serving_quantity_unit,product_quantity,product_quantity_unit,nutriments,image_front_small_url,image_small_url,image_front_url,image_url,selected_images,lang,lc";
+}
+async function remoteFoodSearch(query,token,local,{force=false}={}){
  const typed=normalizeTerm(query);
  const q=/^(capucino|kapucino|cappucino|kapuccino)$/.test(typed)?"cappuccino":typed;
  if(q.length<3||token!==searchGeneration)return;
  const cached=getCachedFoodSearch(q);
- if(cached!==null){
+ if(!force&&cached!==null){
   if(token===searchGeneration)renderFoodSuggestions(local,cached,false);
   return;
  }
  const now=Date.now();
  searchNetworkHistory=searchNetworkHistory.filter(t=>now-t<60000);
- // OFF officially permits 10 searches / minute / IP; avoid making a request
- // on every keystroke. Use max 3/min on this device and stagger requests.
  const minDelay=Math.max(0,lastSearchAt+6500-now);
  const windowDelay=searchNetworkHistory.length>=3?Math.max(0,searchNetworkHistory[0]+61000-now):0;
- const outageDelay=Math.max(0,remoteSearchPauseUntil-now);
+ const outageDelay=force?0:Math.max(0,remoteSearchPauseUntil-now);
  const delay=Math.max(minDelay,windowDelay,outageDelay);
  if(delay>0){
-  // Local results remain available immediately. Do not lock the form or show
-  // an alarming "database down" status for a temporary API rate limit.
   if(delay<8500){
-   searchTimer=setTimeout(()=>remoteFoodSearch(query,token,local),delay+120);
+   searchTimer=setTimeout(()=>remoteFoodSearch(query,token,local,{force}),delay+120);
+   renderFoodSuggestions(local,[],true,"");
    return;
   }
-  if(token===searchGeneration){
-   const info=local.length?"":"Online vyhľadávanie je dočasne obmedzené. Skús to neskôr alebo naskenuj čiarový kód.";
-   renderFoodSuggestions(local,[],false,info);
-  }
+  if(token===searchGeneration)renderFoodSuggestions(local,[],false,"Online vyhľadávanie má dočasný limit. Môžeš skúsiť znova.");
   return;
  }
- searchNetworkHistory.push(now);
- lastSearchAt=now;
+ searchNetworkHistory.push(now);lastSearchAt=now;
  searchAbort=new AbortController();
- const ctrl=searchAbort;
- const timer=setTimeout(()=>ctrl.abort(),11000);
+ const ctrl=searchAbort,timer=setTimeout(()=>ctrl.abort(),10000);
+ const fields=foodSearchFields();
+ const brand=matchingFoodBrand(q);
+ const endpoints=[];
+ if(brand){
+  // API v2 supports structured brand filtering and is independent of legacy full text.
+  const url=new URL("https://world.openfoodfacts.org/api/v2/search");
+  url.searchParams.set("brands_tags",brand.replace(/ /g,"-"));
+  url.searchParams.set("page_size","24");url.searchParams.set("fields",fields);
+  endpoints.push(url);
+ }
+ const legacy=new URL("https://world.openfoodfacts.org/cgi/search.pl");
+ legacy.searchParams.set("search_terms",q);
+ legacy.searchParams.set("search_simple","1");
+ legacy.searchParams.set("action","process");legacy.searchParams.set("json","1");
+ legacy.searchParams.set("page_size","12");legacy.searchParams.set("fields",fields);
+ endpoints.push(legacy);
+ let products=[],lastError=null,foundHealthyResponse=false;
  try{
-  const url=new URL("https://world.openfoodfacts.org/cgi/search.pl");
-  url.searchParams.set("search_terms",q);
-  url.searchParams.set("search_simple","1");
-  url.searchParams.set("action","process");
-  url.searchParams.set("json","1");
-  url.searchParams.set("page_size","8");
-  url.searchParams.set("fields","code,product_name,product_name_sk,product_name_en,brands,serving_size,serving_quantity,serving_quantity_unit,product_quantity,product_quantity_unit,nutriments,image_front_small_url,image_small_url,image_front_url,image_url,selected_images,lang,lc");
-  const response=await fetch(url.toString(),{signal:ctrl.signal,headers:{Accept:"application/json"},cache:"no-store"});
-  if(!response.ok){
-   const error=new Error("Open Food Facts vrátilo "+response.status);
-   error.httpStatus=response.status;
-   throw error;
+  for(const url of endpoints){
+   if(token!==searchGeneration||ctrl.signal.aborted)return;
+   try{
+    const matches=await fetchOFFProducts(url,ctrl.signal);
+    foundHealthyResponse=true;
+    if(matches.length){products=matches;break}
+   }catch(e){lastError=e;if(e.name==="AbortError")break}
   }
-  const data=await response.json();
-  const products=Array.isArray(data.products)?data.products:[];
-  const mapped=products.filter(p=>p&&p.nutriments&&(p.product_name||p.product_name_sk||p.product_name_en))
-   .map(nutritionFromOFF)
-   .filter(p=>p.name&&p.kcal!==null&&validNum(p.kcal,0,2000)&&p.portion>0)
-   .slice(0,6);
-  rememberFoodSearch(q,mapped);
-  if(token===searchGeneration&&!$("foodOverlay").hidden&&normalizeTerm($("foodName").value)===typed)
-   renderFoodSuggestions(local,mapped,false);
- }catch(e){
   if(token!==searchGeneration)return;
-  // If the request timed out (not user-initiated), show a fallback instead of leaving the spinner forever.
-  // The legacy endpoint occasionally returns 503, and an IP shared by
-  // multiple family devices may hit the OFF rate limit.
-  if([429,500,502,503,504].includes(e.httpStatus))remoteSearchPauseUntil=Date.now()+45000;
-  console.warn("Open Food Facts vyhľadávanie:",e.message||e);
-  const message=local.length?"":"Nenačítali sa značkové produkty. Bežné jedlá fungujú; môžeš aj naskenovať čiarový kód.";
-  renderFoodSuggestions(local,[],false,message);
+  if(products.length){
+   rememberFoodSearch(q,products);
+   renderFoodSuggestions(local,products,false);
+  }else if(foundHealthyResponse){
+   // Do not persist an empty query for 24 h: database search availability varies.
+   renderFoodSuggestions(local,[],false,"Nenašli sa produkty pre tento názov. Skús iný názov alebo čiarový kód.");
+  }else{
+   if([429,500,502,503,504].includes(lastError?.httpStatus))remoteSearchPauseUntil=Date.now()+20000;
+   console.warn("Open Food Facts vyhľadávanie:",lastError?.message||"Nedostupné");
+   renderFoodSuggestions(local,[],false,"Databáza teraz neodpovedá. Ťukni na „Skúsiť znova“.");
+  }
  }finally{
   clearTimeout(timer);
   if(searchAbort===ctrl)searchAbort=null;
@@ -451,7 +474,7 @@ function foodNameChanged(){
  if(value.length<2){hideFoodSuggestions();$("foodSearchHelp").textContent="Začni písať a vyber jedlo z návrhov.";return}
  const local=findCommon(value);
  renderFoodSuggestions(local,[],normalizeTerm(value).length>=3);
- $("foodSearchHelp").textContent="Vyber jedlo zo zoznamu. Kalórie a porcia sa doplnia.";
+ $("foodSearchHelp").textContent="Vyhľadávam: "+value+". Po výbere sa vyplnia kalórie a porcia.";
  if(normalizeTerm(value).length<3)return;
  // Local suggestions are immediate; one online request only after typing stops.
  const wait=1650;
@@ -1390,6 +1413,18 @@ $("recentFoods").addEventListener("click",e=>{const b=e.target.closest("[data-re
 $("eggMinus").addEventListener("click",()=>{activeEggCount=Math.max(1,activeEggCount-1);recalculateEgg()});
 $("eggPlus").addEventListener("click",()=>{activeEggCount=Math.min(8,activeEggCount+1);recalculateEgg()});
 $("eggFatSelect").addEventListener("change",()=>{activeEggFat=$("eggFatSelect").value;recalculateEgg()});
+$("foodSuggestions").addEventListener("click",e=>{
+ if(!e.target.closest("#foodSearchRetry"))return;
+ const value=$("foodName").value.trim();
+ if(value.length<3)return;
+ clearTimeout(searchTimer);
+ if(searchAbort){searchAbort.abort();searchAbort=null}
+ const token=++searchGeneration;
+ const local=findCommon(value);
+ remoteSearchPauseUntil=0;
+ renderFoodSuggestions(local,[],true);
+ void remoteFoodSearch(value,token,local,{force:true});
+});
 $("foodSuggestions").addEventListener("pointerdown",e=>{const b=e.target.closest("[data-suggest]");if(b)e.preventDefault()});
 $("foodSuggestions").addEventListener("click",e=>{const b=e.target.closest("[data-suggest]");if(b)applyFoodSuggestion(suggestions[Number(b.dataset.suggest)])});
 $("foodForm").addEventListener("invalid",e=>{if($("foodDetails").contains(e.target))$("foodDetails").open=true},true);
