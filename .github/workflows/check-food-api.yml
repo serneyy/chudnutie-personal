@@ -16,6 +16,7 @@ jobs:
           socket.setdefaulttimeout(12)
           checks=[
             ("legacy", "https://world.openfoodfacts.org/cgi/search.pl?search_terms=protein&search_simple=1&action=process&json=1&page_size=2"),
+            ("forma_exact", "https://world.openfoodfacts.org/cgi/search.pl?search_terms=protein&search_simple=1&action=process&json=1&page_size=10&fields=code,product_name,product_name_sk,product_name_en,brands,serving_size,serving_quantity,serving_quantity_unit,product_quantity,product_quantity_unit,nutriments"),
             ("searchalicious", "https://search.openfoodfacts.org/search?q=protein&page_size=2&langs=sk,en"),
             ("searchalicious_post", "https://search.openfoodfacts.org/search"),
             ("v2_category", "https://world.openfoodfacts.org/api/v2/search?categories_tags_en=protein-bars&page_size=2&fields=code,product_name,brands,nutriments"),
