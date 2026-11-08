@@ -13,7 +13,7 @@ Ak web nie je aktívny, v **Settings → Pages → Deploy from a branch → main
 
 - **Dnes**: kalórie, cieľ, makrá, základné motivačné zobrazenie.
 - **Jedlá**: raňajky / desiata / obed / olovrant / večera, detailné živiny, úprava aj odstránenie.
-- **Skener**: automatické načítanie EAN cez kameru, alternatívny skenovací režim pre zariadenia bez natívneho rozpoznania, fotenie obalu a ručný EAN.
+- **Skener**: automatické načítanie EAN cez kameru, nezávislý ZXing-C++ dekodér WebAssembly (lokálne v repozitári), prepínanie kamery, fotenie obalu a ručný EAN.
 - **Open Food Facts**: doplnenie názvu produktu a živín na 100 g. Údaje si over podľa etikety.
 - **Plán**: TDEE, deficit, makrá, približný čas, fitko, chôdza a zápis aktivít.
 - **Progres**: záznamy váhy, trend, vzdialenosť od cieľa.
@@ -25,14 +25,14 @@ Ak web nie je aktívny, v **Settings → Pages → Deploy from a branch → main
 2. Dole klikni na žlté tlačidlo **Skenovať**.
 3. Pri prvom použití potvrď **Povoliť kameru**.
 4. Namier zadnú kameru na celý EAN čiarový kód s dostatočným svetlom. Skener **automaticky rozpozná číslice**, nespúšťa ukladanie fotografie na server.
-5. Ak sa nedarí, klikni **Alternatívny skener**, alebo **Odfotiť obal** (mobilný fotoaparát), prípadne napíš číslo EAN.
+5. Ak sa nedarí, klikni **Prepnúť kameru**, alebo **Odfotiť obal** (mobilný fotoaparát), prípadne napíš číslo EAN.
 6. Po nájdení produktu doplň **množstvo v gramoch** a over údaje podľa obalu.
 
 Foto režim potrebuje prístup k obrázku. Po odfotení sa lokálne pokúsi rozpoznať EAN. Appka **nevytvára nový čiarový kód produktu**; číta existujúci.
 
 ### Súčasné obmedzenia
 
-- Skenovanie v živom obraze vyžaduje HTTPS a povolenie kamery. iOS Safari nemusí podporovať natívne `BarcodeDetector`, vtedy sa používa HTML5 QR Code fallback.
+- Skenovanie v živom obraze vyžaduje HTTPS a povolenie kamery. iOS Safari nemusí podporovať natívne `BarcodeDetector`; preto je základom aj samostatný ZXing-C++ dekodér vo WebAssembly. Všetky obrazové dáta sa dekódujú lokálne.
 - Ak výrobok nie je v Open Food Facts alebo nemá kompletné makrá, hodnoty môžeš zadať ručne.
 - Pri prechode do iného prehliadača/na iné zariadenie sa lokálne dáta neprenesú. Stiahni zálohu v Nastaveniach.
 - Odporúčaný výdaj z cvičenia je len odhad a **nepripočítava sa** ku kalorickému rozpočtu.
@@ -44,6 +44,8 @@ Foto režim potrebuje prístup k obrázku. Po odfotení sa lokálne pokúsi rozp
 - `styles.css` – vzhľad pre mobil + desktop
 - `app.js` – dáta, kalorická kalkulačka, čítačka, import/export
 - `manifest.webmanifest` + `icon.svg` – pridanie na plochu telefónu
+- `vendor/zxing-reader.js` a `vendor/zxing_reader.wasm` – lokálny skener, bez externého CDN
+- `.github/workflows/vendor-scanner.yml` – verzovanie knižnice skenera
 - `tests/smoke.cjs` – automatizovaný mobilný browser test
 - `.github/workflows/validate.yml` – validácia po každom pushi
 
