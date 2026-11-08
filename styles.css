@@ -333,3 +333,29 @@ input,select,textarea{min-height:44px}
  .macro-card>strong{font-size:16px}
  .macro-card>small{font-size:10px}
 }
+
+
+/* FORMA v18: per-meal nutrition summary, no huge empty cards */
+.diary-group{margin-top:23px}
+.diary-head{margin-bottom:12px;align-items:center}
+.diary-head h2{font-size:18px}
+.diary-head button{min-height:44px;padding:10px 16px;font-size:13px}
+.diary-group .meal-totals{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:10px}
+.meal-total{min-width:0;background:#fff;border:1px solid #e0e8dc;border-radius:14px;padding:12px 7px 11px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px}
+.meal-total>span{font-size:10px;font-weight:800;line-height:1.15;color:#718174}
+.meal-total strong{font:800 17px/1.1 Manrope,sans-serif;white-space:nowrap;letter-spacing:-.55px;color:#253e30}
+.meal-total strong small{font-size:10px;font-weight:700;color:#849187;letter-spacing:0}
+.meal-total.calories{background:#f0f6e9;border-color:#dce9cf}
+.meal-total.calories strong{color:#345e35}
+.meal-total.protein strong{color:#4d8250}
+.meal-total.carbs strong{color:#5279b4}
+.meal-total.fat strong{color:#aa7847}
+.diary-group .meal-foods{margin-bottom:0;padding:15px 17px}
+.meal-empty{font-size:12px;color:#8b988d;line-height:1.45;text-align:center;border:1px dashed #dce7d7;background:#f9faf7;border-radius:12px;margin:0;padding:12px 10px}
+@media(max-width:365px){
+ .diary-group .meal-totals{gap:5px}
+ .meal-total{padding:10px 3px;border-radius:11px}
+ .meal-total>span{font-size:9px}
+ .meal-total strong{font-size:15px}
+ .meal-total strong small{font-size:9px}
+}
