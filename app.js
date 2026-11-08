@@ -10,7 +10,13 @@ const EXERCISES={gym:{name:"Fitko / silový tréning",met:3.5},walk:{name:"Sviž
 const DEFAULT={profile:{weight:94,height:189,target:88,age:22,sex:"male",activity:1.2,rate:.3},foods:[],weights:[],workouts:[]};
 let state=structuredCloneSafe(DEFAULT);
 let selectedDay=today,foodContextMeal="ranajky",activeView="home",toastTimer;
-let scanner=null,nativeStream=null,nativeTimer=null,nativeVideoActive=false,scannerRunning=false,scanSession=0,barcodeBusy=false;
+let nativeStream=null,nativeTimer=null,scanSession=0,barcodeBusy=false,frameInFlight=false;
+let cameraDevices=[],cameraIndex=0,requestedDeviceId=null,scanStartedAt=0,scanAttempts=0;
+let nativeDetector=null,zxingPromise=null,zxingReady=false,photoProcessing=false;
+const frameCanvas=document.createElement("canvas");
+const frameContext=frameCanvas.getContext("2d",{willReadFrequently:true});
+const BARCODE_FORMATS=["EAN13","EAN8","UPCA","UPCE","Code128","Code39","ITF"];
+const LIB_VERSION="3.1.6";
 const fmt=n=>Math.round(Number(n)||0).toLocaleString("sk-SK");
 const dec=n=>Number(n||0).toLocaleString("sk-SK",{maximumFractionDigits:1});
 const round=n=>Math.round(Number(n||0)*10)/10;
@@ -199,118 +205,269 @@ function exportData(){
  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="forma-zaloha-"+today+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 async function importData(file){if(!file)return;try{const data=normalize(JSON.parse(await file.text()));if(!confirm("Nahradiť všetky existujúce záznamy touto zálohou?"))return;state=data;save();render();notify("Záloha obnovená.")}catch(e){notify("Záloha je neplatná.")}}
-function scanMessage(message,isError=false){$("scanStatus").textContent=message;$("scanStatus").classList.toggle("error",isError)}
-function cameraPlaceholder(message,show=true){$("cameraPlaceholder").hidden=!show;if(show)$("cameraPlaceholder").querySelector("span").textContent=message}
-function scannerFormats(){const f=window.Html5QrcodeSupportedFormats;if(!f)return undefined;return [f.EAN_13,f.EAN_8,f.UPC_A,f.UPC_E,f.CODE_128,f.ITF,f.CODE_39].filter(x=>x!==undefined)}
+function scanMessage(message,isError=false){
+ $("scanStatus").textContent=message;$("scanStatus").classList.toggle("error",isError);
+}
+function cameraPlaceholder(message,show=true){
+ $("cameraPlaceholder").hidden=!show;
+ if(show)$("cameraPlaceholder").querySelector("span").textContent=message;
+}
 function isValidEAN(code){return /^\d{8,14}$/.test(String(code||"").trim())}
-async function loadScannerLibrary(){
- if(window.Html5Qrcode)return true;
- const sources=["https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js","https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"];
- for(const src of sources){
-  const ok=await new Promise(resolve=>{const script=document.createElement("script");script.src=src;script.onload=()=>resolve(!!window.Html5Qrcode);script.onerror=()=>resolve(false);document.head.appendChild(script)});
-  if(ok)return true;
+function errorText(error){
+ if(!error)return "Neznáma chyba.";
+ if(error.name==="NotAllowedError"||error.name==="PermissionDeniedError")return "Prístup ku kamere bol zamietnutý. Povoľ kameru v nastaveniach prehliadača.";
+ if(error.name==="NotFoundError"||error.name==="DevicesNotFoundError")return "Nenašla sa kamera. Môžeš nahrať fotografiu alebo zadať EAN ručne.";
+ if(error.name==="NotReadableError")return "Kamera je obsadená inou aplikáciou. Zavri ju a skús znova.";
+ return error.message||String(error);
+}
+function addScript(url){
+ return new Promise(resolve=>{
+  const script=document.createElement("script");
+  script.async=true;script.src=url;
+  script.onload=()=>resolve(!!(window.ZXingWASM&&window.ZXingWASM.readBarcodes));
+  script.onerror=()=>resolve(false);
+  document.head.appendChild(script);
+ });
+}
+async function getZxing(){
+ if(zxingReady&&window.ZXingWASM&&window.ZXingWASM.readBarcodes)return window.ZXingWASM;
+ if(zxingPromise)return zxingPromise;
+ zxingPromise=(async()=>{
+  const urls=[
+   "https://cdn.jsdelivr.net/npm/zxing-wasm@"+LIB_VERSION+"/dist/iife/reader/index.js",
+   "https://unpkg.com/zxing-wasm@"+LIB_VERSION+"/dist/iife/reader/index.js"
+  ];
+  if(!window.ZXingWASM?.readBarcodes){
+   let loaded=false;
+   for(const url of urls){if(await addScript(url)){loaded=true;break}}
+   if(!loaded)throw Error("Nepodarilo sa načítať knižnicu na rozpoznávanie kódov. Skontroluj pripojenie.");
+  }
+  // Load WebAssembly explicitly: this also lets us retry on another CDN.
+  const binaryUrls=[
+   "https://cdn.jsdelivr.net/npm/zxing-wasm@"+LIB_VERSION+"/dist/reader/zxing_reader.wasm",
+   "https://unpkg.com/zxing-wasm@"+LIB_VERSION+"/dist/reader/zxing_reader.wasm"
+  ];
+  let bytes=null;
+  for(const url of binaryUrls){
+   try{
+    const response=await fetch(url,{cache:"force-cache"});
+    if(response.ok){bytes=new Uint8Array(await response.arrayBuffer());if(bytes.byteLength>100000)break}
+   }catch(e){console.warn("WASM CDN:",errorText(e))}
+  }
+  if(!bytes||bytes.byteLength<=100000)throw Error("Nedá sa stiahnuť dekodér kódov. Skontroluj internet.");
+  if(typeof window.ZXingWASM.prepareZXingModule==="function"){
+   await window.ZXingWASM.prepareZXingModule({
+    overrides:{wasmBinary:bytes},
+    fireImmediately:true
+   });
+  }
+  zxingReady=true;
+  return window.ZXingWASM;
+ })().catch(error=>{
+  zxingPromise=null;
+  console.warn("ZXing WASM inicializácia:",error);
+  throw error;
+ });
+ return zxingPromise;
+}
+async function getNativeDetector(){
+ if(typeof window.BarcodeDetector!=="function")return null;
+ try{
+  const supported=await window.BarcodeDetector.getSupportedFormats();
+  const formats=["ean_13","ean_8","upc_a","upc_e","code_128","code_39","itf"].filter(x=>supported.includes(x));
+  return formats.length?new window.BarcodeDetector({formats}):null;
+ }catch(e){return null}
+}
+function foundBarcode(matches){
+ if(!Array.isArray(matches))return null;
+ for(const m of matches){
+  const code=String(m.text||m.rawValue||"").trim();
+  if(isValidEAN(code))return code;
  }
- return false;
+ return null;
 }
 async function stopCamera(){
- scanSession++;if(nativeTimer!==null){clearTimeout(nativeTimer);nativeTimer=null}
+ ++scanSession;
+ if(nativeTimer!==null){clearTimeout(nativeTimer);nativeTimer=null}
+ frameInFlight=false;
+ const video=$("cameraVideo");
+ video.pause();
+ video.srcObject=null;
  if(nativeStream){nativeStream.getTracks().forEach(t=>t.stop());nativeStream=null}
- $("cameraVideo").pause();$("cameraVideo").srcObject=null;nativeVideoActive=false;
- if(scanner){const s=scanner,active=scannerRunning;scanner=null;scannerRunning=false;try{if(active)await s.stop()}catch(e){}try{await s.clear()}catch(e){}}
- $("nativeCamera").hidden=false;$("html5Camera").hidden=true;
+ $("nativeCamera").hidden=false;
+ $("html5Camera").hidden=true;
 }
-function closeScan(){stopCamera();$("scanOverlay").hidden=true;bodyUnlock()}
+function closeScan(){
+ stopCamera();
+ $("scanOverlay").hidden=true;bodyUnlock();
+}
 function scanSuccess(code){
  if(barcodeBusy||!isValidEAN(code))return;
  barcodeBusy=true;
- scanMessage("Kód "+String(code).trim()+" rozpoznaný. Načítavam výživové hodnoty…");
- try{if(navigator.vibrate)navigator.vibrate(80)}catch(e){}
- stopCamera().then(async()=>{
-  $("scanOverlay").hidden=true;bodyUnlock();
-  await lookupCode(String(code).trim());
-  barcodeBusy=false;
- }).catch(()=>{barcodeBusy=false});
+ scanMessage("Kód rozpoznaný: "+code+". Hľadám produkt…");
+ try{navigator.vibrate?.(75)}catch(e){}
+ stopCamera();
+ $("scanOverlay").hidden=true;bodyUnlock();
+ lookupCode(String(code).trim()).finally(()=>{barcodeBusy=false});
 }
-async function startNative(token){
- if(!("BarcodeDetector" in window)||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return false;
- let formats;
- try{const available=await BarcodeDetector.getSupportedFormats();formats=["ean_13","ean_8","upc_a","upc_e","code_128","itf","code_39"].filter(f=>available.includes(f))}catch(e){formats=[]}
- if(!formats.length||token!==scanSession)return false;
- try{
-  const detector=new BarcodeDetector({formats});
-  nativeStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}});
-  if(token!==scanSession){nativeStream.getTracks().forEach(t=>t.stop());nativeStream=null;return false}
-  const video=$("cameraVideo");video.srcObject=nativeStream;await video.play();nativeVideoActive=true;cameraPlaceholder("",false);
-  scanMessage("Kamera aktívna. Namier čiarový kód do rámčeka, načíta sa automaticky.");
-  const tick=async()=>{
-   if(token!==scanSession||barcodeBusy||!nativeVideoActive)return;
-   try{
-    if(video.readyState>=2){const matches=await detector.detect(video);if(token!==scanSession)return;const found=matches.find(x=>isValidEAN(x.rawValue));if(found){scanSuccess(found.rawValue);return}}
-   }catch(e){console.warn("BarcodeDetector:",e)}
-   if(token===scanSession)nativeTimer=setTimeout(tick,180);
-  };
-  tick();return true;
- }catch(e){console.warn("Natívna kamera zlyhala:",e);if(nativeStream){nativeStream.getTracks().forEach(t=>t.stop());nativeStream=null}return false}
-}
-async function startFallback(token){
- if(token!==scanSession)return;
- cameraPlaceholder("Načítavam skener…");
- scanMessage("Spúšťam alternatívny kamerový skener…");
- const ok=await loadScannerLibrary();
- if(!ok||token!==scanSession){if(token===scanSession){cameraPlaceholder("Skener sa nenačítal.");scanMessage("Skener nie je dostupný. Použi možnosť Odfotiť obal alebo zadaj EAN ručne.",true)}return}
- $("nativeCamera").hidden=true;$("html5Camera").hidden=false;
- try{
-  scanner=new Html5Qrcode("html5Camera",{formatsToSupport:scannerFormats(),verbose:false});
-  const cfg={fps:12,qrbox:(w,h)=>({width:Math.floor(Math.min(290,w*.84)),height:Math.floor(Math.min(125,h*.55))}),disableFlip:true};
-  await scanner.start({facingMode:"environment"},cfg,decoded=>scanSuccess(decoded));
-  if(token!==scanSession){await stopCamera();return}
-  scannerRunning=true;cameraPlaceholder("",false);
-  scanMessage("Kamera je pripravená. Drž čiarový kód rovno v rámčeku, bez odleskov.");
- }catch(err){
-  console.warn("HTML5 skener:",err);
-  cameraPlaceholder("Prístup ku kamere zlyhal.");
-  scanMessage("Nepodarilo sa spustiť kameru. Povoľ prístup ku kamere v nastaveniach prehliadača alebo použi foto režim.",true);
+async function readFrame(){
+ if(!nativeStream||barcodeBusy||!frameContext)return null;
+ const video=$("cameraVideo");
+ if(video.readyState<2||!video.videoWidth||!video.videoHeight)return null;
+ const width=Math.min(1600,video.videoWidth);
+ const height=Math.round(video.videoHeight*width/video.videoWidth);
+ if(frameCanvas.width!==width||frameCanvas.height!==height){frameCanvas.width=width;frameCanvas.height=height}
+ frameContext.drawImage(video,0,0,width,height);
+ const pixels=frameContext.getImageData(0,0,width,height);
+ let code=null;
+ if(nativeDetector){
+  try{code=foundBarcode(await nativeDetector.detect(frameCanvas));if(code)return code}catch(e){nativeDetector=null}
  }
+ if(zxingReady&&window.ZXingWASM?.readBarcodes){
+  const hits=await window.ZXingWASM.readBarcodes(pixels,{formats:BARCODE_FORMATS,tryHarder:scanAttempts%3===2,maxNumberOfSymbols:2});
+  code=foundBarcode(hits);
+  if(code)return code;
+ }
+ return null;
+}
+function scanLoop(token){
+ if(token!==scanSession||barcodeBusy||$("scanOverlay").hidden)return;
+ if(frameInFlight)return;
+ frameInFlight=true;
+ (async()=>{
+  try{
+   const code=await readFrame();
+   if(token!==scanSession)return;
+   if(code){scanSuccess(code);return}
+   scanAttempts++;
+   if(scanAttempts===18)scanMessage("Stále hľadám kód. Drž obal 10–20 cm od kamery, bez odleskov.");
+   if(scanAttempts===45)scanMessage("Ak je kód veľmi malý, skús obal priblížiť, inak použi Odfotiť obal.");
+  }catch(e){
+   if(scanAttempts%8===0)console.warn("Čítanie obrazu:",e);
+   scanAttempts++;
+  }finally{
+   frameInFlight=false;
+   if(token===scanSession&&!barcodeBusy&&!$("scanOverlay").hidden)nativeTimer=setTimeout(()=>scanLoop(token),210);
+  }
+ })();
+}
+async function cameraList(){
+ try{
+  if(!navigator.mediaDevices?.enumerateDevices)return [];
+  const devices=await navigator.mediaDevices.enumerateDevices();
+  return devices.filter(d=>d.kind==="videoinput");
+ }catch(e){return []}
 }
 async function openScanner(){
  if(!$("scanOverlay").hidden)return;
- await stopCamera();$("scanOverlay").hidden=false;bodyLock();barcodeBusy=false;$("manualEAN").value="";
- cameraPlaceholder("Pripravujem kameru…");scanMessage("Žiadam povolenie pre kameru…");
- if(!window.isSecureContext){cameraPlaceholder("Vyžaduje sa HTTPS.");scanMessage("Kamera potrebuje zabezpečenú adresu HTTPS. GitHub Pages ju podporuje. Použi foto režim.",true);return}
- const token=scanSession;
- const native=await startNative(token);if(token!==scanSession)return;if(!native)await startFallback(token);
+ await stopCamera();
+ $("scanOverlay").hidden=false;bodyLock();barcodeBusy=false;requestedDeviceId=null;
+ await startCamera();
 }
-async function forceFallback(){
- await stopCamera();barcodeBusy=false;const token=scanSession;await startFallback(token);
+async function startCamera(){
+ await stopCamera();barcodeBusy=false;scanAttempts=0;nativeDetector=null;
+ cameraPlaceholder("Pripravujem zadnú kameru…");
+ scanMessage("Zapínam kameru…");
+ if(!window.isSecureContext){cameraPlaceholder("Kamera vyžaduje HTTPS.");scanMessage("Otvor GitHub Pages cez https:// a povoľ kameru.",true);return}
+ if(!navigator.mediaDevices?.getUserMedia){cameraPlaceholder("Prehliadač nepodporuje kameru.");scanMessage("Skús Safari alebo Chrome. Prípadne odfoť kód a načítaj fotografiu.",true);return}
+ const token=scanSession;
+ try{
+  const videoOptions=requestedDeviceId?{deviceId:{exact:requestedDeviceId},width:{ideal:1920},height:{ideal:1080}}:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}};
+  const stream=await navigator.mediaDevices.getUserMedia({audio:false,video:videoOptions});
+  if(token!==scanSession){stream.getTracks().forEach(t=>t.stop());return}
+  nativeStream=stream;
+  const video=$("cameraVideo");
+  video.srcObject=stream;
+  await video.play();
+  if(token!==scanSession)return;
+  cameraPlaceholder("",false);
+  cameraDevices=await cameraList();
+  scanMessage("Kamera beží. Pripravujem rozpoznávanie čiarového kódu…");
+  nativeDetector=await getNativeDetector();
+  if(token!==scanSession)return;
+  // The native browser detector is not reliable on every iPhone. Always load
+  // the independent WASM implementation too.
+  try{
+   await getZxing();
+  }catch(e){
+   if(!nativeDetector){
+    scanMessage(errorText(e)+" Môžeš použiť fotografiu alebo zadať EAN.",true);
+    return;
+   }
+  }
+  if(token!==scanSession)return;
+  scanStartedAt=Date.now();
+  scanMessage("Skenovanie je aktívne. Namier celý čiarový kód do rámčeka.");
+  scanLoop(token);
+ }catch(e){
+  if(token!==scanSession)return;
+  console.warn("Chyba kamery:",e);
+  cameraPlaceholder("Kameru sa nepodarilo spustiť.");
+  scanMessage(errorText(e),true);
+ }
+}
+async function switchCamera(){
+ if(cameraDevices.length<2)cameraDevices=await cameraList();
+ if(cameraDevices.length<2){
+  scanMessage("Na zariadení sa zistila len jedna kamera. Skús odfotiť kód alebo uprav vzdialenosť.",true);return;
+ }
+ const activeId=nativeStream?.getVideoTracks()[0]?.getSettings()?.deviceId;
+ let index=cameraDevices.findIndex(c=>c.deviceId===activeId);
+ index=(index+1)%cameraDevices.length;
+ requestedDeviceId=cameraDevices[index].deviceId;
+ await startCamera();
+}
+async function loadImageData(file){
+ const img=await createImageBitmap(file,{imageOrientation:"from-image"});
+ const max=2200;
+ const scale=Math.min(1,max/Math.max(img.width,img.height));
+ const canvas=document.createElement("canvas");
+ canvas.width=Math.max(1,Math.round(img.width*scale));
+ canvas.height=Math.max(1,Math.round(img.height*scale));
+ const context=canvas.getContext("2d",{willReadFrequently:true});
+ context.drawImage(img,0,0,canvas.width,canvas.height);
+ img.close?.();
+ return {canvas,context};
 }
 async function photoDecode(file){
  if(!file)return;
- await stopCamera();barcodeBusy=false;
- cameraPlaceholder("Spracúvam fotografiu…");scanMessage("Hľadám čiarový kód na fotografii…");
+ await stopCamera();
+ photoProcessing=true;
+ cameraPlaceholder("Rozpoznávam čiarový kód z fotografie…");
+ scanMessage("Načítavam fotografiu. Čakaj na výsledok rozpoznávania.");
  const token=scanSession;
  try{
-  if("BarcodeDetector" in window){
-   try{
-    const formats=await BarcodeDetector.getSupportedFormats();
-    const good=["ean_13","ean_8","upc_a","upc_e","code_128","itf","code_39"].filter(f=>formats.includes(f));
-    if(good.length){
-     const bitmap=await createImageBitmap(file),d=new BarcodeDetector({formats:good});
-     const codes=await d.detect(bitmap);bitmap.close&&bitmap.close();
-     if(token!==scanSession)return;
-     const hit=codes.find(x=>isValidEAN(x.rawValue));if(hit){scanSuccess(hit.rawValue);return}
-    }
-   }catch(e){console.warn("Foto native decode:",e)}
+  const decoder=await getZxing();
+  if(token!==scanSession)return;
+  let code=foundBarcode(await decoder.readBarcodes(file,{formats:BARCODE_FORMATS,tryHarder:true,maxNumberOfSymbols:4}));
+  if(!code){
+   const {canvas,context}=await loadImageData(file);
+   let pixels=context.getImageData(0,0,canvas.width,canvas.height);
+   code=foundBarcode(await decoder.readBarcodes(pixels,{formats:BARCODE_FORMATS,tryHarder:true,maxNumberOfSymbols:4}));
+   // Try additional orientations if the phone metadata or photo rotation is unusual.
+   for(const angle of [90,180,270]){
+    if(code||token!==scanSession)break;
+    const rotated=document.createElement("canvas");
+    rotated.width=angle%180?canvas.height:canvas.width;
+    rotated.height=angle%180?canvas.width:canvas.height;
+    const ctx=rotated.getContext("2d",{willReadFrequently:true});
+    ctx.translate(rotated.width/2,rotated.height/2);
+    ctx.rotate(angle*Math.PI/180);
+    ctx.drawImage(canvas,-canvas.width/2,-canvas.height/2);
+    pixels=ctx.getImageData(0,0,rotated.width,rotated.height);
+    code=foundBarcode(await decoder.readBarcodes(pixels,{formats:BARCODE_FORMATS,tryHarder:true,maxNumberOfSymbols:4}));
+   }
   }
-  if(!await loadScannerLibrary())throw Error("Knižnicu skenera sa nepodarilo načítať.");
   if(token!==scanSession)return;
-  $("html5Camera").hidden=false;$("nativeCamera").hidden=true;
-  const temp=new Html5Qrcode("html5Camera",{formatsToSupport:scannerFormats(),verbose:false});
-  let result;try{result=await temp.scanFileV2(file,true)}finally{try{await temp.clear()}catch(e){}}
+  if(code){scanSuccess(code);return}
+  scanMessage("Z fotografie sa čiarový kód nepodarilo prečítať. Odfotiť treba celý kód s bočnými bielymi okrajmi, ostro a bez odlesku.",true);
+  cameraPlaceholder("EAN sa nenašiel.");
+ }catch(e){
   if(token!==scanSession)return;
-  const code=typeof result==="string"?result:result&&result.decodedText;
-  if(!isValidEAN(code))throw Error("Na fotke sa nenašiel čitateľný EAN/UPC.");
-  scanSuccess(code);
- }catch(e){console.warn("Fotka:",e);if(token===scanSession){cameraPlaceholder("Čiarový kód sa nenašiel.");scanMessage("Na fotke sa nepodarilo nájsť kód. Skús ostrejšiu fotografiu celého kódu alebo zadaj EAN ručne.",true)}}
+  console.warn("Chyba foto dekódovania:",e);
+  scanMessage("Nepodarilo sa spracovať fotku: "+errorText(e),true);
+  cameraPlaceholder("Skenovanie fotky zlyhalo.");
+ }finally{photoProcessing=false}
 }
 async function lookupCode(code){
  const input=String(code||"").trim();
@@ -362,7 +519,7 @@ $("closeFood").addEventListener("click",closeFood);
 $("foodOverlay").addEventListener("click",e=>{if(e.target===$("foodOverlay"))closeFood()});
 $("closeScan").addEventListener("click",closeScan);
 $("scanOverlay").addEventListener("click",e=>{if(e.target===$("scanOverlay"))closeScan()});
-$("fallbackScan").addEventListener("click",forceFallback);
+$("fallbackScan").addEventListener("click",switchCamera);
 $("photoScan").addEventListener("click",()=>{$("barcodePhoto").click()});
 $("barcodePhoto").addEventListener("change",async e=>{const file=e.target.files[0];e.target.value="";if(file)await photoDecode(file)});
 $("manualLookup").addEventListener("click",async()=>{
