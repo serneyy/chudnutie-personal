@@ -71,6 +71,7 @@ const fs=require("node:fs");
     },png.toString("base64"));
     throw Error("Real photo barcode scan failed: "+await page.locator("#scanStatus").innerText()+" DEBUG="+JSON.stringify(debug))
   }
+  await page.waitForFunction(()=>document.querySelector("#foodName")?.value==="Testovací jogurt",{timeout:15000});
   assert.equal(await page.locator("#foodName").inputValue(),"Testovací jogurt");
   assert.equal(await page.locator("#fKcal").inputValue(),"180");
   assert.equal(await page.locator("#foodEAN").inputValue(),"3017624010701");
@@ -102,6 +103,7 @@ const fs=require("node:fs");
   await live.locator('[data-action="scan"]').click();
   try{await live.locator("#foodOverlay").waitFor({state:"visible",timeout:35000})}
   catch(e){throw Error("REAL live video decoding failed: "+await live.locator("#scanStatus").innerText())}
+  await live.waitForFunction(()=>document.querySelector("#foodName")?.value==="Testovací jogurt",{timeout:15000});
   assert.equal(await live.locator("#foodEAN").inputValue(),"3017624010701");
   assert.deepEqual(liveErrors,[],"Live browser runtime errors: "+liveErrors.join(" | "));
   console.log("PASS: REAL streaming barcode scan using Canvas MediaStream + ZXing WASM");
