@@ -1,8 +1,14 @@
 const assert=require("node:assert/strict");
 const {chromium}=require("playwright");
 const bwipjs=require("bwip-js");
+const fs=require("node:fs");
 (async()=>{
  const png=await bwipjs.toBuffer({bcid:"ean13",text:"301762401070",scale:4,height:27,includetext:false,padding:25});
+ const zxing=require("zxing-wasm/reader");
+ const wasmBytes=fs.readFileSync("node_modules/zxing-wasm/dist/reader/zxing_reader.wasm");
+ await zxing.prepareZXingModule({overrides:{wasmBinary:new Uint8Array(wasmBytes)},fireImmediately:true});
+ const nodeResults=await zxing.readBarcodes(new Uint8Array(png),{formats:["AllReadable"],tryHarder:true});
+ console.log("NODE BARCODE READ:",JSON.stringify(nodeResults.map(x=>({text:x.text,format:x.format}))));
  const browser=await chromium.launch({headless:true,args:["--use-fake-ui-for-media-stream","--use-fake-device-for-media-stream"]});
  const mockProduct=JSON.stringify({status:"success",product:{product_name:"Testovací jogurt",nutriments:{"energy-kcal_100g":180,"proteins_100g":8,"carbohydrates_100g":12,"fat_100g":9,"sugars_100g":7,"fiber_100g":1}}});
  async function setup(page){
@@ -52,7 +58,19 @@ const bwipjs=require("bwip-js");
   await page.locator("#scanOverlay").waitFor({state:"visible"});
   await page.locator("#barcodePhoto").setInputFiles({name:"real-ean13.png",mimeType:"image/png",buffer:png});
   try{await page.locator("#foodOverlay").waitFor({state:"visible",timeout:30000})}
-  catch(e){throw Error("Real photo barcode scan failed: "+await page.locator("#scanStatus").innerText())}
+  catch(e){
+    const debug=await page.evaluate(async raw=>{
+      const buffer=Uint8Array.from(atob(raw),c=>c.charCodeAt(0));
+      const reader=window.ZXingWASM;
+      if(!reader)return {error:"window.ZXingWASM absent"};
+      try{
+        const blob=new Blob([buffer],{type:"image/png"});
+        const all=await reader.readBarcodes(blob,{formats:["AllReadable"],tryHarder:true});
+        return {version:reader.ZXING_WASM_VERSION,all:all.map(x=>({text:x.text,format:x.format}))};
+      }catch(err){return {error:String(err)}}
+    },png.toString("base64"));
+    throw Error("Real photo barcode scan failed: "+await page.locator("#scanStatus").innerText()+" DEBUG="+JSON.stringify(debug))
+  }
   assert.equal(await page.locator("#foodName").inputValue(),"Testovací jogurt");
   assert.equal(await page.locator("#fKcal").inputValue(),"180");
   assert.equal(await page.locator("#foodEAN").inputValue(),"3017624010701");
