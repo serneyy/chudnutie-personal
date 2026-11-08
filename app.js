@@ -364,6 +364,23 @@ function findCommon(query){
   return score?{...item,id:"common:"+item.key,source:item.dish?"dish":"estimate",brand:"Orientačný údaj",fromLabel:false,_searchScore:score}:null;
  }).filter(Boolean).sort((a,b)=>b._searchScore-a._searchScore).slice(0,normalizeTerm(query)==="polievka"||normalizeTerm(query)==="polievky"?30:20);
 }
+// Keep the picker focused on search, recent meals and four one-tap foods.
+// All other items remain available through a single, optional category browser.
+function resetFoodCatalog(){
+ $("foodCatalog").open=false;
+ $("foodCatalogCategories").hidden=false;
+ $("foodCatalogActive").hidden=true;
+ $all("#foodCatalogActive .quick-dishes-expand").forEach(section=>{section.open=false});
+}
+function showFoodCatalogCategory(id,button){
+ const section=document.getElementById(id);
+ if(!section||!section.classList.contains("quick-dishes-expand")||!$("foodCatalogActive").contains(section))return;
+ $all("#foodCatalogActive .quick-dishes-expand").forEach(item=>{item.open=item===section});
+ $("foodCatalogTitle").textContent=button.querySelector("strong")?.textContent||"Jedlá";
+ $("foodCatalogCategories").hidden=true;
+ $("foodCatalogActive").hidden=false;
+ $("foodCatalogTitle").focus({preventScroll:true});
+}
 function renderQuickFoods(){
  const recent=[],seen=new Set();
  for(const f of state.foods.slice().reverse()){
@@ -1228,7 +1245,7 @@ function foodModal(options={}){
  setProductImage("","");
  $("foodTitle").textContent=options.product?"Načítavam produkt…":"Pridať jedlo";
  $("foodStep").textContent="JEDÁLNIČEK";
- $("quickDishesExpand").open=false;
+ resetFoodCatalog();
  $("foodSave").innerHTML='Uložiť jedlo '+icon("check");
  $("foodSave").disabled=Boolean(options.product);
  $("foodMeal").value=options.meal||preferredMeal();
@@ -1687,6 +1704,16 @@ $all("[data-dish-factor]").forEach(button=>button.addEventListener("click",()=>{
  const grams=Number(button.dataset.portionGrams);
  if(validNum(grams,50,3000)){$("foodGrams").value=grams;renderFoodPreview();updateFoodSaveState()}
 }));
+$("foodCatalogCategories").addEventListener("click",e=>{
+ const button=e.target.closest("button[data-food-category]");
+ if(button)showFoodCatalogCategory(button.dataset.foodCategory,button);
+});
+$("foodCatalogBack").addEventListener("click",()=>{
+ $("foodCatalogActive").hidden=true;
+ $("foodCatalogCategories").hidden=false;
+ $all("#foodCatalogActive .quick-dishes-expand").forEach(section=>{section.open=false});
+ $("foodCatalog").querySelector("summary").focus({preventScroll:true});
+});
 $("recentFoods").addEventListener("click",e=>{const b=e.target.closest("[data-recent-index]");if(b)applyFoodSuggestion(recentQuickFoods[Number(b.dataset.recentIndex)])});
 $("eggMinus").addEventListener("click",()=>{activeEggCount=Math.max(1,activeEggCount-1);recalculateEgg()});
 $("eggPlus").addEventListener("click",()=>{activeEggCount=Math.min(8,activeEggCount+1);recalculateEgg()});
