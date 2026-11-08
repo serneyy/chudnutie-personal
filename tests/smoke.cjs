@@ -12,6 +12,7 @@ const fs=require("node:fs");
  const browser=await chromium.launch({headless:true,args:["--use-fake-ui-for-media-stream","--use-fake-device-for-media-stream"]});
  const photoUrl="https://images.openfoodfacts.org/images/products/test-package.jpg";
  const mockProduct=JSON.stringify({status:"success",product:{product_name:"Testovací jogurt",image_front_small_url:photoUrl,nutriments:{"energy-kcal_100g":180,"proteins_100g":8,"carbohydrates_100g":12,"fat_100g":9,"sugars_100g":7,"fiber_100g":1}}});
+ const mockKinder=JSON.stringify({count:1,products:[{code:"4008400320328",product_name:"Kinder Bueno",brands:"Kinder",image_front_small_url:photoUrl,nutriments:{"energy-kcal_100g":572,"proteins_100g":8.6,"carbohydrates_100g":49.5,"fat_100g":37.3,"sugars_100g":41.2,"fiber_100g":3.4}}]});
  const mockSearch=JSON.stringify({count:1,products:[{code:"9876543210123",product_name:"Proteínové kakao",brands:"Testová značka",serving_size:"250 ml",serving_quantity:"250",serving_quantity_unit:"ml",image_front_small_url:photoUrl,nutriments:{"energy-kcal_100g":62,"proteins_100g":6,"carbohydrates_100g":7,"fat_100g":1.4,"sugars_100g":6.2,"fiber_100g":0.6}}]});
  async function setup(page){
   const errors=[];
@@ -19,7 +20,7 @@ const fs=require("node:fs");
   page.on("console",m=>{if(m.type()==="error")console.error("BROWSER:",m.text())});
   await page.route("https://world.openfoodfacts.org/**",r=>{
    const url=r.request().url(),broken=url.includes("serverfail");
-   return r.fulfill({status:broken?503:200,contentType:"application/json",headers:{"Access-Control-Allow-Origin":"*"},body:broken?'{"error":"temporarily unavailable"}':url.includes("/cgi/search.pl")?mockSearch:mockProduct});
+   return r.fulfill({status:broken?503:200,contentType:"application/json",headers:{"Access-Control-Allow-Origin":"*"},body:broken?'{"error":"temporarily unavailable"}':url.includes("/api/v2/search")&&url.includes("brands_tags=kinder")?mockKinder:url.includes("/cgi/search.pl")?mockSearch:mockProduct});
   });
   await page.route("https://images.openfoodfacts.org/**",r=>r.fulfill({status:200,contentType:"image/png",body:png}));
   await page.route(/fonts\.googleapis\.com|fonts\.gstatic\.com/,r=>r.abort());
@@ -259,11 +260,23 @@ const fs=require("node:fs");
   // The remote provider may return 503. Local suggestions must still work.
   await page.locator("#homeAdd").click();
   await page.locator("#foodName").fill("serverfail");
-  await page.waitForFunction(()=>document.getElementById("foodSuggestions")?.innerText?.includes("Nenačítali sa značkové produkty"),{timeout:25000});
-  assert((await page.locator("#foodSuggestions").innerText()).includes("naskenovať čiarový kód"));
+  await page.waitForFunction(()=>document.getElementById("foodSuggestions")?.innerText?.includes("Databáza teraz neodpovedá"),{timeout:25000});
+  assert(await page.locator("#foodSearchRetry").isVisible(),"Provide visible retry when API fails");
   await page.locator("#foodName").fill("proteín");
   await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible",timeout:7000});
   assert((await page.locator("#foodSuggestions").innerText()).includes("Proteínový prášok"),"Local foods remain usable during API outage");
+  await page.locator("#closeFood").click();
+  // Branded product search must work from structured API even when full-text 503s.
+  await page.locator("#homeAdd").click();
+  await page.locator("#foodName").fill("Kinder");
+  assert(await page.locator("#foodSuggestions").isVisible(),"Instant visual feedback while brand is loading");
+  assert((await page.locator("#foodSuggestions").innerText()).includes("Hľadám"),"User must not see a blank screen");
+  await page.waitForFunction(()=>document.getElementById("foodSuggestions")?.innerText?.includes("Kinder Bueno"),{timeout:12000});
+  assert((await page.locator("#foodSuggestions .food-suggestion-image").count())>=1,"Kinder should display package photo");
+  await page.locator("#foodSuggestions [data-suggest]").first().click();
+  assert.equal(await page.locator("#foodName").inputValue(),"Kinder Bueno");
+  assert.equal(await page.locator("#fKcal").inputValue(),"572");
+  assert(await page.locator("#selectedProductVisual").isVisible());
   await page.locator("#closeFood").click();
   // A known successful search should be cached in localStorage and survive reload.
   await page.reload({waitUntil:"domcontentloaded"});
