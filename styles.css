@@ -395,9 +395,9 @@ input,select,textarea{min-height:44px}
 
 
 /* FORMA v23: tappable nutrition breakdown and muscle-gain goal */
-#homeEnergyCard[data-nutrient],#homeMacros [data-nutrient],#homeExtras [data-nutrient],.meal-item[data-food-detail]{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .16s ease,box-shadow .16s ease}
-#homeEnergyCard[data-nutrient]:active,#homeMacros [data-nutrient]:active,#homeExtras [data-nutrient]:active,.meal-item[data-food-detail]:active{transform:scale(.986)}
-#homeEnergyCard[data-nutrient]:focus-visible,#homeMacros [data-nutrient]:focus-visible,#homeExtras [data-nutrient]:focus-visible,.meal-item[data-food-detail]:focus-visible{outline:3px solid #81b75a;outline-offset:3px}
+#homeEnergyCard .energy-main[data-nutrient],#homeMacros [data-nutrient],#homeExtras [data-nutrient],.meal-item[data-food-detail]{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .16s ease,box-shadow .16s ease}
+#homeEnergyCard .energy-main[data-nutrient]:active,#homeMacros [data-nutrient]:active,#homeExtras [data-nutrient]:active,.meal-item[data-food-detail]:active{transform:scale(.986)}
+#homeEnergyCard .energy-main[data-nutrient]:focus-visible,#homeMacros [data-nutrient]:focus-visible,#homeExtras [data-nutrient]:focus-visible,.meal-item[data-food-detail]:focus-visible{outline:3px solid #81b75a;outline-offset:3px}
 #homeEnergyCard button,#homeEnergyCard input{position:relative;z-index:1}
 .insight-overlay{z-index:1090;align-items:flex-end;justify-content:center}
 .insight-sheet{background:#f8faf6;border-radius:25px 25px 0 0;width:min(100%,540px);max-height:89dvh;overflow-y:auto;overscroll-behavior:contain;padding:22px 20px max(24px,env(safe-area-inset-bottom));box-shadow:0 -10px 40px #112c1b20}
