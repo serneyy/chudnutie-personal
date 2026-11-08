@@ -78,6 +78,28 @@ const COMMON_FOODS=[
 let suggestions=[],suggestionCursor=-1,searchTimer=null,searchAbort=null,searchGeneration=0,searchNetworkHistory=[],lastSearchAt=0,selectedFoodName="";
 let recentQuickFoods=[],activeDishPortion=null;
 const searchCache=new Map();
+const FOOD_SEARCH_CACHE_KEY="forma-off-search-cache-v1";
+const FOOD_SEARCH_CACHE_TTL_MS=24*60*60*1000;
+let remoteSearchPauseUntil=0;
+function getCachedFoodSearch(query){
+ const item=searchCache.get(query);
+ if(item&&Date.now()-item.ts<FOOD_SEARCH_CACHE_TTL_MS)return item.products;
+ return null;
+}
+function rememberFoodSearch(query,products){
+ searchCache.set(query,{ts:Date.now(),products});
+ const recent=[...searchCache.entries()].filter(([q,v])=>q.length<100&&Date.now()-v.ts<FOOD_SEARCH_CACHE_TTL_MS).slice(-25);
+ try{localStorage.setItem(FOOD_SEARCH_CACHE_KEY,JSON.stringify(recent))}catch(e){console.warn("Vyhľadávacia cache:",e)}
+}
+try{
+ const entries=JSON.parse(localStorage.getItem(FOOD_SEARCH_CACHE_KEY)||"[]");
+ if(Array.isArray(entries))for(const [q,v] of entries.slice(-25)){
+  if(typeof q==="string"&&v&&Array.isArray(v.products)&&Number.isFinite(v.ts)&&Date.now()-v.ts<FOOD_SEARCH_CACHE_TTL_MS){
+   searchCache.set(q,{ts:v.ts,products:v.products.slice(0,6)});
+  }
+ }
+}catch(e){console.warn("Cache produktov sa nepodarilo načítať:",e)}
+
 function normalizeTerm(value){
  return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
 }
@@ -226,37 +248,76 @@ function applyFoodSuggestion(item){
  renderFoodPreview();updateFoodSaveState();
 }
 async function remoteFoodSearch(query,token,local){
- const typed=normalizeTerm(query);const q=/^(capucino|kapucino|cappucino|kapuccino)$/.test(typed)?"cappuccino":typed;if(q.length<3)return;
- if(searchCache.has(q)){if(token===searchGeneration)renderFoodSuggestions(local,searchCache.get(q),false);return}
- const now=Date.now();searchNetworkHistory=searchNetworkHistory.filter(t=>now-t<60000);
- if(searchNetworkHistory.length>=8){if(token===searchGeneration)renderFoodSuggestions(local,[],false,"Databáza má limit vyhľadávania. Skús to znova neskôr.");return}
- searchNetworkHistory.push(now);lastSearchAt=now;
- searchAbort=new AbortController();const ctrl=searchAbort;
- const timer=setTimeout(()=>ctrl.abort(),9000);
+ const typed=normalizeTerm(query);
+ const q=/^(capucino|kapucino|cappucino|kapuccino)$/.test(typed)?"cappuccino":typed;
+ if(q.length<3||token!==searchGeneration)return;
+ const cached=getCachedFoodSearch(q);
+ if(cached!==null){
+  if(token===searchGeneration)renderFoodSuggestions(local,cached,false);
+  return;
+ }
+ const now=Date.now();
+ searchNetworkHistory=searchNetworkHistory.filter(t=>now-t<60000);
+ // OFF officially permits 10 searches / minute / IP; avoid making a request
+ // on every keystroke. Use max 3/min on this device and stagger requests.
+ const minDelay=Math.max(0,lastSearchAt+6500-now);
+ const windowDelay=searchNetworkHistory.length>=3?Math.max(0,searchNetworkHistory[0]+61000-now):0;
+ const outageDelay=Math.max(0,remoteSearchPauseUntil-now);
+ const delay=Math.max(minDelay,windowDelay,outageDelay);
+ if(delay>0){
+  // Local results remain available immediately. Do not lock the form or show
+  // an alarming "database down" status for a temporary API rate limit.
+  if(delay<8500){
+   searchTimer=setTimeout(()=>remoteFoodSearch(query,token,local),delay+120);
+   return;
+  }
+  if(token===searchGeneration){
+   const info=local.length?"":"Online vyhľadávanie je dočasne obmedzené. Skús to neskôr alebo naskenuj čiarový kód.";
+   renderFoodSuggestions(local,[],false,info);
+  }
+  return;
+ }
+ searchNetworkHistory.push(now);
+ lastSearchAt=now;
+ searchAbort=new AbortController();
+ const ctrl=searchAbort;
+ const timer=setTimeout(()=>ctrl.abort(),11000);
  try{
-  // Open Food Facts full text search is documented on its legacy Search API.
   const url=new URL("https://world.openfoodfacts.org/cgi/search.pl");
   url.searchParams.set("search_terms",q);
   url.searchParams.set("search_simple","1");
   url.searchParams.set("action","process");
   url.searchParams.set("json","1");
-  url.searchParams.set("page_size","10");
+  url.searchParams.set("page_size","8");
   url.searchParams.set("fields","code,product_name,product_name_sk,product_name_en,brands,serving_size,serving_quantity,serving_quantity_unit,product_quantity,product_quantity_unit,nutriments");
-  const response=await fetch(url.toString(),{signal:ctrl.signal,headers:{Accept:"application/json"}});
-  if(!response.ok)throw Error("API "+response.status);
+  const response=await fetch(url.toString(),{signal:ctrl.signal,headers:{Accept:"application/json"},cache:"no-store"});
+  if(!response.ok){
+   const error=new Error("Open Food Facts vrátilo "+response.status);
+   error.httpStatus=response.status;
+   throw error;
+  }
   const data=await response.json();
   const products=Array.isArray(data.products)?data.products:[];
-  const mapped=products.filter(p=>p&&p.product_name&&p.nutriments)
-   .map(nutritionFromOFF).filter(p=>p.name&&p.kcal!==null&&validNum(p.kcal,0,2000)&&p.portion>0)
+  const mapped=products.filter(p=>p&&p.nutriments&&(p.product_name||p.product_name_sk||p.product_name_en))
+   .map(nutritionFromOFF)
+   .filter(p=>p.name&&p.kcal!==null&&validNum(p.kcal,0,2000)&&p.portion>0)
    .slice(0,6);
-  searchCache.set(q,mapped);
+  rememberFoodSearch(q,mapped);
   if(token===searchGeneration&&!$("foodOverlay").hidden&&normalizeTerm($("foodName").value)===typed)
    renderFoodSuggestions(local,mapped,false);
  }catch(e){
   if(token!==searchGeneration)return;
-  if(e.name==="AbortError"&&ctrl.signal.aborted){renderFoodSuggestions(local,[],false,"Produkty sa nepodarilo načítať. Skús znova.");return}
-  renderFoodSuggestions(local,[],false,"Databáza je momentálne nedostupná. Bežné jedlá fungujú ďalej.");
- }finally{clearTimeout(timer);if(searchAbort===ctrl)searchAbort=null}
+  if(e.name==="AbortError"&&ctrl.signal.aborted)return;
+  // The legacy endpoint occasionally returns 503, and an IP shared by
+  // multiple family devices may hit the OFF rate limit.
+  if([429,500,502,503,504].includes(e.httpStatus))remoteSearchPauseUntil=Date.now()+45000;
+  console.warn("Open Food Facts vyhľadávanie:",e.message||e);
+  const message=local.length?"":"Nenačítali sa značkové produkty. Bežné jedlá fungujú; môžeš aj naskenovať čiarový kód.";
+  renderFoodSuggestions(local,[],false,message);
+ }finally{
+  clearTimeout(timer);
+  if(searchAbort===ctrl)searchAbort=null;
+ }
 }
 function foodNameChanged(){
  const value=$("foodName").value.trim();
@@ -278,7 +339,8 @@ function foodNameChanged(){
  renderFoodSuggestions(local,[],normalizeTerm(value).length>=3);
  $("foodSearchHelp").textContent="Vyber jedlo zo zoznamu. Kalórie a porcia sa doplnia.";
  if(normalizeTerm(value).length<3)return;
- const wait=Math.max(680,1250-(Date.now()-lastSearchAt));
+ // Local suggestions are immediate; one online request only after typing stops.
+ const wait=1650;
  searchTimer=setTimeout(()=>remoteFoodSearch(value,token,local),wait);
 }
 function foodNameKeys(e){
