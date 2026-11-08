@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 18
+# FORMA. Personal · verzia 20
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -42,6 +42,15 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Pozor na mililitre:** databáza môže uvádzať 100 g, ale nápoj sa zapisuje v ml; preto FORMA uvádza, že prepočet ml používa orientačnú konverziu 1 ml ≈ 1 g. Presný prepočet pri inom druhu nápoja závisí od hustoty a údajov na etikete.
 - **Rozdiel kcal a makrá:** kcal podľa etikety alebo databázy sa **neprepočítavajú nanovo zo vzorca 4/4/9**, pretože kalorická energia môže zohľadňovať vlákninu, polyoly a zákonné zaokrúhľovanie. Skontroluj hodnoty na obale, ak záznam databázy vyzerá nezvyčajne.
 - **Čo test neoverí:** kvalitu nutričných údajov každého externého produktu ani presnú hmotnosť receptu z reštaurácie. Výpočtové pravidlo je overené, ale správnosť vstupu závisí od etikety/databázy.
+
+## Cloudflare Worker a automatické GitHub zálohy
+
+- Source servera: `cloudflare/forma-github-sync.js`. Určený **výhradne** na nový Cloudflare Worker `forma-github-sync` v existujúcom účte s workers.dev subdoménou `threadid`. **Nemení** existujúce Workers, ich DNS, routes ani konfiguráciu.
+- Server používa URL `https://forma-github-sync.threadid.workers.dev`. GET `/health` vráti, či je nakonfigurovaný serverový GitHub token `GITHUB_TOKEN`. GET a POST `/profiles` načítavajú a ukladajú `data/forma-family.json` v repozitári `serneyy/chudnutie-personal`. Server zlúči profily podľa `updatedAt` a opakuje zápis pri konfliktoch GitHub SHA.
+- **V prehliadači nie je GitHub PAT**, žiadne prihlasovanie do GitHubu ani formulár s tokenom. Nastavenie secretu sa robí raz v Cloudflare Worker Settings → Variables and Secrets → Add secret. Hodnota: GitHub fine-grained PAT obmedzený na `serneyy/chudnutie-personal` s `Contents: Read and write`. Secret sa nesmie commitovať.
+- **Dôležité:** nasadenie Cloudflare Worker cez pripojený ChatGPT nástroj bolo odmietnuté bezpečnostnou kontrolou. Kým worker nie je manuálne nasadený a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
+- Prvá synchronizácia lokálne dáta nevymaže; profily sa zlúčia podľa času poslednej úpravy, pri zlyhaní servera sa zachovajú v `localStorage`. Mobilné testy simulujú dve zariadenia a nedostupný server.
+- Upozornenie: verejný GitHub repo umožňuje komukoľvek prezerať údaje v histórii commitov. Endpoint POST nie je autentifikovaný na strane používateľa (požiadavka na rodinný prototyp); CORS/Origin nie je bezpečnostné overenie klienta, takže endpoint nie je vhodný pre produkčné osobné údaje.
 
 ## Denník: výživové súčty podľa jedla
 
