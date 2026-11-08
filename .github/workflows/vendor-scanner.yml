@@ -1,0 +1,39 @@
+name: Pridanie lokalneho WASM skenera
+on:
+  push:
+    paths:
+      - '.github/workflows/vendor-scanner.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  vendor:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Stiahnut ZXing WASM z npm a ulozit lokalne
+        run: |
+          set -eu
+          mkdir -p vendor /tmp/zxing-dist
+          cd /tmp/zxing-dist
+          npm pack zxing-wasm@3.1.6 --silent > package-name.txt
+          tar -xzf "$(cat package-name.txt)"
+          cp package/dist/iife/reader/index.js "$GITHUB_WORKSPACE/vendor/zxing-reader.js"
+          cp package/dist/reader/zxing_reader.wasm "$GITHUB_WORKSPACE/vendor/zxing_reader.wasm"
+          ls -lh "$GITHUB_WORKSPACE/vendor"
+      - name: Commitnut vlastne assets ak su nove
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vendor/zxing-reader.js vendor/zxing_reader.wasm
+          if git diff --cached --quiet; then
+            echo "Scanner assets unchanged"
+          else
+            git commit -m "build: self-host ZXing WASM for reliable barcode scanning"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
