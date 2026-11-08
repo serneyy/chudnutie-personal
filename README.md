@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 10
+# FORMA. Personal · verzia 11
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -41,7 +41,7 @@ Ak web nie je aktívny, v **Settings → Pages → Deploy from a branch → main
 - **Dnes**: kalórie, cieľ, makrá, základné motivačné zobrazenie.
 - **Jedlá**: raňajky / desiata / obed / olovrant / večera, návrhy pri písaní, detailné živiny, úprava aj odstránenie.
 - **Skener**: automatické načítanie EAN cez kameru, nezávislý ZXing-C++ dekodér WebAssembly (lokálne v repozitári), prepínanie kamery, fotenie obalu a ručný EAN.
-- **Open Food Facts**: textové vyhľadávanie značkových výrobkov cez legacy search API, vyhľadanie EAN, údaje na 100 g a porcia z etikety, ak existuje. Výsledky sú obmedzené kvôli limitom API.
+- **Open Food Facts**: textové vyhľadávanie značkových výrobkov cez legacy search API, vyhľadanie EAN, údaje na 100 g a porcia z etikety, ak existuje. Vyhľadávanie po dopísaní textu je spomalené, obmedzené na 3 požiadavky za minútu na zariadenie a úspešné výsledky sa na 24 hodín ukladajú lokálne. Pri 503/429 majú prednosť lokálne jedlá a skener čiarových kódov.
 - **Bežné jedlá**: prednastavené orientačné hodnoty napr. cappuccino s polotučným mliekom a porcia 180 ml, banán alebo ryža. Odhad nie je údaj od výrobcu.
 - **Plán**: TDEE, deficit, makrá, približný čas, fitko, chôdza a zápis aktivít.
 - **Progres**: záznamy váhy, trend, vzdialenosť od cieľa.
