@@ -155,17 +155,17 @@
       "id": "72ad0033-2104-47de-9991-e3665e8f1cfd",
       "name": "Môj pôvodný profil",
       "createdAt": "2026-11-08",
-      "updatedAt": "",
+      "updatedAt": "2026-11-08T21:53:27.392Z",
       "password": null,
       "data": {
         "profile": {
-          "weight": 93,
+          "weight": 94,
           "target": 88,
           "height": 189,
           "age": 22,
           "sex": "male",
           "activity": 1.2,
-          "rate": 0.4,
+          "rate": 0.3,
           "mode": "lose",
           "gainRate": "moderate",
           "lossTarget": 88
