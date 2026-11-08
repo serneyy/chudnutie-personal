@@ -352,8 +352,9 @@ function renderFoodSuggestions(local=[],remote=[],loading=false,error=""){
   return '<button type="button" class="food-suggestion" role="option" aria-selected="false" data-suggest="'+index+'"><span class="food-suggestion-icon '+(item.source==="off"?"remote":"")+'">'+(foodImageMarkup(item.image,"food-suggestion-image")||(item.unit==="ml"?"☕":"◉"))+'</span><span class="food-suggestion-body"><span class="food-suggestion-title">'+escapeHTML(item.name)+'</span><span class="food-suggestion-meta">'+escapeHTML(text)+' · '+fmt(item.portion)+' '+item.unit+'</span></span><span class="food-suggestion-calories">'+(item.kcal==null?"Doplniť":fmt(item.kcal*item.portion/100)+" kcal")+'</span></button>';
  };
  let html="";
- const localItems=suggestions.filter(x=>x.source==="estimate"||x.source==="dish"||x.source==="recipe"),remoteItems=suggestions.filter(x=>x.source==="off");
+ const localItems=suggestions.filter(x=>x.source==="estimate"||x.source==="dish"||x.source==="recipe"),recentItems=suggestions.filter(x=>x.source==="recent"),remoteItems=suggestions.filter(x=>x.source==="off");
  if(localItems.length)html+='<div class="food-suggestions-heading">Jedlá a nápoje (orientačné údaje)</div>'+localItems.map(x=>row(x,suggestions.indexOf(x))).join("");
+ if(recentItems.length)html+='<div class="food-suggestions-heading">Tvoje zapísané jedlá</div>'+recentItems.map(x=>row(x,suggestions.indexOf(x))).join("");
  if(remoteItems.length)html+='<div class="food-suggestions-heading">Konkrétne výrobky z databázy</div>'+remoteItems.map(x=>row(x,suggestions.indexOf(x))).join("");
  if(loading)html+='<div class="food-search-empty">Hľadám v online katalógu…</div>';
  if(!loading&&error)html+='<div class="food-search-empty">'+escapeHTML(error)+'</div><button type="button" class="food-search-retry" id="foodSearchRetry">Skúsiť znova vyhľadať <span>↻</span></button>';
