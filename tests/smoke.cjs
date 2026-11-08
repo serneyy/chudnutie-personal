@@ -49,6 +49,20 @@ const fs=require("node:fs");
   await page.locator("#profileOverlay").waitFor({state:"hidden"});
   assert.equal((await page.locator("#homeCalories").innerText()).trim(),"0");
   assert.equal((await page.locator("#profileHeaderBtn").innerText()).trim(),"D");
+  assert.equal(await page.locator("#cloudHomeStatus").count(),0,"GitHub save status should appear in Settings only");
+  await page.locator('[data-nav="settings"]').first().click();
+  await page.locator("#renameProfileBtn").click();
+  assert(await page.locator("#profileRenameForm").isVisible(),"Rename form must be inline");
+  await page.locator("#profileRenameInput").fill("Dano");
+  await page.locator("#profileRenameSave").click();
+  assert.equal(await page.locator("#currentProfileLabel").innerText(),"Dano");
+  await page.locator("#renameProfileBtn").click();
+  await page.locator("#profileRenameInput").fill("Daniel");
+  await page.locator("#profileRenameSave").click();
+  assert.equal(await page.locator("#currentProfileLabel").innerText(),"Daniel");
+  assert(await page.locator("#githubSyncStatus").isVisible(),"GitHub status remains accessible in Settings");
+  await page.locator('[data-nav="home"]').first().click();
+
   assert.equal(await page.locator("#homeMacros .nutrient-ring").count(),3,"Three macros need circular progress");
   assert.equal(await page.locator("#homeExtras .nutrient-ring").count(),2,"Sugar and fiber need circular progress");
   assert.equal(await page.locator("#homeMacros .nutrient-ring.protein .nutrient-ring-center strong").innerText(),"114");
@@ -254,6 +268,7 @@ const fs=require("node:fs");
   assert(dishes.includes("Chicken tikka masala bez ryže"));
   await page.locator("#closeFood").click();
   await page.locator("#homeAdd").click();
+  await page.locator("#quickDishesExpand summary").click();
   await page.locator('[data-quick-food="tikka_rice"]').click();
   assert.equal(await page.locator("#foodName").inputValue(),"Chicken tikka masala s ryžou");
   assert(await page.locator("#dishPortions").isVisible());
@@ -449,7 +464,26 @@ const fs=require("node:fs");
   await page.locator('#profileList [data-profile-select]').filter({hasText:"Mama"}).click();
   assert((await page.locator("#homeMealList").innerText()).includes("Skyr biely"),"First phone downloads Mom's meal");
   await second.close();
-  console.log("PASS: token-free Worker health gate, autosave, and two-device family sync");
+  // Logout only removes active selection, not the profile or saved diary, including
+  // when the cloud synchronizer still runs.
+  await page.locator('[data-nav="settings"]').first().click();
+  await page.locator("#logoutProfileBtn").click();
+  assert(await page.locator("#profileOverlay").isVisible(),"Logout shows profile picker");
+  assert((await page.locator("#profileList").innerText()).includes("Daniel"),"Logout must preserve profiles");
+  const foodsBeforeLogout=cloudState.profiles.find(p=>p.name==="Daniel").data.foods.length;
+  await page.reload({waitUntil:"domcontentloaded"});
+  assert(await page.locator("#profileOverlay").isVisible(),"Logged-out session should not auto-login after reload");
+  await page.locator('#profileList [data-profile-select]').filter({hasText:"Daniel"}).click();
+  assert(!await page.locator("#profileOverlay").isVisible());
+  assert.equal((await page.locator("#homeMealList").innerText()).includes("Banán"),true,"Logout must retain diary");
+  assert.equal(cloudState.profiles.find(p=>p.name==="Daniel").data.foods.length,foodsBeforeLogout);
+  await page.locator("#homeAdd").click();
+  assert(!await page.locator("#quickDishesExpand").evaluate(el=>el.open),"Extra dishes collapsed by default");
+  assert(await page.locator('[data-quick-food="banana"]').isVisible(),"Common foods remain one tap");
+  await page.locator("#quickDishesExpand summary").click();
+  assert(await page.locator('[data-quick-food="tikka_rice"]').isVisible(),"Full dishes accessible on demand");
+  await page.locator("#closeFood").click();
+  console.log("PASS: Worker sync, profile rename/logout persistence and compact food UX");
 
   await context.close();
  }finally{await browser.close()}
