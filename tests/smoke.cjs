@@ -234,6 +234,43 @@ const fs=require("node:fs");
   const cacheEntries=await page.evaluate(()=>JSON.parse(localStorage.getItem("forma-off-search-cache-v1")||"[]"));
   assert(cacheEntries.some(([key,entry])=>key==="kakao"&&entry.products?.some(p=>p.name==="Proteínové kakao")),"Successful OFF search must be persisted locally");
   await page.locator("#closeFood").click();
+
+  // Scrambled eggs: native recipe query with count in Slovak, optional frying fat.
+  await page.locator("#homeAdd").click();
+  await page.locator("#foodName").fill("praženica z 3 vajíčok");
+  await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible",timeout:5000});
+  assert((await page.locator("#foodSuggestions").innerText()).includes("Praženica z 3 vajec"));
+  await page.locator("#foodSuggestions [data-suggest]").first().click();
+  assert(await page.locator("#eggRecipe").isVisible());
+  assert(await page.locator("#amountControls").isHidden());
+  assert.equal(await page.locator("#eggCountText").innerText(),"3");
+  assert.equal(await page.locator("#eggFatSelect").inputValue(),"none");
+  assert.equal(await page.locator("#foodGrams").inputValue(),"150");
+  assert.equal((await page.locator("#foodPreviewCalories").innerText()).trim(),"216 kcal");
+  await page.locator("#eggFatSelect").selectOption("butter5");
+  assert.equal((await page.locator("#foodPreviewCalories").innerText()).trim(),"252 kcal");
+  await page.locator("#eggPlus").click();
+  assert.equal(await page.locator("#eggCountText").innerText(),"4");
+  assert.equal((await page.locator("#foodPreviewCalories").innerText()).trim(),"324 kcal");
+  await page.locator("#eggMinus").click();
+  assert.equal(await page.locator("#eggCountText").innerText(),"3");
+  await page.locator("#eggFatSelect").selectOption("oil5");
+  assert.equal((await page.locator("#foodPreviewCalories").innerText()).trim(),"261 kcal");
+  await page.locator("#eggFatSelect").selectOption("butter5");
+  await page.locator("#foodSave").click();
+  assert.equal(Number((await page.locator("#homeCalories").innerText()).replace(/[^0-9]/g,"")),1573);
+  await page.locator('[data-nav="diary"]').first().click();
+  assert((await page.locator("#diarySections").innerText()).includes("Praženica z 3 vajec"));
+  await page.locator("#diarySections [data-edit-food]").first().click();
+  assert(await page.locator("#eggRecipe").isVisible(),"Editing an egg recipe should preserve its controls");
+  assert.equal(await page.locator("#eggFatSelect").inputValue(),"butter5");
+  await page.locator("#closeFood").click();
+  await page.locator('[data-nav="home"]').first().click();
+  await page.locator("#homeAdd").click();
+  await page.locator('[data-quick-food="scrambled_eggs"]').click();
+  assert(await page.locator("#eggRecipe").isVisible(),"Quick pick scrambled eggs should open egg counter");
+  await page.locator("#closeFood").click();
+
   assert.deepEqual(errors,[],"Browser errors (photo): "+errors.join(" | "));
   console.log("PASS: layout, calorie logging, diary, plan, weight, persistence, REAL EAN13 photo via WebAssembly");
 
