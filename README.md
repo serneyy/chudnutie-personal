@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 17
+# FORMA. Personal · verzia 18
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -42,6 +42,13 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Pozor na mililitre:** databáza môže uvádzať 100 g, ale nápoj sa zapisuje v ml; preto FORMA uvádza, že prepočet ml používa orientačnú konverziu 1 ml ≈ 1 g. Presný prepočet pri inom druhu nápoja závisí od hustoty a údajov na etikete.
 - **Rozdiel kcal a makrá:** kcal podľa etikety alebo databázy sa **neprepočítavajú nanovo zo vzorca 4/4/9**, pretože kalorická energia môže zohľadňovať vlákninu, polyoly a zákonné zaokrúhľovanie. Skontroluj hodnoty na obale, ak záznam databázy vyzerá nezvyčajne.
 - **Čo test neoverí:** kvalitu nutričných údajov každého externého produktu ani presnú hmotnosť receptu z reštaurácie. Výpočtové pravidlo je overené, ale správnosť vstupu závisí od etikety/databázy.
+
+## Denník: výživové súčty podľa jedla
+
+- Raňajky, desiata, obed, olovrant, večera a ostatné zobrazujú oddelene **kalórie, bielkoviny, sacharidy a tuky**.
+- Každý súčet sa vyráta zo všetkých zapísaných potravín v príslušnej kategórii a zvolenom dni. Hodnoty sa po pridaní, úprave alebo odstránení jedla aktualizujú.
+- Pri prázdnej kategórii sú súčty nulové a veľký prázdny biely blok je nahradený úzkou správou. Pôvodné tlačidlá „+ Pridať“ zostávajú.
+- Nezmenené: uložené údaje, makrá výrobkov, jedálniček ani celkové denné hodnoty.
 
 ## Domovská stránka: kruhové ciele a pohyb
 
