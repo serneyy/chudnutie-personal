@@ -152,6 +152,35 @@
         "weights": [],
         "workouts": []
       }
+    },
+    {
+      "id": "fa41dc56-6260-4c9d-932e-e0058f5cf584",
+      "name": "Domko",
+      "createdAt": "2026-11-08",
+      "updatedAt": "2026-11-08T22:02:49.013Z",
+      "password": {
+        "algorithm": "PBKDF2-SHA256",
+        "iterations": 210000,
+        "salt": "6ef70f7749313dcf6bd79a9ee7755504",
+        "hash": "2eaa7c1f4b4501559e17e6b773c3bf1891924008a0ed9ccabc7b8d597736f570"
+      },
+      "data": {
+        "profile": {
+          "weight": 75,
+          "target": 80,
+          "height": 197,
+          "age": 21,
+          "sex": "male",
+          "activity": 1.2,
+          "rate": 0.3,
+          "mode": "gain",
+          "gainRate": "moderate",
+          "lossTarget": 80
+        },
+        "foods": [],
+        "weights": [],
+        "workouts": []
+      }
     }
   ]
 }
