@@ -506,10 +506,10 @@ function uid(){return crypto&&crypto.randomUUID?crypto.randomUUID():Date.now()+"
 function structuredCloneSafe(o){return JSON.parse(JSON.stringify(o))}
 function validNum(x,min,max){const n=Number(x);return x!==null&&x!==""&&Number.isFinite(n)&&n>=min&&n<=max}
 function validDate(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(String(s)))return false;const d=new Date(s+"T12:00:00");return !Number.isNaN(d.valueOf())&&dateLocal(d)===s}
-function validProfile(p){return p&&validNum(p.weight,35,300)&&validNum(p.target,35,300)&&validNum(p.height,120,230)&&validNum(p.age,18,95)&&["male","female"].includes(p.sex)&&[1.2,1.375,1.55,1.725].includes(Number(p.activity))&&[.25,.3,.4,.5,.65,.75].includes(Number(p.rate))&&(!p.mode||["lose","maintain"].includes(p.mode))}
+function validProfile(p){return p&&validNum(p.weight,35,300)&&validNum(p.target,35,300)&&validNum(p.height,120,230)&&validNum(p.age,18,95)&&["male","female"].includes(p.sex)&&[1.2,1.375,1.55,1.725].includes(Number(p.activity))&&[.25,.3,.4,.5,.65,.75].includes(Number(p.rate))&&(!p.mode||["lose","maintain","gain"].includes(p.mode))}
 function normalize(input){
  if(!input||!validProfile(input.profile)||!Array.isArray(input.foods)||!Array.isArray(input.weights)||!Array.isArray(input.workouts))throw Error("Neplatný súbor údajov.");
- const p=input.profile;const obj={profile:{weight:+p.weight,target:+p.target,height:+p.height,age:+p.age,sex:p.sex,activity:+p.activity,rate:+p.rate,mode:p.mode==="maintain"?"maintain":"lose",lossTarget:validNum(p.lossTarget,35,300)?+p.lossTarget:+p.target},foods:[],weights:[],workouts:[]};
+ const p=input.profile;const obj={profile:{weight:+p.weight,target:+p.target,height:+p.height,age:+p.age,sex:p.sex,activity:+p.activity,rate:+p.rate,mode:["maintain","gain"].includes(p.mode)?p.mode:"lose",lossTarget:validNum(p.lossTarget,35,300)?+p.lossTarget:+p.target},foods:[],weights:[],workouts:[]};
  obj.foods=input.foods.slice(0,20000).filter(x=>x&&typeof x.name==="string"&&x.name.length<=100&&validDate(x.date)&&MEALS.some(m=>m[0]===x.meal)&&validNum(x.grams,1,10000)&&["kcal","protein","carbs","fat","sugar"].every(k=>validNum(x[k],0,200000))).map(x=>({id:String(x.id||uid()).slice(0,100),name:x.name,date:x.date,meal:x.meal,grams:+x.grams,kcal:+x.kcal,protein:+x.protein,carbs:+x.carbs,fat:+x.fat,sugar:+x.sugar,fiber:validNum(x.fiber,0,200000)?+x.fiber:null,code:String(x.code||"").slice(0,16),image:safeFoodImage(x.image),unit:x.unit==="ml"?"ml":"g",dish:Boolean(x.dish),eggCount:validNum(x.eggCount,1,8)?Number(x.eggCount):null,eggFat:Object.hasOwn(EGG_EXTRA_FATS,x.eggFat)?x.eggFat:"none"}));
  obj.weights=input.weights.slice(0,10000).filter(x=>x&&validDate(x.date)&&validNum(x.kg,35,300)).map(x=>({date:x.date,kg:+x.kg}));
  obj.workouts=input.workouts.slice(0,10000).filter(x=>x&&validDate(x.date)&&EXERCISES[x.type]&&validNum(x.minutes,1,480)).map(x=>({id:String(x.id||uid()).slice(0,100),type:x.type,date:x.date,minutes:+x.minutes}));
@@ -792,26 +792,27 @@ function preferredMeal(hour=new Date().getHours()){
  return "ine";
 }
 function plan(){
- const p=state.profile,maintain=p.mode==="maintain";
+ const p=state.profile,maintain=p.mode==="maintain",gain=p.mode==="gain",activeWeight=lastWeight();
  const bmr=10*p.weight+6.25*p.height-5*p.age+(p.sex==="male"?5:-161);
  const tdee=bmr*p.activity,floor=p.sex==="male"?1600:1400;
- const desired=maintain?tdee:tdee-p.rate*7700/7;
- const calories=maintain?Math.round(tdee/50)*50:Math.max(floor,Math.round(Math.max(floor,desired)/50)*50);
- // Pri sedavom dni nema zmysel vyzadovat rovnakych 1,6 g/kg ako pri silovom treningu.
- // Chudnutie: 1,3–1,6 g/kg cielovej vahy, udrziavanie: 1,2–1,6 g/kg aktualnej vahy.
+ // A modest surplus is an initial estimate, not a guarantee of muscle gain.
+ const surplus=gain?250:0;
+ const desired=gain?tdee+surplus:maintain?tdee:tdee-p.rate*7700/7;
+ const calories=gain?Math.round(desired/50)*50:maintain?Math.round(tdee/50)*50:Math.max(floor,Math.round(Math.max(floor,desired)/50)*50);
  const activity=Number(p.activity);
- const proteinRate=maintain?
+ const proteinRate=gain?1.8:maintain?
    (activity>=1.725?1.6:activity>=1.55?1.5:activity>=1.375?1.3:1.2):
    (activity>=1.55?1.6:activity>=1.375?1.4:1.3);
- const protein=Math.round((maintain?p.weight:p.target)*proteinRate);
- const fat=Math.round((maintain?p.weight:p.target)*.8);
+ const protein=Math.round((gain?activeWeight:maintain?p.weight:p.target)*proteinRate);
+ const fat=Math.round((gain?activeWeight:maintain?p.weight:p.target)*.8);
  const carbs=Math.max(0,Math.round((calories-protein*4-fat*9)/4));
- const deficit=maintain?0:Math.max(0,tdee-calories),rate=deficit*7/7700;
- const remaining=maintain?0:Math.max(0,lastWeight()-p.target);
+ const deficit=maintain?0:gain?-(calories-tdee):Math.max(0,tdee-calories);
+ const rate=gain?Math.max(0,(calories-tdee)*7/7700):maintain?0:Math.max(0,deficit*7/7700);
+ const remaining=maintain?0:gain?Math.max(0,p.target-activeWeight):Math.max(0,activeWeight-p.target);
  const weeks=maintain?null:remaining===0?0:rate>0?Math.ceil(remaining/rate):null;
- return {bmr,tdee,calories,protein,proteinRate,fat,carbs,deficit,rate,remaining,weeks,maintain,fiber:25,
+ return {bmr,tdee,calories,protein,proteinRate,fat,carbs,deficit,rate,remaining,weeks,maintain,gain,surplus:calories-tdee,fiber:25,
   sugarsReference:90,freeSugarMax:Math.floor(calories*.10/4),freeSugarIdeal:Math.floor(calories*.05/4),
- targetDate:weeks===null?null:addDays(today,weeks*7),floor,capped:!maintain&&desired<floor};
+  targetDate:weeks===null?null:addDays(today,weeks*7),floor,capped:!maintain&&!gain&&desired<floor};
 }
 function foodsFor(day){return state.foods.filter(f=>f.date===day)}
 function daily(day){let o={kcal:0,protein:0,carbs:0,fat:0,sugar:0,fiber:0};foodsFor(day).forEach(f=>Object.keys(o).forEach(k=>o[k]+=Number(f[k])||0));return o}
@@ -821,7 +822,7 @@ function setView(view){if(!$("view-"+view))return;activeView=view;$all(".view").
 function mealMarkup(f,mini=false){
  const edit=mini?"":'<button class="small-button" data-edit-food="'+escapeHTML(f.id)+'" aria-label="Upraviť">'+icon("edit")+'</button>';
  const del=mini?"":'<button class="small-button" data-remove-food="'+escapeHTML(f.id)+'" aria-label="Zmazať">'+icon("trash")+'</button>';
- return '<div class="meal-item"><span class="meal-icon '+(safeFoodImage(f.image)?'meal-photo':'')+'">'+(foodImageMarkup(f.image,"meal-image")||icon("list"))+'</span><div class="meal-details"><strong>'+escapeHTML(f.name)+'</strong><small>'+dec(f.grams)+' '+(f.unit||'g')+' · B '+dec(f.protein)+' g · S '+dec(f.carbs)+' g</small></div><div class="meal-kcal">'+fmt(f.kcal)+' kcal</div>'+edit+del+'</div>';
+ return '<div class="meal-item" data-food-detail="'+escapeHTML(f.id)+'" role="button" tabindex="0" aria-label="Detail jedla '+escapeHTML(f.name)+'"><span class="meal-icon '+(safeFoodImage(f.image)?'meal-photo':'')+'">'+(foodImageMarkup(f.image,"meal-image")||icon("list"))+'</span><div class="meal-details"><strong>'+escapeHTML(f.name)+'</strong><small>'+dec(f.grams)+' '+(f.unit||'g')+' · B '+dec(f.protein)+' g · S '+dec(f.carbs)+' g</small></div><div class="meal-kcal">'+fmt(f.kcal)+' kcal</div>'+edit+del+'</div>';
 }
 function nutrientCircle(actual,goal,colorClass){
  const remaining=Math.max(0,Math.ceil(goal-actual));
@@ -845,14 +846,14 @@ function renderHome(){
  $("heroWeights").innerHTML=c.maintain?'Udržať <span>'+dec(start)+'</span> <small>kg</small>':dec(start)+' <span>→</span> '+dec(target)+' <small>kg</small>';
  $("heroStreak").innerHTML=icon("bolt")+" "+(sCount?sCount+" dní v rytme":"Začíname");
  $("heroRemaining").textContent=c.maintain?"± 1 kg":dec(c.remaining)+" kg";
- $("heroRemainingLabel").textContent=c.maintain?"približné rozpätie":"zostáva do cieľa";
+ $("heroRemainingLabel").textContent=c.maintain?"približné rozpätie":c.gain?"zostáva nabrať":"zostáva do cieľa";
  $("heroWeeks").textContent=c.maintain?fmt(c.calories):c.weeks===null?"–":c.weeks;
  $("heroWeeklyLabel").textContent=c.maintain?"kcal denne":"týždňov (odhad)";
  const movement=recommendedDailyMovement();
  $("heroActivityTarget").innerHTML=fmt(movement.target)+' <small>kcal</small>';
  $("heroActivityProgress").textContent=fmt(movement.burned)+' / '+fmt(movement.target)+' kcal dnes';
  $("heroActivityNote").textContent='Orientačne '+movement.minutes+' min svižnej chôdze denne (v priemere 150 min týždenne). Pohyb sa nepripočítava k limitu jedla.';
- let p=c.maintain?100:start<=target?100:capProgress(start-lastWeight(),start-target);
+ let p=c.maintain?100:c.gain?(start>=target?100:capProgress(lastWeight()-start,target-start)):start<=target?100:capProgress(start-lastWeight(),start-target);
  $("heroTrack").style.width=p+"%";
  $("heroCaption").textContent=c.maintain?"Cieľ je stabilná váha. Sleduj trend, nie jednotlivý deň.":c.remaining===0?"Cieľ dosiahnutý. Prejdi na udržiavanie.":p>0?"Už si prešiel "+fmt(p)+" % cesty.":"Prvý krok je začať.";
  $("homeCalories").textContent=fmt(s.kcal);$("homeCaloriesGoal").textContent=fmt(c.calories);
@@ -861,10 +862,10 @@ function renderHome(){
  $("calorieFill").style.width=capProgress(s.kcal,c.calories)+"%";
  $("calorieNote").textContent=s.kcal>c.calories?"Cieľ je prekročený. Zajtra pokračuj normálne, bez kompenzovania.":s.kcal?"Sleduj príjem a jedz pravidelne.":"Pridaj svoje prvé jedlo. Začínaš jednoducho.";
  const macro=[["protein","Bielkoviny",s.protein,c.protein],["carbs","Sacharidy",s.carbs,c.carbs],["fat","Tuky",s.fat,c.fat]];
- $("homeMacros").innerHTML=macro.map(x=>'<div class="macro-card '+x[0]+'"><span>'+x[1]+'</span>'+nutrientCircle(x[2],x[3],x[0])+'<strong>'+fmt(x[2])+' <small>g</small></strong><small>z '+fmt(x[3])+' g</small></div>').join("");
+ $("homeMacros").innerHTML=macro.map(x=>'<div class="macro-card '+x[0]+'" data-nutrient="'+x[0]+'" role="button" tabindex="0" aria-label="Zobraziť jedlá podľa '+x[1]+'"><span>'+x[1]+'</span>'+nutrientCircle(x[2],x[3],x[0])+'<strong>'+fmt(x[2])+' <small>g</small></strong><small>z '+fmt(x[3])+' g</small></div>').join("");
  const hasUnknown=foodsFor(today).some(f=>f.fiber===null);
- $("homeExtras").innerHTML='<div class="nutrient-card sugar"><div class="nutrient-body"><span>Cukry celkom</span>'+nutrientCircle(s.sugar,c.sugarsReference,"sugar")+'<strong>'+dec(s.sugar)+' <small>/ '+c.sugarsReference+' g</small></strong><small>EU referencia, nie limit</small></div></div>'+
- '<div class="nutrient-card fiber"><div class="nutrient-body"><span>Vláknina</span>'+nutrientCircle(s.fiber,c.fiber,"fiber")+'<strong>'+dec(s.fiber)+' <small>/ '+c.fiber+' g</small></strong><small>'+(hasUnknown?"minimum zo známych hodnôt":"orientačný denný cieľ")+'</small></div></div>';
+ $("homeExtras").innerHTML='<div class="nutrient-card sugar" data-nutrient="sugar" role="button" tabindex="0" aria-label="Zobraziť cukry podľa jedál"><div class="nutrient-body"><span>Cukry celkom</span>'+nutrientCircle(s.sugar,c.sugarsReference,"sugar")+'<strong>'+dec(s.sugar)+' <small>/ '+c.sugarsReference+' g</small></strong><small>EU referencia, nie limit</small></div></div>'+
+ '<div class="nutrient-card fiber" data-nutrient="fiber" role="button" tabindex="0" aria-label="Zobraziť vlákninu podľa jedál"><div class="nutrient-body"><span>Vláknina</span>'+nutrientCircle(s.fiber,c.fiber,"fiber")+'<strong>'+dec(s.fiber)+' <small>/ '+c.fiber+' g</small></strong><small>'+(hasUnknown?"minimum zo známych hodnôt":"orientačný denný cieľ")+'</small></div></div>';
  const items=foodsFor(today).slice().reverse();
  $("homeMealList").innerHTML=items.length?items.slice(0,5).map(x=>mealMarkup(x,true)).join(""):'<div class="empty-state">'+icon("list")+'Dnes ešte nič nezaznamenané.<br>Začni prvým jedlom.</div>';
  if(s.kcal>c.calories){$("quoteTitle").textContent="Jeden deň nie je celý výsledok.";$("quoteText").textContent="Netrestaj sa hladovaním. Ďalším jedlom sa vráť do bežného režimu."}
@@ -905,21 +906,21 @@ function monday(date){let d=new Date(date+"T12:00:00");d.setDate(d.getDate()-((d
 function updatePlanModeUI(){
  const maintain=$("modeMaintain").checked;
  $("pTargetWrap").classList.toggle("hide",maintain);
- $("pRateWrap").classList.toggle("hide",maintain);
- $("pTarget").disabled=maintain;$("pRate").disabled=maintain;
+ $("pRateWrap").classList.toggle("hide",maintain||$("modeGain").checked);
+ $("pTarget").disabled=maintain;$("pRate").disabled=maintain||$("modeGain").checked;
  $("pTarget").value=maintain?$("pWeight").value:lossTargetDraft;
 }
 function renderPlan(){
  const c=plan(),p=state.profile;
  [["pWeight",p.weight],["pHeight",p.height],["pAge",p.age],["pSex",p.sex],["pActivity",p.activity],["pRate",p.rate]].forEach(x=>$(x[0]).value=x[1]);
  lossTargetDraft=p.lossTarget||p.target;$("pTarget").value=lossTargetDraft;
- $("modeMaintain").checked=c.maintain;$("modeLose").checked=!c.maintain;updatePlanModeUI();
+ $("modeMaintain").checked=c.maintain;$("modeGain").checked=c.gain;$("modeLose").checked=!c.maintain&&!c.gain;updatePlanModeUI();
  $("planCalories").textContent=fmt(c.calories);$("planTdee").textContent=fmt(c.tdee);
- $("planDeficit").textContent=c.maintain?"0":"−"+fmt(c.deficit);
+ $("planDeficit").textContent=c.maintain?"0":c.gain?"+"+fmt(c.surplus):"−"+fmt(c.deficit);
  $("planWeeks").textContent=c.maintain?"Stabilne":c.weeks===null?"–":c.weeks+" t.";
  $("planDate").textContent=c.maintain?"bez termínu":c.targetDate?"cca "+formatDate(c.targetDate):"Odlišné tempo";
- $("planSubtitle").textContent=c.maintain?"Približne toľko energie potrebuješ na udržiavanie váhy.":c.capped?"Tempo bolo zmiernené, aby príjem nebol extrémne nízky.":"Odhad pri zvolenej aktivite a tempe.";
- $("planMacroCard").innerHTML=macroRow("protein","Bielkoviny",c.protein,Math.round(c.protein*4/c.calories*100))+macroRow("carbs","Sacharidy",c.carbs,Math.round(c.carbs*4/c.calories*100))+macroRow("fat","Tuky",c.fat,Math.round(c.fat*9/c.calories*100))+'<p class="card-sub">Bielkoviny: '+dec(c.proteinRate)+' g/kg '+(c.maintain?"aktuálnej":"cieľovej")+' váhy podľa aktivity. Tuky cca 0,8 g/kg; zvyšok sacharidy. Ide o orientačný cieľ, nie povinné minimum.</p>';
+ $("planSubtitle").textContent=c.maintain?"Približne toľko energie potrebuješ na udržiavanie váhy.":c.gain?"Mierny kalorický nadbytok na podporu silového tréningu; sleduj trend váhy a výkonu.":c.capped?"Tempo bolo zmiernené, aby príjem nebol extrémne nízky.":"Odhad pri zvolenej aktivite a tempe.";
+ $("planMacroCard").innerHTML=macroRow("protein","Bielkoviny",c.protein,Math.round(c.protein*4/c.calories*100))+macroRow("carbs","Sacharidy",c.carbs,Math.round(c.carbs*4/c.calories*100))+macroRow("fat","Tuky",c.fat,Math.round(c.fat*9/c.calories*100))+'<p class="card-sub">Bielkoviny: '+dec(c.proteinRate)+' g/kg '+(c.maintain||c.gain?"aktuálnej":"cieľovej")+' váhy podľa aktivity. Tuky cca 0,8 g/kg; zvyšok sacharidy. Ide o orientačný cieľ, nie povinné minimum.</p>';
  $("sugarAdvice").innerHTML='<strong>Cukry celkom: '+c.sugarsReference+' g/deň</strong> je európska referenčná hodnota pre priemerného dospelého pri 2 000 kcal, nie bezpečnostný limit.<br><strong>Voľné cukry: menej než '+c.freeSugarMax+' g/deň</strong> pri tvojom kalorickom cieli (WHO do 10 % energie), ideálne približne '+c.freeSugarIdeal+' g (5 %).';
  $("gymBurn").textContent="45 min ≈ "+fmt(exerciseBurn("gym",45))+" kcal";
  $("walkBurn").textContent="30 min ≈ "+fmt(exerciseBurn("walk",30))+" kcal";
@@ -1026,12 +1027,12 @@ function submitFood(e){
 }
 function submitPlan(e){
  e.preventDefault();
- const maintain=$("modeMaintain").checked,weight=Number($("pWeight").value),target=maintain?weight:Number($("pTarget").value);
+ const maintain=$("modeMaintain").checked,gain=$("modeGain").checked,weight=Number($("pWeight").value),target=maintain?weight:Number($("pTarget").value);
  const p={weight,target,height:+$("pHeight").value,age:+$("pAge").value,sex:$("pSex").value,
   activity:+$("pActivity").value,rate:maintain?state.profile.rate:+$("pRate").value,
-  mode:maintain?"maintain":"lose",lossTarget:maintain?lossTargetDraft:target};
- if(!validProfile(p)||(!maintain&&p.target>p.weight)){notify("Skontroluj údaje. Cieľ pri chudnutí nemôže byť vyšší než aktuálna váha.");return}
- state.profile=p;save();render();notify(maintain?"Zapol si udržiavanie váhy.":"Plán chudnutia je prepočítaný.");
+  mode:maintain?"maintain":gain?"gain":"lose",lossTarget:maintain?lossTargetDraft:target};
+ if(!validProfile(p)||(!maintain&&!gain&&p.target>p.weight)||(gain&&p.target<=p.weight)){notify("Skontroluj cieľovú váhu: pri naberaní musí byť vyššia, pri chudnutí nižšia alebo rovnaká.");return}
+ state.profile=p;save();render();notify(maintain?"Zapol si udržiavanie váhy.":gain?"Plán naberania svalov je pripravený.":"Plán chudnutia je prepočítaný.");
 }
 function submitWeight(e){
  e.preventDefault();const date=$("weightDate").value,kg=Number($("weightNumber").value);
@@ -1426,8 +1427,9 @@ $("amountPlus").addEventListener("click",()=>{$("foodGrams").value=Math.min(1000
 $all("[data-grams]").forEach(el=>el.addEventListener("click",()=>{$("foodGrams").value=el.dataset.grams;renderFoodPreview()}));
 $("modeMaintain").addEventListener("change",updatePlanModeUI);
 $("modeLose").addEventListener("change",updatePlanModeUI);
+$("modeGain").addEventListener("change",updatePlanModeUI);
 $("pWeight").addEventListener("input",()=>{if($("modeMaintain").checked)$("pTarget").value=$("pWeight").value});
-$("pTarget").addEventListener("input",()=>{if($("modeLose").checked)lossTargetDraft=Number($("pTarget").value)||lossTargetDraft});
+$("pTarget").addEventListener("input",()=>{if(!$("modeMaintain").checked)lossTargetDraft=Number($("pTarget").value)||lossTargetDraft});
 $("planForm").addEventListener("submit",submitPlan);
 $("weightForm").addEventListener("submit",submitWeight);
 $("workoutForm").addEventListener("submit",submitWorkout);
