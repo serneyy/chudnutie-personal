@@ -627,7 +627,7 @@ function renameProfile(){
 
 /* Token-free cloud backup. The GitHub credential is server-side, never shipped to browsers.
    Do not mark synced unless the server confirms the GitHub commit. */
-const FORMA_CLOUD_URL = "https://forma-github-sync.threadid.workers.dev";
+const FORMA_CLOUD_URL = "https://weathered-feather-e501.teenwear-eu.workers.dev";
 function githubStatus(message,level="neutral"){
  $("githubSyncStatus").textContent=message;
  $("githubSyncStatus").dataset.level=level;
