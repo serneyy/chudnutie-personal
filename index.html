@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=8">
+<link rel="stylesheet" href="styles.css?v=9">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -64,13 +64,13 @@
     </section>
 
     <section class="view" id="view-diary">
-      <div class="intro"><span class="eyebrow">JEDÁLNIČEK</span><h1>Čo si dnes jedol?</h1><p>Každé jedlo na jednom mieste.</p></div>
+      <div class="intro"><span class="eyebrow">JEDÁLNIČEK</span><h1>Moje jedlá</h1><p>Vyber deň a pridaj, čo si zjedol.</p></div>
       <div class="card diary-summary"><div class="day-select"><button class="arrow-action" id="prevDay" aria-label="Predchádzajúci deň"><svg><use href="#ic-back"/></svg></button><span id="diaryDate"></span><button class="arrow-action" id="nextDay" aria-label="Nasledujúci deň"><svg><use href="#ic-forward"/></svg></button></div><div class="diary-total"><div><strong id="diaryCalories">0</strong><span>prijaté kcal</span></div><div><strong id="diaryRemaining">2 100</strong><span>zostáva kcal</span></div></div><div class="slim-progress"><div id="diaryFill"></div></div><p id="diaryMacroText"></p><p id="diaryExtrasText" class="diary-extras"></p></div>
       <div id="diarySections"></div>
     </section>
 
     <section class="view" id="view-plan">
-      <div class="intro"><span class="eyebrow">KALKULAČKA & POHYB</span><h1>Plán, ktorý vydržíš.</h1><p>Kalórie, makrá a pohyb podľa tvojho tela a cieľa.</p></div>
+      <div class="intro"><span class="eyebrow">MOJE NASTAVENIA</span><h1>Môj plán</h1><p>Koľko jesť a ako sa hýbať.</p></div>
       <div class="card plan-form-card">
         <div class="card-heading"><span class="round-icon"><svg><use href="#ic-target"/></svg></span><div><h2>Moje údaje</h2><p>Uprav a prepočítaj plán</p></div></div>
         <form id="planForm" class="form-grid">
@@ -101,7 +101,7 @@
     </section>
 
     <section class="view" id="view-progress">
-      <div class="intro"><span class="eyebrow">TVÔJ PROGRES</span><h1>Pomaly. Ale dopredu.</h1><p>Nesleduj jeden deň. Sleduj trend.</p></div>
+      <div class="intro"><span class="eyebrow">VÁHA</span><h1>Moja hmotnosť</h1><p>Zapíš si váhu a pozri, ako sa mení.</p></div>
       <div class="stats-3"><div class="stat-tile"><span>Štart</span><strong id="weightStart">94</strong><small>kg</small></div><div class="stat-tile accent"><span>Teraz</span><strong id="weightNow">94</strong><small>kg</small></div><div class="stat-tile"><span>Zostáva</span><strong id="weightLeft">6</strong><small id="weightLeftLabel">kg do cieľa</small></div></div>
       <div class="card chart-card"><div class="card-heading"><span class="round-icon"><svg><use href="#ic-chart"/></svg></span><div><h2>Vývoj hmotnosti</h2><p id="chartSummary">Zapíš váhu a uvidíš graf</p></div></div><svg id="weightChart" viewBox="0 0 340 198" class="chart" role="img" aria-label="Graf vývoja hmotnosti"></svg><div class="chart-foot"><span id="chartFirst"></span><span id="chartLast"></span></div></div>
       <div class="card"><h2>Nové váženie</h2><p class="card-sub">Najlepšie ráno za podobných podmienok.</p><form id="weightForm" class="form-grid"><label>Dátum<input id="weightDate" type="date" required></label><label>Hmotnosť (kg)<input id="weightNumber" type="number" min="35" max="300" step="0.1" placeholder="napr. 93.6" required></label><button class="primary-button stretch full-span" type="submit"><svg><use href="#ic-plus"/></svg> Uložiť váženie</button></form><div id="weightHistory"></div></div>
@@ -153,8 +153,18 @@
      <label class="block-label food-main-name" for="foodName">Čo si jedol?
       <input id="foodName" maxlength="100" placeholder="Napr. cappuccino, banán, jogurt…" required autocomplete="off" autocapitalize="sentences" aria-autocomplete="list" aria-expanded="false" aria-controls="foodSuggestions" role="combobox">
      </label>
-     <p class="food-search-help" id="foodSearchHelp">Začni písať. Zobrazím ti jedlá a produkty s výživovými hodnotami.</p>
+     <p class="food-search-help" id="foodSearchHelp">Napíš napríklad proteín, skyr, banán alebo káva.</p>
      <div id="foodSuggestions" class="food-suggestions" role="listbox" aria-label="Návrhy potravín" hidden></div>
+    </div>
+    <div class="quick-foods" id="quickFoods">
+      <div class="quick-foods-label">VYBER BEŽNÉ JEDLO</div>
+      <div class="quick-foods-grid">
+       <button type="button" data-quick-food="whey">Proteín</button>
+       <button type="button" data-quick-food="skyr">Skyr</button>
+       <button type="button" data-quick-food="banana">Banán</button>
+       <button type="button" data-quick-food="cappuccino">Cappuccino</button>
+      </div>
+      <div id="recentFoods" class="recent-foods"></div>
     </div>
     <div class="food-choice">
      <label class="food-simple-label" for="foodMeal">Kedy si to jedol?</label>
@@ -170,7 +180,7 @@
     <div class="food-preview"><span>PRIDÁŠ DO DENNÍKA</span><strong id="foodPreviewCalories">0 kcal</strong><small id="foodPreviewMacros">Bielkoviny 0 g · Sacharidy 0 g · Tuky 0 g</small></div>
    </div>
    <details class="food-more" id="foodDetails">
-    <summary>Upraviť výživové hodnoty alebo dátum <svg><use href="#ic-forward"/></svg></summary>
+    <summary>Nenašiel si jedlo? Zadaj hodnoty ručne <svg><use href="#ic-forward"/></svg></summary>
     <div class="food-more-body">
      <label class="block-label">Dátum<input id="foodDate" type="date" required></label>
      <label class="block-label">Čiarový kód (voliteľné)<input id="foodEAN" inputmode="numeric" maxlength="14" placeholder="EAN"></label>
@@ -215,6 +225,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=8"></script>
+<script defer src="app.js?v=9"></script>
 </body>
 </html>
