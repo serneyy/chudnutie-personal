@@ -425,6 +425,7 @@ async function loadImageData(file){
  canvas.width=Math.max(1,Math.round(img.width*scale));
  canvas.height=Math.max(1,Math.round(img.height*scale));
  const context=canvas.getContext("2d",{willReadFrequently:true});
+ context.fillStyle="#fff";context.fillRect(0,0,canvas.width,canvas.height);
  context.drawImage(img,0,0,canvas.width,canvas.height);
  img.close?.();
  return {canvas,context};
