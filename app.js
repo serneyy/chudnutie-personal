@@ -862,7 +862,7 @@ function showNutrientBreakdown(key){
  if(!Object.hasOwn(NUTRIENT_LABELS,key))return;
  const list=foodsFor(today).slice().sort((a,b)=>(nutrientValue(b,key)||0)-(nutrientValue(a,key)||0));
  const total=nutrientTotal(key,list),unit=key==="kcal"?"kcal":"g";
- const targets=plan(),goal=key==="sugar"?targets.sugarsReference:targets[key]??0;
+ const targets=plan(),goal=key==="kcal"?targets.calories:key==="sugar"?targets.sugarsReference:targets[key]??0;
  let rows=list.map(food=>{
   const amount=nutrientValue(food,key);
   const pct=total>0&&amount!==null?Math.min(100,(amount/total)*100):0;
