@@ -383,85 +383,73 @@ const fs=require("node:fs");
   assert.deepEqual(liveErrors,[],"Live browser runtime errors: "+liveErrors.join(" | "));
   console.log("PASS: REAL streaming barcode scan using Canvas MediaStream + ZXing WASM");
 
-  // GitHub cloud JSON syncing: public repo consent, authenticated PUT and cross-device pull.
-  let cloudState={version:1,profiles:[]},cloudSha="sha-init",cloudWrites=0;
-  async function mockGithub(route){
-   const request=route.request(),url=request.url(),method=request.method();
-   const headers={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization,content-type,accept,x-github-api-version"};
-   if(url.endsWith("/repos/serneyy/chudnutie-personal")){
-    return route.fulfill({status:200,contentType:"application/json",headers,body:JSON.stringify({private:false,name:"chudnutie-personal"})});
-   }
-   if(url.includes("/contents/data/forma-family.json")){
-    if(method==="GET"){
-     return route.fulfill({status:200,contentType:"application/json",headers,body:JSON.stringify({sha:cloudSha,content:Buffer.from(JSON.stringify(cloudState)).toString("base64")})});
-    }
-    if(method==="PUT"){
-     const payload=request.postDataJSON();
-     assert.equal(payload.sha,cloudSha,"GitHub must use optimistic SHA");
-     assert.equal(request.headers().authorization,"Bearer github_pat_test_fake");
-     cloudState=JSON.parse(Buffer.from(payload.content,"base64").toString("utf8"));
+  // Cloudflare Worker sync: no PAT in the browser, same GitHub JSON across phones.
+  let cloudState={version:1,profiles:[]},cloudWrites=0,cloudReady=false;
+  async function mockWorker(route){
+   const req=route.request(),url=new URL(req.url()),method=req.method();
+   const headers={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"content-type","Access-Control-Allow-Methods":"GET,POST,OPTIONS"};
+   const fulfill=(status,data)=>route.fulfill({status,contentType:"application/json",headers,body:JSON.stringify(data)});
+   if(method==="OPTIONS")return fulfill(200,{ok:true});
+   if(url.pathname==="/health")return fulfill(200,{ok:true,ready:cloudReady});
+   if(!cloudReady)return fulfill(503,{error:"Not configured"});
+   if(url.pathname==="/profiles"){
+    if(method==="GET")return fulfill(200,{ok:true,...cloudState});
+    if(method==="POST"){
+     const submitted=req.postDataJSON();
+     assert.equal(submitted.version,1);
+     assert(!JSON.stringify(submitted).includes("github_pat_"),"Never put token into JSON");
+     const profiles=new Map(cloudState.profiles.map(p=>[p.id,p]));
+     for(const p of submitted.profiles){
+      const existing=profiles.get(p.id);
+      if(!existing||Date.parse(p.updatedAt||0)>Date.parse(existing.updatedAt||0))profiles.set(p.id,p);
+     }
+     cloudState={version:1,profiles:[...profiles.values()]};
      cloudWrites++;
-     cloudSha="sha-"+cloudWrites;
-     return route.fulfill({status:200,contentType:"application/json",headers,body:JSON.stringify({content:{sha:cloudSha}})});
+     return fulfill(200,{ok:true,saved:true,...cloudState});
     }
    }
-   throw Error("Unexpected GitHub API call "+method+" "+url);
+   throw Error("Unexpected Worker request "+method+" "+url.pathname);
   }
-  await page.route("https://api.github.com/**",mockGithub);
+  await page.route("https://forma-github-sync.threadid.workers.dev/**",mockWorker);
   await page.locator('[data-nav="settings"]').first().click();
-  await page.locator("#githubRepo").fill("serneyy/chudnutie-personal");
-  await page.locator("#githubToken").fill("github_pat_test_fake");
-  await page.locator("#githubConnectBtn").click();
-  await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.textContent?.includes("VEREJNÝ"),{timeout:8000});
-  assert((await page.locator("#githubSyncStatus").innerText()).includes("VEREJNÝ"),"Do not upload personal data before explicit consent");
-  assert.equal(cloudWrites,0,"No uploads without consent");
-  await page.locator("#githubPublicConsent").check();
-  page.once("dialog",dialog=>dialog.accept());
-  await page.locator("#githubConnectBtn").click();
-  await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:15000});
-  assert(cloudWrites>=1,"Connecting must upload JSON");
-  assert(cloudState.profiles.some(p=>p.name==="Daniel")&&cloudState.profiles.some(p=>p.name==="Mama"),"Both profiles must sync");
-  const danielCloud=cloudState.profiles.find(p=>p.name==="Daniel");
-  assert(danielCloud.data.foods.some(x=>x.name.includes("Praženica")),"Diary must be in cloud data");
-  assert.equal(JSON.stringify(cloudState).includes("github_pat_test_fake"),false,"Do not leak PAT into JSON");
+  await page.locator("#githubRefreshBtn").click();
+  await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.textContent?.includes("serverový GitHub token"),{timeout:7000});
+  assert.equal(cloudWrites,0,"Never claim upload without server configuration");
+  assert((await page.locator("#githubSyncStatus").getAttribute("data-level"))==="error");
+  assert((await page.locator("#cloudHomeText").innerText()).includes("lokálne"),"Offline data state should be obvious");
+  cloudReady=true;
+  await page.locator("#githubRefreshBtn").click();
+  await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:10000});
+  assert(cloudWrites>=1,"Server-ready first sync uploads local profiles");
+  assert(cloudState.profiles.some(p=>p.name==="Daniel")&&cloudState.profiles.some(p=>p.name==="Mama"));
+  assert(cloudState.profiles.find(p=>p.name==="Daniel").data.foods.some(x=>x.name.includes("Praženica")));
   await page.locator('[data-nav="home"]').first().click();
   await page.locator("#homeAdd").click();
   await page.locator('[data-quick-food="banana"]').click();
   await page.locator("#foodSave").click();
-  await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:15000});
-  await page.waitForTimeout(1900);
-  assert(cloudState.profiles.find(p=>p.name==="Daniel").data.foods.some(x=>x.name==="Banán (jedlá časť)"),"Autosave food into GitHub must work");
+  await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:10000});
+  assert(cloudState.profiles.find(p=>p.name==="Daniel").data.foods.some(x=>x.name==="Banán (jedlá časť)"),"Autosave food into GitHub cloud must work");
   const second=await browser.newContext({viewport:{width:390,height:844}});
   const momDevice=await second.newPage();
-  await momDevice.route("https://api.github.com/**",mockGithub);
+  await momDevice.route("https://forma-github-sync.threadid.workers.dev/**",mockWorker);
   await momDevice.goto("http://127.0.0.1:8765/",{waitUntil:"domcontentloaded"});
-  assert(await momDevice.locator("#profileOverlay").isVisible());
-  await momDevice.locator("#profileGithubConnect").click();
-  await momDevice.locator("#githubRepo").fill("serneyy/chudnutie-personal");
-  await momDevice.locator("#githubToken").fill("github_pat_test_fake");
-  await momDevice.locator("#githubPublicConsent").check();
-  momDevice.once("dialog",dialog=>dialog.accept());
-  await momDevice.locator("#githubConnectBtn").click();
-  await momDevice.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:15000});
-  assert((await momDevice.locator("#currentProfileLabel").innerText()).length>0);
+  await momDevice.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:10000});
   await momDevice.locator("#profileHeaderBtn").click();
-  assert((await momDevice.locator("#profileList").innerText()).includes("Mama"),"Second device should download family profiles");
+  assert((await momDevice.locator("#profileList").innerText()).includes("Mama"),"Fresh phone loads Mom profile");
   await momDevice.locator('#profileList [data-profile-select]').filter({hasText:"Mama"}).click();
-  assert.equal(await momDevice.locator("#homeCalories").innerText(),"0","Mom still has her isolated diary");
   await momDevice.locator("#homeAdd").click();
   await momDevice.locator('[data-quick-food="skyr"]').click();
   await momDevice.locator("#foodSave").click();
-  await momDevice.waitForTimeout(2600);
-  assert(cloudState.profiles.find(p=>p.name==="Mama").data.foods.some(x=>x.name==="Skyr biely"),"Mom's food must autosave to GitHub");
-  // Owner can pull Mom's new food without losing Daniel's entries.
+  await momDevice.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:10000});
+  assert(cloudState.profiles.find(p=>p.name==="Mama").data.foods.some(x=>x.name==="Skyr biely"),"Second phone saves Mom's profile");
   await page.locator('[data-nav="settings"]').first().click();
   await page.locator("#githubRefreshBtn").click();
-  await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:15000});
+  await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:10000});
   await page.locator("#profileHeaderBtn").click();
   await page.locator('#profileList [data-profile-select]').filter({hasText:"Mama"}).click();
-  assert((await page.locator("#homeMealList").innerText()).includes("Skyr biely"),"Manual refresh must pull other device changes");
+  assert((await page.locator("#homeMealList").innerText()).includes("Skyr biely"),"First phone downloads Mom's meal");
   await second.close();
-  console.log("PASS: authenticated GitHub JSON sync, consent, multi-device profiles and autosave");
+  console.log("PASS: token-free Worker health gate, autosave, and two-device family sync");
 
   await context.close();
  }finally{await browser.close()}
