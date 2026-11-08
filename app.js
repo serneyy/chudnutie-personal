@@ -824,6 +824,62 @@ function mealMarkup(f,mini=false){
  const del=mini?"":'<button class="small-button" data-remove-food="'+escapeHTML(f.id)+'" aria-label="Zmazať">'+icon("trash")+'</button>';
  return '<div class="meal-item" data-food-detail="'+escapeHTML(f.id)+'" role="button" tabindex="0" aria-label="Detail jedla '+escapeHTML(f.name)+'"><span class="meal-icon '+(safeFoodImage(f.image)?'meal-photo':'')+'">'+(foodImageMarkup(f.image,"meal-image")||icon("list"))+'</span><div class="meal-details"><strong>'+escapeHTML(f.name)+'</strong><small>'+dec(f.grams)+' '+(f.unit||'g')+' · B '+dec(f.protein)+' g · S '+dec(f.carbs)+' g</small></div><div class="meal-kcal">'+fmt(f.kcal)+' kcal</div>'+edit+del+'</div>';
 }
+
+const NUTRIENT_LABELS={kcal:"Kalórie",protein:"Bielkoviny",carbs:"Sacharidy",fat:"Tuky",sugar:"Cukry",fiber:"Vláknina"};
+function nutrientValue(food,key){return food[key]===null||food[key]===undefined?null:Number(food[key])||0}
+function nutrientTotal(key,foods){return foods.reduce((sum,food)=>sum+(nutrientValue(food,key)||0),0)}
+function nutritionItemPhoto(food){
+ const pic=foodImageMarkup(food.image,"nutrition-photo");
+ return '<span class="nutrition-item-image">'+(pic||icon("list"))+'</span>';
+}
+function showNutritionDialog(title,subtitle,content){
+ $("nutritionTitle").textContent=title;
+ $("nutritionSubtitle").textContent=subtitle;
+ $("nutritionContent").innerHTML=content;
+ $("nutritionOverlay").hidden=false;
+ bodyLock();
+ $("closeNutrition").focus({preventScroll:true});
+}
+function closeNutritionDialog(){
+ $("nutritionOverlay").hidden=true;
+ $("nutritionContent").replaceChildren();
+ bodyUnlock();
+}
+function showFoodNutrition(id){
+ const food=state.foods.find(item=>item.id===id);
+ if(!food)return;
+ const stats=[["kcal","Kalórie","kcal"],["protein","Bielkoviny","g"],["carbs","Sacharidy","g"],["fat","Tuky","g"],["sugar","Cukry","g"],["fiber","Vláknina","g"]];
+ const cards=stats.map(([key,label,unit])=>'<div class="nutrition-detail-stat"><span>'+label+'</span><strong>'+
+   (nutrientValue(food,key)===null?"Neznáme":dec(nutrientValue(food,key))+' <small>'+unit+'</small>')+'</strong></div>').join("");
+ const meal=MEALS.find(x=>x[0]===food.meal)?.[1]||"Jedlo";
+ const photo=nutritionItemPhoto(food);
+ showNutritionDialog(food.name,meal+' · '+formatDate(food.date),
+  '<div class="nutrition-product-top">'+photo+'<div><strong>'+dec(food.grams)+' '+(food.unit||"g")+'</strong><span>zapísaná porcia</span></div></div>'+
+  '<div class="nutrition-detail-grid">'+cards+'</div>'+
+  '<p class="nutrition-footnote">Hodnoty zodpovedajú zapísanej porcii. Pri odhadovaných jedlách sú orientačné.</p>');
+}
+function showNutrientBreakdown(key){
+ if(!Object.hasOwn(NUTRIENT_LABELS,key))return;
+ const list=foodsFor(today).slice().sort((a,b)=>(nutrientValue(b,key)||0)-(nutrientValue(a,key)||0));
+ const total=nutrientTotal(key,list),unit=key==="kcal"?"kcal":"g";
+ const goal=plan()[key]??(key==="sugar"?plan().sugarsReference:0);
+ let rows=list.map(food=>{
+  const amount=nutrientValue(food,key);
+  const pct=total>0&&amount!==null?Math.min(100,(amount/total)*100):0;
+  return '<button type="button" class="nutrition-item" data-food-detail="'+escapeHTML(food.id)+'">'+
+   nutritionItemPhoto(food)+'<span class="nutrition-item-description"><strong>'+escapeHTML(food.name)+'</strong>'+
+   '<small>'+dec(food.grams)+' '+(food.unit||"g")+' · '+(MEALS.find(m=>m[0]===food.meal)?.[1]||"Jedlo")+'</small>'+
+   '<span class="nutrition-contribution"><i style="width:'+pct+'%"></i></span></span>'+
+   '<strong class="nutrition-item-amount">'+(amount===null?"–":dec(amount))+' <small>'+unit+'</small></strong></button>';
+ }).join("");
+ if(!list.length)rows='<div class="nutrition-no-food">Dnes ešte nemáš zapísané jedlá.</div>';
+ showNutritionDialog(NUTRIENT_LABELS[key],"DNES · ROZPIS PODĽA JEDÁL",
+  '<div class="nutrition-total-panel"><span>Spolu dnes</span><strong>'+dec(total)+' <small>'+unit+'</small></strong>'+
+  (goal>0?'<small>Orientačný cieľ / referencia: '+dec(goal)+' '+unit+'</small>':"")+'</div>'+
+  '<div class="nutrition-item-list">'+rows+'</div>'+
+  (key==="fiber"&&list.some(f=>f.fiber===null)?'<p class="nutrition-footnote">Niektoré produkty nemajú údaj o vláknine. Súčet je len zo známych hodnôt.</p>':""));
+}
+
 function nutrientCircle(actual,goal,colorClass){
  const remaining=Math.max(0,Math.ceil(goal-actual));
  const complete=actual>=goal;
@@ -1351,6 +1407,10 @@ async function lookupCode(code){
 }
 function delegatedClick(e){
  const nav=e.target.closest("[data-nav]");if(nav){setView(nav.dataset.nav);return}
+ const foodDetail=e.target.closest("[data-food-detail]");
+ if(foodDetail){showFoodNutrition(foodDetail.dataset.foodDetail);return}
+ const metric=e.target.closest("[data-nutrient]");
+ if(metric){showNutrientBreakdown(metric.dataset.nutrient);return}
  if(e.target.closest('[data-action="scan"]')){foodContextMeal=preferredMeal();selectedDay=today;openScanner();return}
  const meal=e.target.closest("[data-add-meal]");if(meal){foodContextMeal=meal.dataset.addMeal;foodModal({meal:foodContextMeal,date:selectedDay});return}
  const edit=e.target.closest("[data-edit-food]");if(edit){let f=state.foods.find(x=>x.id===edit.dataset.editFood);if(f)foodModal({record:f});return}
@@ -1433,6 +1493,15 @@ $("pTarget").addEventListener("input",()=>{if(!$("modeMaintain").checked)lossTar
 $("planForm").addEventListener("submit",submitPlan);
 $("weightForm").addEventListener("submit",submitWeight);
 $("workoutForm").addEventListener("submit",submitWorkout);
+$("closeNutrition").addEventListener("click",closeNutritionDialog);
+$("nutritionOverlay").addEventListener("click",e=>{if(e.target===$("nutritionOverlay"))closeNutritionDialog()});
+document.addEventListener("keydown",e=>{
+ if(!$("nutritionOverlay").hidden&&e.key==="Escape"){e.preventDefault();closeNutritionDialog()}
+ if(e.key==="Enter"||e.key===" "){
+  const target=e.target.closest("[data-nutrient],.meal-item[data-food-detail]");
+  if(target&&!target.closest("button")){e.preventDefault();target.click()}
+ }
+});
 $("closeFood").addEventListener("click",closeFood);
 $("foodOverlay").addEventListener("click",e=>{if(e.target===$("foodOverlay"))closeFood()});
 $("closeScan").addEventListener("click",closeScan);
