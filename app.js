@@ -173,16 +173,28 @@ function render(){renderHome();renderDiary();renderPlan();renderProgress()}
 function bodyLock(){document.body.style.overflow="hidden"}
 function bodyUnlock(){document.body.style.overflow=""}
 function foodModal(options={}){
- $("foodForm").reset();$("foodEditId").value="";$("foodTitle").textContent="Pridať jedlo";$("foodSave").innerHTML='Pridať do denníka '+icon("check");
- $("foodMeal").value=options.meal||foodContextMeal;$("foodDate").value=options.date||selectedDay;
- $("foodGrams").value="100";["fProtein","fCarbs","fFat","fSugar"].forEach(id=>$(id).value="0");
+ ++activeLookupNonce;
+ $("foodForm").reset();$("foodEditId").value="";
+ $("foodTitle").textContent=options.product?"Načítavam produkt…":"Pridať jedlo";
+ $("foodStep").textContent="JEDNODUCHÝ ZÁPIS JEDLA";
+ $("foodSave").innerHTML='Uložiť jedlo '+icon("check");
+ $("foodSave").disabled=Boolean(options.product);
+ $("foodMeal").value=options.meal||preferredMeal();
+ $("foodDate").value=options.date||selectedDay;
+ $("foodGrams").value="100";
+ ["fProtein","fCarbs","fFat","fSugar"].forEach(id=>$(id).value="0");
  $("fFiber").value="";$("fKcal").value="";$("foodEAN").value="";
  $("foodLookupMessage").hidden=true;$("foodLookupMessage").classList.remove("warn");
+ $("foodDetails").open=!options.product;
  if(options.record){
   const f=options.record,m=100/f.grams;
-  $("foodEditId").value=f.id;$("foodTitle").textContent="Upraviť jedlo";$("foodSave").innerHTML='Uložiť zmeny '+icon("check");
-  $("foodName").value=f.name;$("foodGrams").value=f.grams;$("foodDate").value=f.date;$("foodMeal").value=f.meal;$("foodEAN").value=f.code||"";
+  $("foodEditId").value=f.id;$("foodTitle").textContent="Upraviť jedlo";
+  $("foodSave").innerHTML='Uložiť zmeny '+icon("check");
+  $("foodSave").disabled=false;
+  $("foodName").value=f.name;$("foodGrams").value=f.grams;
+  $("foodDate").value=f.date;$("foodMeal").value=f.meal;$("foodEAN").value=f.code||"";
   [["fKcal","kcal"],["fProtein","protein"],["fCarbs","carbs"],["fFat","fat"],["fSugar","sugar"],["fFiber","fiber"]].forEach(([id,key])=>$(id).value=f[key]===null?"":round(f[key]*m));
+  $("foodDetails").open=false;
  }
  if(options.product){
   const p=options.product;
@@ -192,11 +204,12 @@ function foodModal(options={}){
  }
  renderFoodPreview();$("foodOverlay").hidden=false;bodyLock();
 }
-function closeFood(){$("foodOverlay").hidden=true;bodyUnlock()}
+function closeFood(){++activeLookupNonce;$("foodOverlay").hidden=true;bodyUnlock()}
 function renderFoodPreview(){
- const g=Number($("foodGrams").value)||0,calc=id=>round((Number($(id).value)||0)*g/100);
+ const grams=Number($("foodGrams").value)||0,calc=id=>round((Number($(id).value)||0)*grams/100);
  $("foodPreviewCalories").textContent=fmt(calc("fKcal"))+" kcal";
- $("foodPreviewMacros").textContent="B "+dec(calc("fProtein"))+" g · S "+dec(calc("fCarbs"))+" g · T "+dec(calc("fFat"))+" g";
+ $("foodPreviewMacros").textContent="B "+dec(calc("fProtein"))+" g · S "+dec(calc("fCarbs"))+" g · T "+dec(calc("fFat"))+" g · Cukry "+dec(calc("fSugar"))+" g";
+ $all("[data-grams]").forEach(el=>el.classList.toggle("selected",Number(el.dataset.grams)===grams));
 }
 function submitFood(e){
  e.preventDefault();
@@ -213,9 +226,12 @@ function submitFood(e){
 }
 function submitPlan(e){
  e.preventDefault();
- const p={weight:+$("pWeight").value,target:+$("pTarget").value,height:+$("pHeight").value,age:+$("pAge").value,sex:$("pSex").value,activity:+$("pActivity").value,rate:+$("pRate").value};
- if(!validProfile(p)||p.target>p.weight){notify("Skontroluj údaje. Cieľ nesmie byť vyšší než aktuálna váha.");return}
- state.profile=p;save();render();notify("Tvoj plán je prepočítaný.");
+ const maintain=$("modeMaintain").checked,weight=Number($("pWeight").value),target=maintain?weight:Number($("pTarget").value);
+ const p={weight,target,height:+$("pHeight").value,age:+$("pAge").value,sex:$("pSex").value,
+  activity:+$("pActivity").value,rate:maintain?state.profile.rate:+$("pRate").value,
+  mode:maintain?"maintain":"lose",lossTarget:maintain?lossTargetDraft:target};
+ if(!validProfile(p)||(!maintain&&p.target>p.weight)){notify("Skontroluj údaje. Cieľ pri chudnutí nemôže byť vyšší než aktuálna váha.");return}
+ state.profile=p;save();render();notify(maintain?"Zapol si udržiavanie váhy.":"Plán chudnutia je prepočítaný.");
 }
 function submitWeight(e){
  e.preventDefault();const date=$("weightDate").value,kg=Number($("weightNumber").value);
@@ -502,34 +518,40 @@ async function photoDecode(file){
 async function lookupCode(code){
  const input=String(code||"").trim();
  if(!isValidEAN(input)){notify("EAN musí mať 8 až 14 číslic.");return}
- foodModal({meal:foodContextMeal,date:selectedDay,product:{code:input,name:"",notice:"Hľadám výrobok podľa čiarového kódu…"}});
- const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
+ foodModal({meal:foodContextMeal,date:selectedDay,product:{code:input,name:"",notice:"Načítavam produkt…"}});
+ const nonce=activeLookupNonce,controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
  try{
   const url="https://world.openfoodfacts.org/api/v3/product/"+encodeURIComponent(input)+"?fields=code,product_name,product_name_sk,product_name_en,nutriments";
   const response=await fetch(url,{signal:controller.signal,headers:{"Accept":"application/json"}});
   if(!response.ok)throw Error("API odpovedalo chybou "+response.status);
   const data=await response.json();
   if(!data.product||data.status==="failure"||data.status===0)throw Error("Výrobok sa v databáze nenašiel.");
+  if(nonce!==activeLookupNonce||$("foodOverlay").hidden)return;
   const p=data.product,n=p.nutriments||{};
   const value=k=>{const v=n[k+"_100g"];return v==null||!Number.isFinite(Number(v))?null:Number(v)};
   let kcal=value("energy-kcal");if(kcal===null){const kj=value("energy-kj");if(kj!==null)kcal=kj/4.184}
   const info={name:p.product_name_sk||p.product_name||p.product_name_en||"Produkt "+input,code:input,kcal,protein:value("proteins"),carbs:value("carbohydrates"),fat:value("fat"),sugar:value("sugars"),fiber:value("fiber")};
-  if($("foodOverlay").hidden)return;
-  $("foodName").value=info.name;
+  $("foodName").value=info.name;$("foodTitle").textContent="Zapísať potravinu";
   [["fKcal","kcal"],["fProtein","protein"],["fCarbs","carbs"],["fFat","fat"],["fSugar","sugar"],["fFiber","fiber"]].forEach(([field,key])=>$(field).value=info[key]===null?"":round(info[key]));
   const missing=["kcal","protein","carbs","fat","sugar"].filter(k=>info[k]===null);
-  $("foodLookupMessage").hidden=false;$("foodLookupMessage").classList.toggle("warn",missing.length>0);
-  $("foodLookupMessage").textContent=missing.length?"Produkt nájdený, ale niektoré nutričné hodnoty chýbajú. Doplň ich podľa obalu.":"Produkt rozpoznaný. Skontroluj údaje podľa obalu a uprav množstvo.";
+  $("foodSave").disabled=false;
+  $("foodLookupMessage").hidden=false;
+  $("foodLookupMessage").classList.toggle("warn",missing.length>0);
+  $("foodLookupMessage").textContent=missing.length?"Produkt sa našiel, ale niektoré hodnoty chýbajú. Otvorené detaily doplň podľa etikety.":"Produkt nájdený. Stačí nastaviť množstvo a uložiť.";
+  $("foodDetails").open=missing.length>0;
   renderFoodPreview();
  }catch(e){
-  if($("foodOverlay").hidden)return;
+  if(nonce!==activeLookupNonce||$("foodOverlay").hidden)return;
+  $("foodTitle").textContent="Pridať jedlo ručne";
+  $("foodSave").disabled=false;
+  $("foodDetails").open=true;
   $("foodLookupMessage").hidden=false;$("foodLookupMessage").classList.add("warn");
-  $("foodLookupMessage").textContent="Nenašlo sa: "+(e.name==="AbortError"?"Vyhľadávanie trvalo príliš dlho.":e.message)+ " Zadaj údaje z obalu ručne.";
+  $("foodLookupMessage").textContent="Nenašlo sa: "+(e.name==="AbortError"?"Vyhľadávanie trvalo príliš dlho.":e.message)+ " Hodnoty môžeš zadať ručne.";
  }finally{clearTimeout(timeout)}
 }
 function delegatedClick(e){
  const nav=e.target.closest("[data-nav]");if(nav){setView(nav.dataset.nav);return}
- if(e.target.closest('[data-action="scan"]')){foodContextMeal="ranajky";selectedDay=today;openScanner();return}
+ if(e.target.closest('[data-action="scan"]')){foodContextMeal=preferredMeal();selectedDay=today;openScanner();return}
  const meal=e.target.closest("[data-add-meal]");if(meal){foodContextMeal=meal.dataset.addMeal;foodModal({meal:foodContextMeal,date:selectedDay});return}
  const edit=e.target.closest("[data-edit-food]");if(edit){let f=state.foods.find(x=>x.id===edit.dataset.editFood);if(f)foodModal({record:f});return}
  const remove=e.target.closest("[data-remove-food]");if(remove){if(confirm("Vymazať toto jedlo?")){state.foods=state.foods.filter(x=>x.id!==remove.dataset.removeFood);save();render();notify("Jedlo vymazané.")}return}
@@ -537,11 +559,19 @@ function delegatedClick(e){
  const ex=e.target.closest("[data-remove-workout]");if(ex){if(confirm("Vymazať túto aktivitu?")){state.workouts=state.workouts.filter(x=>x.id!==ex.dataset.removeWorkout);save();render()}return}
 }
 document.addEventListener("click",delegatedClick);
-$("homeAdd").addEventListener("click",()=>{foodContextMeal="ranajky";foodModal({meal:foodContextMeal,date:today})});
+$("homeAdd").addEventListener("click",()=>{foodContextMeal=preferredMeal();foodModal({meal:foodContextMeal,date:today})});
 $("prevDay").addEventListener("click",()=>{selectedDay=addDays(selectedDay,-1);renderDiary()});
 $("nextDay").addEventListener("click",()=>{selectedDay=addDays(selectedDay,1);renderDiary()});
 $("foodForm").addEventListener("submit",submitFood);
 $("foodForm").addEventListener("input",renderFoodPreview);
+$("foodForm").addEventListener("invalid",e=>{if($("foodDetails").contains(e.target))$("foodDetails").open=true},true);
+$("amountMinus").addEventListener("click",()=>{$("foodGrams").value=Math.max(1,(Number($("foodGrams").value)||100)-25);renderFoodPreview()});
+$("amountPlus").addEventListener("click",()=>{$("foodGrams").value=Math.min(10000,(Number($("foodGrams").value)||0)+25);renderFoodPreview()});
+$all("[data-grams]").forEach(el=>el.addEventListener("click",()=>{$("foodGrams").value=el.dataset.grams;renderFoodPreview()}));
+$("modeMaintain").addEventListener("change",updatePlanModeUI);
+$("modeLose").addEventListener("change",updatePlanModeUI);
+$("pWeight").addEventListener("input",()=>{if($("modeMaintain").checked)$("pTarget").value=$("pWeight").value});
+$("pTarget").addEventListener("input",()=>{if($("modeLose").checked)lossTargetDraft=Number($("pTarget").value)||lossTargetDraft});
 $("planForm").addEventListener("submit",submitPlan);
 $("weightForm").addEventListener("submit",submitWeight);
 $("workoutForm").addEventListener("submit",submitWorkout);
