@@ -303,6 +303,7 @@ async function photoDecode(file){
   }
   if(!await loadScannerLibrary())throw Error("Knižnicu skenera sa nepodarilo načítať.");
   if(token!==scanSession)return;
+  $("html5Camera").hidden=false;$("nativeCamera").hidden=true;
   const temp=new Html5Qrcode("html5Camera",{formatsToSupport:scannerFormats(),verbose:false});
   let result;try{result=await temp.scanFileV2(file,true)}finally{try{await temp.clear()}catch(e){}}
   if(token!==scanSession)return;
