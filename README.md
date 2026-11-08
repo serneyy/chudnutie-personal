@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 28
+# FORMA. Personal · verzia 29
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -51,6 +51,17 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Dôležité:** nasadenie Cloudflare Worker robí vlastník ručne. Kým Worker nebeží a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
 - Prvá synchronizácia lokálne dáta nevymaže; profily sa zlúčia podľa času poslednej úpravy, pri zlyhaní servera sa zachovajú v `localStorage`. Mobilné testy simulujú dve zariadenia a nedostupný server.
 - Upozornenie: verejný GitHub repo umožňuje komukoľvek prezerať údaje v histórii commitov. Endpoint POST nie je autentifikovaný na strane používateľa (požiadavka na rodinný prototyp); CORS/Origin nie je bezpečnostné overenie klienta, takže endpoint nie je vhodný pre produkčné osobné údaje.
+
+## FORMA v29: Veiny Galaxy a Voxberg proteíny
+
+- Pridaných 19 konkrétnych proteínov do **offline** katalógu: 12 príchutí Veiny Galaxy Whey/ISO a 7 príchutí Voxberg Whey 100. Fungujú okamžite pri vyhľadávaní `veiny`, `voxberg`, `voxberrg` aj názvu príchute, bez API.
+- Každý výrobok má hodnoty kcal/bielkovín/sacharidov/tukov na **100 g prášku** z výrobcu, KalorickéTabuľky.sk, Dr. Max alebo konkrétneho sekundárneho zdroja. Príslušný odkaz sa zobrazuje po výbere. Príchute sa nesmú zamieňať, makrá sa líšia.
+- Predvolená porcia Veiny Galaxy = 25 g; Voxberg = 30 g. Voda má nulové kalórie; pri miešaní s mliekom si treba pripočítať osobitne mlieko. Porciu možno manuálne zmeniť.
+- **Cukry a vláknina**: Ak nebol konkrétny údaj na zdroji, uložená hodnota je `null`, nie vymyslená nula. V UI sa zobrazí možnosť doplniť údaj podľa etikety.
+- Kde boli dostupné jasne priraditeľné fotografie konkrétnej príchute, boli pridané odkazy na externé obrázky s atribúciou zdroja (11/19); obrázky nie sú vytvorené AI ani generické obaly. Ich dostupnosť môže závisieť od externého webu.
+- Dve rozbaľovacie sekcie **Proteíny Veiny Galaxy** a **Proteíny Voxberg** v rýchlom výbere. Vyhľadávanie zobrazuje až 18 lokálnych zhôd.
+- Zdroje: https://www.kaloricketabulky.sk/brand/veiny-galaxy ; https://veinygalaxy.shop/obchod/doplnky-vyzivy/proteiny/ ; https://www.voxberg.com/sk/products/whey-100 ; individuálne URL v poli `sourceUrl` každého výrobku.
+- Zmena sa netýka synchronizácie profilov, dát rodiny, kalorických cieľov ani cloudového Worker API.
 
 ## FORMA v28: overený proxy katalóg
 
