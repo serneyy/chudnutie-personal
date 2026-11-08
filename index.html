@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=13">
+<link rel="stylesheet" href="styles.css?v=14">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -174,6 +174,7 @@
       </div>
       <div id="recentFoods" class="recent-foods"></div>
     </div>
+    <div id="selectedProductVisual" class="selected-product-visual" hidden><div class="selected-product-picture" id="selectedProductPicture"></div><div class="selected-product-description"><strong id="selectedProductLabel">Vybraný výrobok</strong><small>Fotografia obalu z Open Food Facts, ak je dostupná</small></div></div>
     <div class="food-choice">
      <label class="food-simple-label" for="foodMeal">Kedy si to jedol?</label>
      <select id="foodMeal" aria-label="Typ jedla"><option value="ranajky">Raňajky</option><option value="desiata">Desiata</option><option value="obed">Obed</option><option value="olovrant">Olovrant</option><option value="vecera">Večera</option><option value="ine">Ostatné</option></select>
@@ -218,7 +219,7 @@
     <div class="food-more-body">
      <label class="block-label">Dátum<input id="foodDate" type="date" required></label>
      <label class="block-label">Čiarový kód (voliteľné)<input id="foodEAN" inputmode="numeric" maxlength="14" placeholder="EAN"></label>
-     <div class="per100"><span>NA 100 G / 100 ML</span><small>údaje podľa etikety</small></div>
+     <div class="per100"><span id="nutritionBasis">NA 100 G / 100 ML</span><small>údaje podľa etikety</small></div>
      <div class="form-grid nutrients">
       <label>Kalórie <small>kcal</small><input id="fKcal" type="number" min="0" max="2000" step="any" required placeholder="0"></label>
       <label>Bielkoviny <small>g</small><input id="fProtein" type="number" min="0" max="100" step="any" value="0" required></label>
@@ -259,6 +260,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=13"></script>
+<script defer src="app.js?v=14"></script>
 </body>
 </html>
