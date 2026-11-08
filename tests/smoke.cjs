@@ -410,7 +410,7 @@ const fs=require("node:fs");
    }
    throw Error("Unexpected Worker request "+method+" "+url.pathname);
   }
-  await page.route("https://forma-github-sync.threadid.workers.dev/**",mockWorker);
+  await page.route("https://weathered-feather-e501.teenwear-eu.workers.dev/**",mockWorker);
   await page.locator('[data-nav="settings"]').first().click();
   await page.locator("#githubRefreshBtn").click();
   await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.textContent?.includes("serverový GitHub token"),{timeout:7000});
@@ -431,7 +431,7 @@ const fs=require("node:fs");
   assert(cloudState.profiles.find(p=>p.name==="Daniel").data.foods.some(x=>x.name==="Banán (jedlá časť)"),"Autosave food into GitHub cloud must work");
   const second=await browser.newContext({viewport:{width:390,height:844}});
   const momDevice=await second.newPage();
-  await momDevice.route("https://forma-github-sync.threadid.workers.dev/**",mockWorker);
+  await momDevice.route("https://weathered-feather-e501.teenwear-eu.workers.dev/**",mockWorker);
   await momDevice.goto("http://127.0.0.1:8765/",{waitUntil:"domcontentloaded"});
   await momDevice.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:10000});
   assert(await momDevice.locator("#profileOverlay").isVisible(),"Fresh phone should let user choose an imported profile");
