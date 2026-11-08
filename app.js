@@ -397,7 +397,7 @@ async function remoteFoodSearch(query,token,local,{force=false}={}){
  searchNetworkHistory=searchNetworkHistory.filter(t=>now-t<60000);
  const minDelay=Math.max(0,lastSearchAt+6500-now);
  const windowDelay=searchNetworkHistory.length>=3?Math.max(0,searchNetworkHistory[0]+61000-now):0;
- const outageDelay=force?0:Math.max(0,remoteSearchPauseUntil-now);
+ const outageDelay=force||matchingFoodBrand(q)?0:Math.max(0,remoteSearchPauseUntil-now);
  const delay=Math.max(minDelay,windowDelay,outageDelay);
  if(delay>0){
   if(delay<8500){
