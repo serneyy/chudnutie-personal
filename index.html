@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=7">
+<link rel="stylesheet" href="styles.css?v=8">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -40,7 +40,7 @@
 <div class="shell">
   <header class="header">
     <div class="wordmark">forma<span>.</span><small>PERSONAL</small></div>
-    <div class="header-actions"><span id="headerDate"></span><button class="round-action" data-nav="settings" aria-label="Nastavenia"><svg><use href="#ic-settings"/></svg></button></div>
+    <div class="header-actions"><span id="headerDate"></span><button class="profile-avatar" id="profileHeaderBtn" aria-label="Zmeniť profil" title="Zmeniť profil">?</button><button class="round-action" data-nav="settings" aria-label="Nastavenia"><svg><use href="#ic-settings"/></svg></button></div>
   </header>
   <main id="main" tabindex="-1">
     <section class="view active" id="view-home">
@@ -110,10 +110,11 @@
 
     <section class="view" id="view-settings">
       <div class="intro"><span class="eyebrow">NASTAVENIA</span><h1>Tvoje dáta. Tvoje pravidlá.</h1><p>Žiadny účet, žiadna databáza na serveri.</p></div>
-      <div class="card"><h2>Zálohovanie</h2><p class="card-sub">Jedlá, váha a plán sú uložené iba v tomto prehliadači. Ak zmeníš mobil alebo vymažeš dáta prehliadača, bez zálohy ich stratíš.</p><div class="action-stack"><button class="secondary-button" id="exportBtn"><svg><use href="#ic-download"/></svg> Stiahnuť moje dáta (.json)</button><button class="outline-button" id="importBtn"><svg><use href="#ic-upload"/></svg> Obnoviť zo zálohy</button><input id="importFile" type="file" accept=".json,application/json" hidden></div></div>
-      <div class="card"><h2>Ochrana súkromia</h2><p class="card-sub">Tvoja váha ani jedálniček nejdú na GitHub. Pri skene výrobku odosielame jeho EAN do verejného Open Food Facts API. Kód aplikácie je verejný.</p></div>
+      <div class="card" id="profilesSettings"><div class="card-heading"><span class="round-icon"><svg><use href="#ic-settings"/></svg></span><div><h2>Používateľské profily</h2><p>Osobné záznamy oddelené podľa mena</p></div></div><p class="card-sub">Aktívny profil: <strong id="currentProfileLabel">–</strong></p><div class="action-stack"><button class="secondary-button" id="changeProfileBtn">Zmeniť používateľa</button><button class="outline-button" id="renameProfileBtn">Premenovať môj profil</button></div><p class="card-sub">Profily nie sú online účty. Fungujú iba v tomto prehliadači a nemajú heslá.</p></div>
+      <div class="card"><h2>Zálohovanie</h2><p class="card-sub">Každý používateľ má svoje údaje uložené ako JSON v tomto prehliadači. Záloha sa týka iba aktuálneho profilu. Na inom mobile bez importu nebude dostupná.</p><div class="action-stack"><button class="secondary-button" id="exportBtn"><svg><use href="#ic-download"/></svg> Stiahnuť moje dáta (.json)</button><button class="outline-button" id="importBtn"><svg><use href="#ic-upload"/></svg> Obnoviť zo zálohy</button><input id="importFile" type="file" accept=".json,application/json" hidden></div></div>
+      <div class="card"><h2>Ochrana súkromia</h2><p class="card-sub">Tvoja váha ani jedálniček nejdú na GitHub. Profil podľa mena nie je zabezpečený účet: iný človek na tomto zariadení môže prepnúť na tvoj profil. Pre súkromné účty na rôznych mobiloch by bolo potrebné online úložisko a prihlasovanie. Pri skene sa EAN posiela do Open Food Facts.</p></div>
       <div class="card"><h2>O projekte</h2><p class="card-sub">FORMA. je osobný nástroj na sledovanie návykov. Kalorické výpočty, termín cieľa a výdaj pri cvičení sú iba odhady pre dospelých.</p><a href="https://www.cdc.gov/physical-activity-basics/guidelines/adults.html" rel="noopener" target="_blank">Pohybové odporúčania CDC ↗</a><a href="https://www.who.int/news-room/fact-sheets/detail/healthy-diet" rel="noopener" target="_blank">WHO a cukry ↗</a><a href="https://openfoodfacts.github.io/documentation/docs/Product-Opener/api/" rel="noopener" target="_blank">Open Food Facts API ↗</a></div>
-      <button class="danger-button" id="resetBtn">Vymazať všetky moje záznamy</button>
+      <button class="danger-button" id="resetBtn">Vymazať záznamy v tomto profile</button>
     </section>
   </main>
   <nav class="bottom-nav" aria-label="Hlavná navigácia">
@@ -188,7 +189,32 @@
   </form>
  </div>
 </div>
+<div class="profile-overlay" id="profileOverlay" role="dialog" aria-modal="true" aria-labelledby="profileDialogTitle" hidden>
+  <div class="profile-sheet">
+    <div class="profile-mark">forma<span>.</span></div>
+    <span class="eyebrow">OSOBNÉ PROFILY</span>
+    <h2 id="profileDialogTitle">Kto dnes používa FORMA.?</h2>
+    <p class="profile-lead">Vyber svoje meno. Každý má vlastné jedlá, hmotnosť aj plán.</p>
+    <div id="profileList" class="profile-list"></div>
+    <button class="outline-button stretch" id="toggleNewProfile" type="button"><svg><use href="#ic-plus"/></svg> Vytvoriť nový profil</button>
+    <form id="newProfileForm" class="profile-create" hidden>
+      <h3>Nový profil</h3>
+      <label class="block-label" for="newProfileName">Meno<input id="newProfileName" maxlength="30" placeholder="Napríklad Mama" required autocomplete="nickname"></label>
+      <div class="form-grid">
+        <label>Aktuálna váha (kg)<input id="newProfileWeight" type="number" min="35" max="300" step="0.1" placeholder="Napr. 76" required></label>
+        <label>Cieľová váha (kg)<input id="newProfileTarget" type="number" min="35" max="300" step="0.1" placeholder="Napr. 72" required></label>
+        <label>Výška (cm)<input id="newProfileHeight" type="number" min="120" max="230" step="1" placeholder="Napr. 165" required></label>
+        <label>Vek (roky)<input id="newProfileAge" type="number" min="18" max="95" step="1" placeholder="Napr. 55" required></label>
+        <label class="full-span">Pohlavie (pre kalorický vzorec)<select id="newProfileSex"><option value="female">Žena</option><option value="male">Muž</option></select></label>
+        <button class="primary-button stretch full-span" type="submit">Vytvoriť a otvoriť profil <svg><use href="#ic-check"/></svg></button>
+      </div>
+      <p class="profile-note">Ak nechceš chudnúť, nastav rovnakú aktuálnu a cieľovú váhu. Plán môžeš zmeniť neskôr.</p>
+    </form>
+    <button class="profile-cancel" id="closeProfile" type="button">Späť do aplikácie</button>
+    <p class="profile-privacy">Tieto profily sa ukladajú iba do tohto zariadenia, nie do GitHub repozitára. Na prenesenie použi JSON zálohu.</p>
+  </div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=7"></script>
+<script defer src="app.js?v=8"></script>
 </body>
 </html>
