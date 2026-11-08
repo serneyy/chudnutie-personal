@@ -17,6 +17,183 @@ const frameCanvas=document.createElement("canvas");
 const frameContext=frameCanvas.getContext("2d",{willReadFrequently:true});
 const BARCODE_FORMATS=["EAN13","EAN8","UPCA","UPCE","Code128","Code39","ITF"];
 const LIB_VERSION="3.1.6";
+
+/* Nutričné údaje všeobecných jedál sú orientačné na 100 g/ml.
+   Veľkosť porcie nie je univerzálna: používateľ ju vždy môže upraviť. */
+const COMMON_FOODS=[
+ {key:"cappuccino",name:"Cappuccino s polotučným mliekom, bez cukru",aliases:["cappuccino","cappucino","capucino","kapucino","kapuccino","capu","kava s mliekom"],unit:"ml",portion:180,kcal:42,protein:2.5,carbs:3.8,fat:1.9,sugar:3.8,fiber:0},
+ {key:"latte",name:"Caffè latte s polotučným mliekom, bez cukru",aliases:["latte","cafe latte","caffe latte","mliecna kava"],unit:"ml",portion:250,kcal:46,protein:3,carbs:4.6,fat:1.8,sugar:4.5,fiber:0},
+ {key:"espresso",name:"Espresso bez cukru",aliases:["espresso","expresso","presso"],unit:"ml",portion:30,kcal:3,protein:0.2,carbs:0.5,fat:0,sugar:0,fiber:0},
+ {key:"coffee",name:"Čierna káva bez cukru",aliases:["cierna kava","kava bez cukru","coffee","americano","kafe"],unit:"ml",portion:200,kcal:2,protein:0.3,carbs:0,fat:0,sugar:0,fiber:0},
+ {key:"tea",name:"Čaj bez cukru",aliases:["caj","tea","caj bez cukru"],unit:"ml",portion:250,kcal:1,protein:0,carbs:0.2,fat:0,sugar:0,fiber:0},
+ {key:"water",name:"Voda",aliases:["voda","water","mineralka"],unit:"ml",portion:250,kcal:0,protein:0,carbs:0,fat:0,sugar:0,fiber:0},
+ {key:"milk",name:"Polotučné mlieko (1,5 %)",aliases:["mlieko","milk","polotucne"],unit:"ml",portion:250,kcal:47,protein:3.4,carbs:4.8,fat:1.5,sugar:4.8,fiber:0},
+ {key:"juice",name:"Pomarančový džús",aliases:["pomarancovy dzus","dzus","orange juice"],unit:"ml",portion:200,kcal:45,protein:0.7,carbs:10.4,fat:0.2,sugar:8.4,fiber:0.2},
+ {key:"banana",name:"Banán (jedlá časť)",aliases:["banan","banana"],unit:"g",portion:120,kcal:89,protein:1.1,carbs:22.8,fat:0.3,sugar:12.2,fiber:2.6},
+ {key:"apple",name:"Jablko",aliases:["jablko","apple"],unit:"g",portion:160,kcal:52,protein:0.3,carbs:13.8,fat:0.2,sugar:10.4,fiber:2.4},
+ {key:"egg",name:"Vajce uvarené",aliases:["vajce","vajicko","egg"],unit:"g",portion:55,kcal:155,protein:12.6,carbs:1.1,fat:10.6,sugar:1.1,fiber:0},
+ {key:"rice",name:"Ryža uvarená",aliases:["ryza","rice"],unit:"g",portion:180,kcal:130,protein:2.7,carbs:28.2,fat:0.3,sugar:0.1,fiber:0.4},
+ {key:"oats",name:"Ovsené vločky suché",aliases:["ovsene vlocky","vlocky","oats"],unit:"g",portion:50,kcal:379,protein:13.2,carbs:67.7,fat:6.5,sugar:1,fiber:10.1},
+ {key:"chicken",name:"Kuracie prsia tepelne upravené",aliases:["kuracie","kuracie prsia","chicken"],unit:"g",portion:150,kcal:165,protein:31,carbs:0,fat:3.6,sugar:0,fiber:0},
+ {key:"bread",name:"Chlieb pšenično-ražný",aliases:["chlieb","bread"],unit:"g",portion:40,kcal:240,protein:8,carbs:47,fat:2,sugar:3,fiber:5}
+];
+let suggestions=[],suggestionCursor=-1,searchTimer=null,searchAbort=null,searchGeneration=0,searchNetworkHistory=[],lastSearchAt=0;
+const searchCache=new Map();
+function normalizeTerm(value){
+ return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+}
+function setFoodPortion(unit="g",portion=100,note=""){
+ const selected=unit==="ml"?"ml":"g";
+ $("foodUnit").value=selected;$("portionUnit").textContent=selected;
+ $("foodGrams").setAttribute("aria-label","Množstvo v "+(selected==="ml"?"mililitroch":"gramoch"));
+ if(Number.isFinite(Number(portion))&&Number(portion)>0)$("foodGrams").value=Number(portion);
+ $all("[data-grams]").forEach(button=>button.textContent=button.dataset.grams+" "+selected);
+ $("portionHint").textContent=note||"Množstvo môžeš upraviť podľa skutočnej porcie.";
+ renderFoodPreview();
+}
+function bestServing(product){
+ const isDrink=/\b(ml|l)\b/i.test(String(product.serving_size||""))||product.serving_quantity_unit==="ml"||product.product_quantity_unit==="ml"||/(cappuccino|latte|coffee|drink|juice|tea|kava|caj|napoj|mlieko|voda|cola)/i.test(String(product.product_name||""));
+ const unit=isDrink?"ml":"g";
+ const servingUnit=String(product.serving_quantity_unit||"").toLowerCase();
+ const serving=Number(product.serving_quantity);
+ if(validNum(serving,10,2000)&&(servingUnit===unit||!servingUnit))
+  return {unit,portion:Math.round(serving),fromLabel:true};
+ const raw=String(product.serving_size||"");
+ const matches=[...raw.matchAll(/(\d{2,4}(?:[.,]\d+)?)\s*(ml|g)\b/gi)];
+ const explicit=matches.find(m=>m[2].toLowerCase()===unit);
+ if(explicit){const portion=Number(explicit[1].replace(",","."));if(validNum(portion,10,2000))return {unit,portion:Math.round(portion),fromLabel:true}}
+ const productQuantity=Number(product.product_quantity),productUnit=String(product.product_quantity_unit||"").toLowerCase();
+ if(validNum(productQuantity,20,500)&&productUnit===unit)
+  return {unit,portion:Math.round(productQuantity),fromLabel:true};
+ return {unit,portion:unit==="ml"?200:100,fromLabel:false};
+}
+function nutritionFromOFF(p){
+ const n=p.nutriments||{},value=key=>{
+  const v=n[key+"_100g"];return v==null||!Number.isFinite(Number(v))?null:Number(v);
+ };
+ let kcal=value("energy-kcal");
+ if(kcal===null){const kj=value("energy-kj");if(kj!==null)kcal=kj/4.184}
+ const serving=bestServing(p);
+ return {id:"off:"+String(p.code||""),source:"off",name:String(p.product_name_sk||p.product_name||p.product_name_en||"").trim(),
+  brand:String(p.brands||"").trim(),code:String(p.code||""),...serving,
+  kcal,protein:value("proteins"),carbs:value("carbohydrates"),fat:value("fat"),sugar:value("sugars"),fiber:value("fiber")};
+}
+function findCommon(query){
+ const q=normalizeTerm(query);
+ if(q.length<2)return [];
+ return COMMON_FOODS.map(item=>{
+  const fields=[item.name,...item.aliases].map(normalizeTerm);
+  const match=fields.some(text=>text.includes(q)||q.includes(text)&&text.length>3);
+  return match?{...item,id:"common:"+item.key,source:"estimate",brand:"Všeobecná potravina",fromLabel:false}:null;
+ }).filter(Boolean).slice(0,5);
+}
+function hideFoodSuggestions(){
+ clearTimeout(searchTimer);
+ if(searchAbort){searchAbort.abort();searchAbort=null}
+ ++searchGeneration;suggestions=[];suggestionCursor=-1;
+ $("foodSuggestions").hidden=true;$("foodSuggestions").replaceChildren();
+ $("foodName").setAttribute("aria-expanded","false");
+}
+function renderFoodSuggestions(local=[],remote=[],loading=false,error=""){
+ if($("foodOverlay").hidden)return;
+ const unique=new Set();suggestions=[];
+ const add=(items)=>items.forEach(item=>{const id=item.id||item.name;if(!unique.has(id)){unique.add(id);suggestions.push(item)}});
+ add(local);add(remote);
+ const out=$("foodSuggestions");
+ if(!suggestions.length&&!loading&&!error){out.hidden=true;$("foodName").setAttribute("aria-expanded","false");return}
+ const row=(item,index)=>{
+  const text=item.source==="estimate"?"Orientačné údaje • bežná porcia":"Open Food Facts"+(item.brand?" • "+item.brand:"");
+  return '<button type="button" class="food-suggestion" role="option" aria-selected="false" data-suggest="'+index+'"><span class="food-suggestion-icon '+(item.source==="off"?"remote":"")+'">'+(item.unit==="ml"?"☕":"◉")+'</span><span class="food-suggestion-body"><span class="food-suggestion-title">'+escapeHTML(item.name)+'</span><span class="food-suggestion-meta">'+escapeHTML(text)+' · '+fmt(item.portion)+' '+item.unit+'</span></span><span class="food-suggestion-calories">'+(item.kcal==null?"Doplniť":fmt(item.kcal*item.portion/100)+" kcal")+'</span></button>';
+ };
+ let html="";
+ const localItems=suggestions.filter(x=>x.source==="estimate"),remoteItems=suggestions.filter(x=>x.source==="off");
+ if(localItems.length)html+='<div class="food-suggestions-heading">Bežné jedlá a nápoje (odhad)</div>'+localItems.map(x=>row(x,suggestions.indexOf(x))).join("");
+ if(remoteItems.length)html+='<div class="food-suggestions-heading">Konkrétne výrobky z databázy</div>'+remoteItems.map(x=>row(x,suggestions.indexOf(x))).join("");
+ if(loading)html+='<div class="food-search-empty">Hľadám ďalšie produkty…</div>';
+ else if(error)html+='<div class="food-search-empty">'+escapeHTML(error)+'</div>';
+ else if(!suggestions.length)html+='<div class="food-search-empty">Nič som nenašiel. Môžeš jedlo zadať ručne.</div>';
+ out.innerHTML=html;out.hidden=false;$("foodName").setAttribute("aria-expanded","true");
+ suggestionCursor=-1;
+}
+function applyFoodSuggestion(item){
+ if(!item)return;
+ hideFoodSuggestions();
+ $("foodName").value=item.name;
+ $("foodEAN").value=item.code||"";
+ for(const [field,key] of [["fKcal","kcal"],["fProtein","protein"],["fCarbs","carbs"],["fFat","fat"],["fSugar","sugar"],["fFiber","fiber"]])
+  $(field).value=item[key]===null||item[key]===undefined?"":round(item[key]);
+ const note=item.fromLabel?"Porcia uvedená pri výrobku. Ak si mal inú, zmeň množstvo.":"Predvolená bežná porcia. Ak si mal inú, zmeň množstvo.";
+ setFoodPortion(item.unit,item.portion,note);
+ const missing=["kcal","protein","carbs","fat","sugar"].filter(k=>item[k]==null);
+ $("foodDetails").open=missing.length>0;
+ $("foodTitle").textContent=item.source==="off"?"Zapísať výrobok":"Zapísať jedlo";
+ $("foodSave").disabled=false;
+ $("foodLookupMessage").hidden=false;
+ $("foodLookupMessage").classList.toggle("warn",item.source==="estimate"||missing.length>0);
+ $("foodLookupMessage").textContent=missing.length?"Niektoré hodnoty produktu chýbajú. Otvorené detaily doplň z etikety.":
+  item.source==="estimate"?"Orientačný výpočet pre bežnú prípravu. Mlieko, cukor a veľkosť nápoja môžu výsledok zmeniť.":"Výrobok z Open Food Facts. Množstvo a údaje si skontroluj podľa obalu.";
+ $("foodSearchHelp").textContent="Vybrané: "+item.name;
+ renderFoodPreview();
+}
+async function remoteFoodSearch(query,token,local){
+ const q=normalizeTerm(query);if(q.length<3)return;
+ if(searchCache.has(q)){if(token===searchGeneration)renderFoodSuggestions(local,searchCache.get(q),false);return}
+ const now=Date.now();searchNetworkHistory=searchNetworkHistory.filter(t=>now-t<60000);
+ if(searchNetworkHistory.length>=8){if(token===searchGeneration)renderFoodSuggestions(local,[],false,"Databáza má limit vyhľadávania. Skús to znova neskôr.");return}
+ searchNetworkHistory.push(now);lastSearchAt=now;
+ searchAbort=new AbortController();const ctrl=searchAbort;
+ const timer=setTimeout(()=>ctrl.abort(),9000);
+ try{
+  // Open Food Facts full text search is documented on its legacy Search API.
+  const url=new URL("https://world.openfoodfacts.org/cgi/search.pl");
+  url.searchParams.set("search_terms",q);
+  url.searchParams.set("search_simple","1");
+  url.searchParams.set("action","process");
+  url.searchParams.set("json","1");
+  url.searchParams.set("page_size","10");
+  url.searchParams.set("fields","code,product_name,product_name_sk,product_name_en,brands,serving_size,serving_quantity,serving_quantity_unit,product_quantity,product_quantity_unit,nutriments");
+  const response=await fetch(url.toString(),{signal:ctrl.signal,headers:{Accept:"application/json"}});
+  if(!response.ok)throw Error("API "+response.status);
+  const data=await response.json();
+  const products=Array.isArray(data.products)?data.products:[];
+  const mapped=products.filter(p=>p&&p.product_name&&p.nutriments)
+   .map(nutritionFromOFF).filter(p=>p.name&&p.kcal!==null&&validNum(p.kcal,0,2000)&&p.portion>0)
+   .slice(0,6);
+  searchCache.set(q,mapped);
+  if(token===searchGeneration&&!$("foodOverlay").hidden&&normalizeTerm($("foodName").value)===q)
+   renderFoodSuggestions(local,mapped,false);
+ }catch(e){
+  if(token!==searchGeneration)return;
+  if(e.name==="AbortError"&&ctrl.signal.aborted){renderFoodSuggestions(local,[],false,"Produkty sa nepodarilo načítať. Skús znova.");return}
+  renderFoodSuggestions(local,[],false,"Databáza je momentálne nedostupná. Bežné jedlá fungujú ďalej.");
+ }finally{clearTimeout(timer);if(searchAbort===ctrl)searchAbort=null}
+}
+function foodNameChanged(){
+ const value=$("foodName").value.trim();
+ clearTimeout(searchTimer);
+ if(searchAbort){searchAbort.abort();searchAbort=null}
+ const token=++searchGeneration;
+ if(value.length<2){hideFoodSuggestions();$("foodSearchHelp").textContent="Začni písať a vyber jedlo z návrhov.";return}
+ const local=findCommon(value);
+ renderFoodSuggestions(local,[],normalizeTerm(value).length>=3);
+ $("foodSearchHelp").textContent="Ťukni na jedlo a doplním hodnoty aj porciu.";
+ if(normalizeTerm(value).length<3)return;
+ const wait=Math.max(680,1250-(Date.now()-lastSearchAt));
+ searchTimer=setTimeout(()=>remoteFoodSearch(value,token,local),wait);
+}
+function foodNameKeys(e){
+ if($("foodSuggestions").hidden||!suggestions.length)return;
+ if(e.key==="ArrowDown"||e.key==="ArrowUp"){
+  e.preventDefault();suggestionCursor=(suggestionCursor+(e.key==="ArrowDown"?1:-1)+suggestions.length)%suggestions.length;
+  $all("[data-suggest]").forEach((x,i)=>x.setAttribute("aria-selected",String(i===suggestionCursor)));
+  return;
+ }
+ if(e.key==="Enter"){
+  e.preventDefault();
+  applyFoodSuggestion(suggestions[Math.max(0,suggestionCursor)]);
+ }else if(e.key==="Escape"){e.preventDefault();hideFoodSuggestions()}
+}
+
 const fmt=n=>Math.round(Number(n)||0).toLocaleString("sk-SK");
 const dec=n=>Number(n||0).toLocaleString("sk-SK",{maximumFractionDigits:1});
 const round=n=>Math.round(Number(n||0)*10)/10;
@@ -33,7 +210,7 @@ function validProfile(p){return p&&validNum(p.weight,35,300)&&validNum(p.target,
 function normalize(input){
  if(!input||!validProfile(input.profile)||!Array.isArray(input.foods)||!Array.isArray(input.weights)||!Array.isArray(input.workouts))throw Error("Neplatný súbor údajov.");
  const p=input.profile;const obj={profile:{weight:+p.weight,target:+p.target,height:+p.height,age:+p.age,sex:p.sex,activity:+p.activity,rate:+p.rate,mode:p.mode==="maintain"?"maintain":"lose",lossTarget:validNum(p.lossTarget,35,300)?+p.lossTarget:+p.target},foods:[],weights:[],workouts:[]};
- obj.foods=input.foods.slice(0,20000).filter(x=>x&&typeof x.name==="string"&&x.name.length<=100&&validDate(x.date)&&MEALS.some(m=>m[0]===x.meal)&&validNum(x.grams,1,10000)&&["kcal","protein","carbs","fat","sugar"].every(k=>validNum(x[k],0,200000))).map(x=>({id:String(x.id||uid()).slice(0,100),name:x.name,date:x.date,meal:x.meal,grams:+x.grams,kcal:+x.kcal,protein:+x.protein,carbs:+x.carbs,fat:+x.fat,sugar:+x.sugar,fiber:validNum(x.fiber,0,200000)?+x.fiber:null,code:String(x.code||"").slice(0,16)}));
+ obj.foods=input.foods.slice(0,20000).filter(x=>x&&typeof x.name==="string"&&x.name.length<=100&&validDate(x.date)&&MEALS.some(m=>m[0]===x.meal)&&validNum(x.grams,1,10000)&&["kcal","protein","carbs","fat","sugar"].every(k=>validNum(x[k],0,200000))).map(x=>({id:String(x.id||uid()).slice(0,100),name:x.name,date:x.date,meal:x.meal,grams:+x.grams,kcal:+x.kcal,protein:+x.protein,carbs:+x.carbs,fat:+x.fat,sugar:+x.sugar,fiber:validNum(x.fiber,0,200000)?+x.fiber:null,code:String(x.code||"").slice(0,16),unit:x.unit==="ml"?"ml":"g"}));
  obj.weights=input.weights.slice(0,10000).filter(x=>x&&validDate(x.date)&&validNum(x.kg,35,300)).map(x=>({date:x.date,kg:+x.kg}));
  obj.workouts=input.workouts.slice(0,10000).filter(x=>x&&validDate(x.date)&&EXERCISES[x.type]&&validNum(x.minutes,1,480)).map(x=>({id:String(x.id||uid()).slice(0,100),type:x.type,date:x.date,minutes:+x.minutes}));
  return obj;
@@ -74,7 +251,7 @@ function setView(view){if(!$("view-"+view))return;activeView=view;$all(".view").
 function mealMarkup(f,mini=false){
  const edit=mini?"":'<button class="small-button" data-edit-food="'+escapeHTML(f.id)+'" aria-label="Upraviť">'+icon("edit")+'</button>';
  const del=mini?"":'<button class="small-button" data-remove-food="'+escapeHTML(f.id)+'" aria-label="Zmazať">'+icon("trash")+'</button>';
- return '<div class="meal-item"><span class="meal-icon">'+icon("list")+'</span><div class="meal-details"><strong>'+escapeHTML(f.name)+'</strong><small>'+dec(f.grams)+' g/ml · B '+dec(f.protein)+' g · S '+dec(f.carbs)+' g</small></div><div class="meal-kcal">'+fmt(f.kcal)+' kcal</div>'+edit+del+'</div>';
+ return '<div class="meal-item"><span class="meal-icon">'+icon("list")+'</span><div class="meal-details"><strong>'+escapeHTML(f.name)+'</strong><small>'+dec(f.grams)+' '+(f.unit||'g')+' · B '+dec(f.protein)+' g · S '+dec(f.carbs)+' g</small></div><div class="meal-kcal">'+fmt(f.kcal)+' kcal</div>'+edit+del+'</div>';
 }
 function renderHome(){
  const c=plan(),s=daily(today),sCount=streak(),start=state.profile.weight,target=state.profile.target;
@@ -174,6 +351,8 @@ function bodyLock(){document.body.style.overflow="hidden"}
 function bodyUnlock(){document.body.style.overflow=""}
 function foodModal(options={}){
  ++activeLookupNonce;
+ hideFoodSuggestions();
+ $("foodSearchHelp").textContent="Začni písať. Zobrazím ti jedlá a produkty s výživovými hodnotami.";
  $("foodForm").reset();$("foodEditId").value="";
  $("foodTitle").textContent=options.product?"Načítavam produkt…":"Pridať jedlo";
  $("foodStep").textContent="JEDNODUCHÝ ZÁPIS JEDLA";
@@ -182,6 +361,7 @@ function foodModal(options={}){
  $("foodMeal").value=options.meal||preferredMeal();
  $("foodDate").value=options.date||selectedDay;
  $("foodGrams").value="100";
+ $("foodUnit").value="g";setFoodPortion("g",100);
  ["fProtein","fCarbs","fFat","fSugar"].forEach(id=>$(id).value="0");
  $("fFiber").value="";$("fKcal").value="";$("foodEAN").value="";
  $("foodLookupMessage").hidden=true;$("foodLookupMessage").classList.remove("warn");
@@ -193,6 +373,7 @@ function foodModal(options={}){
   $("foodSave").disabled=false;
   $("foodName").value=f.name;$("foodGrams").value=f.grams;
   $("foodDate").value=f.date;$("foodMeal").value=f.meal;$("foodEAN").value=f.code||"";
+  setFoodPortion(f.unit||"g",f.grams,"Pôvodne zapísané množstvo. Môžeš ho upraviť.");
   [["fKcal","kcal"],["fProtein","protein"],["fCarbs","carbs"],["fFat","fat"],["fSugar","sugar"],["fFiber","fiber"]].forEach(([id,key])=>$(id).value=f[key]===null?"":round(f[key]*m));
   $("foodDetails").open=false;
  }
@@ -204,7 +385,7 @@ function foodModal(options={}){
  }
  renderFoodPreview();$("foodOverlay").hidden=false;bodyLock();
 }
-function closeFood(){++activeLookupNonce;$("foodOverlay").hidden=true;bodyUnlock()}
+function closeFood(){++activeLookupNonce;hideFoodSuggestions();$("foodOverlay").hidden=true;bodyUnlock()}
 function renderFoodPreview(){
  const grams=Number($("foodGrams").value)||0,calc=id=>round((Number($(id).value)||0)*grams/100);
  $("foodPreviewCalories").textContent=fmt(calc("fKcal"))+" kcal";
@@ -220,7 +401,7 @@ function submitFood(e){
  const fiber=$("fFiber").value===""?null:Number($("fFiber").value);
  if(fiber!==null&&!validNum(fiber,0,100)){notify("Skontroluj vlákninu.");return}
  const old=$("foodEditId").value;
- const entry={id:old||String(uid()),name:name.slice(0,100),date,meal,grams,...data,fiber:fiber===null?null:round(fiber*grams/100),code:$("foodEAN").value.trim()};
+ const entry={id:old||String(uid()),name:name.slice(0,100),date,meal,grams,unit:$("foodUnit").value==="ml"?"ml":"g",...data,fiber:fiber===null?null:round(fiber*grams/100),code:$("foodEAN").value.trim()};
  if(old)state.foods=state.foods.filter(f=>f.id!==old);
  state.foods.push(entry);selectedDay=date;save();closeFood();render();notify(old?"Zmeny boli uložené.":"Jedlo je zapísané.");
 }
@@ -521,23 +702,21 @@ async function lookupCode(code){
  foodModal({meal:foodContextMeal,date:selectedDay,product:{code:input,name:"",notice:"Načítavam produkt…"}});
  const nonce=activeLookupNonce,controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
  try{
-  const url="https://world.openfoodfacts.org/api/v3/product/"+encodeURIComponent(input)+"?fields=code,product_name,product_name_sk,product_name_en,nutriments";
+  const url="https://world.openfoodfacts.org/api/v3/product/"+encodeURIComponent(input)+"?fields=code,product_name,product_name_sk,product_name_en,brands,serving_size,serving_quantity,serving_quantity_unit,product_quantity,product_quantity_unit,nutriments";
   const response=await fetch(url,{signal:controller.signal,headers:{"Accept":"application/json"}});
   if(!response.ok)throw Error("API odpovedalo chybou "+response.status);
   const data=await response.json();
   if(!data.product||data.status==="failure"||data.status===0)throw Error("Výrobok sa v databáze nenašiel.");
   if(nonce!==activeLookupNonce||$("foodOverlay").hidden)return;
-  const p=data.product,n=p.nutriments||{};
-  const value=k=>{const v=n[k+"_100g"];return v==null||!Number.isFinite(Number(v))?null:Number(v)};
-  let kcal=value("energy-kcal");if(kcal===null){const kj=value("energy-kj");if(kj!==null)kcal=kj/4.184}
-  const info={name:p.product_name_sk||p.product_name||p.product_name_en||"Produkt "+input,code:input,kcal,protein:value("proteins"),carbs:value("carbohydrates"),fat:value("fat"),sugar:value("sugars"),fiber:value("fiber")};
-  $("foodName").value=info.name;$("foodTitle").textContent="Zapísať potravinu";
+  const p=data.product, info=nutritionFromOFF(p);
+  $("foodName").value=info.name||"Produkt "+input;$("foodTitle").textContent="Zapísať potravinu";
   [["fKcal","kcal"],["fProtein","protein"],["fCarbs","carbs"],["fFat","fat"],["fSugar","sugar"],["fFiber","fiber"]].forEach(([field,key])=>$(field).value=info[key]===null?"":round(info[key]));
+  setFoodPortion(info.unit,info.portion,info.fromLabel?"Porcia podľa výrobku. Uprav podľa toho, koľko si naozaj mal.":"Orientačná porcia. Množstvo môžeš upraviť.");
   const missing=["kcal","protein","carbs","fat","sugar"].filter(k=>info[k]===null);
   $("foodSave").disabled=false;
   $("foodLookupMessage").hidden=false;
   $("foodLookupMessage").classList.toggle("warn",missing.length>0);
-  $("foodLookupMessage").textContent=missing.length?"Produkt sa našiel, ale niektoré hodnoty chýbajú. Otvorené detaily doplň podľa etikety.":"Produkt nájdený. Stačí nastaviť množstvo a uložiť.";
+  $("foodLookupMessage").textContent=missing.length?"Produkt sa našiel, ale niektoré hodnoty chýbajú. Otvorené detaily doplň podľa etikety.":"Produkt nájdený. Skontroluj množstvo a ulož.";
   $("foodDetails").open=missing.length>0;
   renderFoodPreview();
  }catch(e){
@@ -564,6 +743,10 @@ $("prevDay").addEventListener("click",()=>{selectedDay=addDays(selectedDay,-1);r
 $("nextDay").addEventListener("click",()=>{selectedDay=addDays(selectedDay,1);renderDiary()});
 $("foodForm").addEventListener("submit",submitFood);
 $("foodForm").addEventListener("input",renderFoodPreview);
+$("foodName").addEventListener("input",foodNameChanged);
+$("foodName").addEventListener("keydown",foodNameKeys);
+$("foodSuggestions").addEventListener("pointerdown",e=>{const b=e.target.closest("[data-suggest]");if(b)e.preventDefault()});
+$("foodSuggestions").addEventListener("click",e=>{const b=e.target.closest("[data-suggest]");if(b)applyFoodSuggestion(suggestions[Number(b.dataset.suggest)])});
 $("foodForm").addEventListener("invalid",e=>{if($("foodDetails").contains(e.target))$("foodDetails").open=true},true);
 $("amountMinus").addEventListener("click",()=>{$("foodGrams").value=Math.max(1,(Number($("foodGrams").value)||100)-25);renderFoodPreview()});
 $("amountPlus").addEventListener("click",()=>{$("foodGrams").value=Math.min(10000,(Number($("foodGrams").value)||0)+25);renderFoodPreview()});
