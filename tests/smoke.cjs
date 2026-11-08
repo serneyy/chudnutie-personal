@@ -747,6 +747,7 @@ const fs=require("node:fs");
   assert.equal(beforeLogout.id,record.id,"Password-protected profile remembered on this device");
   assert.equal(beforeLogout.salt,record.password.salt);
   assert(!JSON.stringify(beforeLogout).includes("test-secret-123"),"Remembered device must not store plaintext password");
+  await page.locator('[data-nav="settings"]').first().click();
   await page.locator("#logoutProfileBtn").click();
   assert.equal(await page.evaluate(()=>localStorage.getItem("forma-remembered-profile-v1")),null,"Explicit logout forgets device trust");
   await page.reload({waitUntil:"domcontentloaded"});
