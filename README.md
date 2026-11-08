@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 15
+# FORMA. Personal · verzia 17
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -42,6 +42,13 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Pozor na mililitre:** databáza môže uvádzať 100 g, ale nápoj sa zapisuje v ml; preto FORMA uvádza, že prepočet ml používa orientačnú konverziu 1 ml ≈ 1 g. Presný prepočet pri inom druhu nápoja závisí od hustoty a údajov na etikete.
 - **Rozdiel kcal a makrá:** kcal podľa etikety alebo databázy sa **neprepočítavajú nanovo zo vzorca 4/4/9**, pretože kalorická energia môže zohľadňovať vlákninu, polyoly a zákonné zaokrúhľovanie. Skontroluj hodnoty na obale, ak záznam databázy vyzerá nezvyčajne.
 - **Čo test neoverí:** kvalitu nutričných údajov každého externého produktu ani presnú hmotnosť receptu z reštaurácie. Výpočtové pravidlo je overené, ale správnosť vstupu závisí od etikety/databázy.
+
+## Domovská stránka: kruhové ciele a pohyb
+
+- Päť kruhových indikátorov ukazuje, **koľko gramov ešte zostáva** do denného cieľa pre bielkoviny, sacharidy, tuky, vlákninu a európsku referenčnú hodnotu celkových cukrov. Pri splnení sa zobrazuje 0 / „splnené“. Referencia cukrov 90 g nie je pevný zdravotný limit.
+- Dlhý vysvetľujúci odsek pod makrami bol odstránený. Detail o rozdiele celkových a voľných cukrov zostal v Pláne.
+- Zelená karta cieľa obsahuje **odporúčanú orientačnú dennú aktivitu**: približne 25 minút svižnej chôdze (priemer 150 minút týždenne), prepočítanú cez MET a poslednú známu hmotnosť na kcal. Sčíta aj dnešné zaznamenané aktivity.
+- **Dôležité:** pohybový cieľ nie je povinnosť spáliť kalórie navyše kvôli jedlu a *nepripočítava* kcal k stravovaciemu rozpočtu. Sú to orientačné odhady, nie presné energetické merania.
 
 ## Ciele bielkovín a cukrov
 
