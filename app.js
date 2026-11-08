@@ -568,13 +568,20 @@ function plan(){
  const tdee=bmr*p.activity,floor=p.sex==="male"?1600:1400;
  const desired=maintain?tdee:tdee-p.rate*7700/7;
  const calories=maintain?Math.round(tdee/50)*50:Math.max(floor,Math.round(Math.max(floor,desired)/50)*50);
- const protein=Math.round((maintain?p.weight:p.target)*1.6);
+ // Pri sedavom dni nema zmysel vyzadovat rovnakych 1,6 g/kg ako pri silovom treningu.
+ // Chudnutie: 1,3–1,6 g/kg cielovej vahy, udrziavanie: 1,2–1,6 g/kg aktualnej vahy.
+ const activity=Number(p.activity);
+ const proteinRate=maintain?
+   (activity>=1.725?1.6:activity>=1.55?1.5:activity>=1.375?1.3:1.2):
+   (activity>=1.55?1.6:activity>=1.375?1.4:1.3);
+ const protein=Math.round((maintain?p.weight:p.target)*proteinRate);
  const fat=Math.round((maintain?p.weight:p.target)*.8);
  const carbs=Math.max(0,Math.round((calories-protein*4-fat*9)/4));
  const deficit=maintain?0:Math.max(0,tdee-calories),rate=deficit*7/7700;
  const remaining=maintain?0:Math.max(0,lastWeight()-p.target);
  const weeks=maintain?null:remaining===0?0:rate>0?Math.ceil(remaining/rate):null;
- return {bmr,tdee,calories,protein,fat,carbs,deficit,rate,remaining,weeks,maintain,fiber:25,
+ return {bmr,tdee,calories,protein,proteinRate,fat,carbs,deficit,rate,remaining,weeks,maintain,fiber:25,
+  sugarsReference:90,freeSugarMax:Math.floor(calories*.10/4),freeSugarIdeal:Math.floor(calories*.05/4),
  targetDate:weeks===null?null:addDays(today,weeks*7),floor,capped:!maintain&&desired<floor};
 }
 function foodsFor(day){return state.foods.filter(f=>f.date===day)}
@@ -607,8 +614,8 @@ function renderHome(){
  const macro=[["protein","Bielkoviny",s.protein,c.protein],["carbs","Sacharidy",s.carbs,c.carbs],["fat","Tuky",s.fat,c.fat]];
  $("homeMacros").innerHTML=macro.map(x=>'<div class="macro-card '+x[0]+'"><span>'+x[1]+'</span><strong>'+fmt(x[2])+' <small>g</small></strong><small>z '+fmt(x[3])+' g</small><div class="macro-line"><div style="width:'+capProgress(x[2],x[3])+'%"></div></div></div>').join("");
  const hasUnknown=foodsFor(today).some(f=>f.fiber===null);
- $("homeExtras").innerHTML='<div class="nutrient-card sugar"><div class="nutrient-symbol">◈</div><div><span>Cukry celkom</span><strong>'+dec(s.sugar)+' g</strong><small>z dnešných jedál</small></div></div>'+
- '<div class="nutrient-card fiber"><div class="nutrient-symbol">≋</div><div><span>Vláknina</span><strong>'+dec(s.fiber)+' <small>/ '+c.fiber+' g</small></strong><small>'+(hasUnknown?"minimum zo známych hodnôt":"orientačný denný cieľ")+'</small></div></div>';
+ $("homeExtras").innerHTML='<div class="nutrient-card sugar"><div class="nutrient-symbol">◈</div><div class="nutrient-body"><span>Cukry celkom</span><strong>'+dec(s.sugar)+' <small>/ '+c.sugarsReference+' g</small></strong><div class="nutrient-progress"><i style="width:'+capProgress(s.sugar,c.sugarsReference)+'%"></i></div><small>EU referenčný príjem, nie pevný limit</small></div></div>'+
+ '<div class="nutrient-card fiber"><div class="nutrient-symbol">≋</div><div class="nutrient-body"><span>Vláknina</span><strong>'+dec(s.fiber)+' <small>/ '+c.fiber+' g</small></strong><div class="nutrient-progress"><i style="width:'+capProgress(s.fiber,c.fiber)+'%"></i></div><small>'+(hasUnknown?"minimum zo známych hodnôt":"orientačný denný cieľ")+'</small></div></div>';
  const items=foodsFor(today).slice().reverse();
  $("homeMealList").innerHTML=items.length?items.slice(0,5).map(x=>mealMarkup(x,true)).join(""):'<div class="empty-state">'+icon("list")+'Dnes ešte nič nezaznamenané.<br>Začni prvým jedlom.</div>';
  if(s.kcal>c.calories){$("quoteTitle").textContent="Jeden deň nie je celý výsledok.";$("quoteText").textContent="Netrestaj sa hladovaním. Ďalším jedlom sa vráť do bežného režimu."}
@@ -620,7 +627,7 @@ function renderDiary(){
  $("diaryDate").textContent=selectedDay===today?"Dnes · "+formatDate(today):formatDate(selectedDay,"full");
  $("diaryCalories").textContent=fmt(s.kcal);$("diaryRemaining").textContent=fmt(c.calories-s.kcal);$("diaryFill").style.width=capProgress(s.kcal,c.calories)+"%";
  $("diaryMacroText").textContent="Bielkoviny "+dec(s.protein)+" g  ·  Sacharidy "+dec(s.carbs)+" g  ·  Tuky "+dec(s.fat)+" g";
- $("diaryExtrasText").textContent="Cukry "+dec(s.sugar)+" g  ·  Vláknina "+dec(s.fiber)+" g";
+ $("diaryExtrasText").textContent="Cukry "+dec(s.sugar)+" / "+c.sugarsReference+" g (EU referencia) · Vláknina "+dec(s.fiber)+" / "+c.fiber+" g";
  $("diarySections").innerHTML=MEALS.map(([key,name])=>{
    const foods=foodsFor(selectedDay).filter(f=>f.meal===key),sum=foods.reduce((n,f)=>n+f.kcal,0);
    return '<section class="diary-group"><div class="diary-head"><div><h2>'+name+'</h2><small>'+fmt(sum)+' kcal</small></div><button data-add-meal="'+key+'">+ Pridať</button></div><div class="card">'+(foods.length?foods.map(f=>mealMarkup(f)).join(""):'<div class="empty-state">Zatiaľ žiadne jedlo.</div>')+'</div></section>';
@@ -646,8 +653,8 @@ function renderPlan(){
  $("planWeeks").textContent=c.maintain?"Stabilne":c.weeks===null?"–":c.weeks+" t.";
  $("planDate").textContent=c.maintain?"bez termínu":c.targetDate?"cca "+formatDate(c.targetDate):"Odlišné tempo";
  $("planSubtitle").textContent=c.maintain?"Približne toľko energie potrebuješ na udržiavanie váhy.":c.capped?"Tempo bolo zmiernené, aby príjem nebol extrémne nízky.":"Odhad pri zvolenej aktivite a tempe.";
- $("planMacroCard").innerHTML=macroRow("protein","Bielkoviny",c.protein,Math.round(c.protein*4/c.calories*100))+macroRow("carbs","Sacharidy",c.carbs,Math.round(c.carbs*4/c.calories*100))+macroRow("fat","Tuky",c.fat,Math.round(c.fat*9/c.calories*100))+'<p class="card-sub">Bielkoviny cca 1,6 g/kg hmotnosti, tuky cca 0,8 g/kg, zvyšok sacharidy. Orientačný návrh.</p>';
- $("sugarAdvice").textContent="Orientačne pod "+dec(c.calories*.1/4)+" g voľných cukrov denne (10 % energie).";
+ $("planMacroCard").innerHTML=macroRow("protein","Bielkoviny",c.protein,Math.round(c.protein*4/c.calories*100))+macroRow("carbs","Sacharidy",c.carbs,Math.round(c.carbs*4/c.calories*100))+macroRow("fat","Tuky",c.fat,Math.round(c.fat*9/c.calories*100))+'<p class="card-sub">Bielkoviny: '+dec(c.proteinRate)+' g/kg '+(c.maintain?"aktuálnej":"cieľovej")+' váhy podľa aktivity. Tuky cca 0,8 g/kg; zvyšok sacharidy. Ide o orientačný cieľ, nie povinné minimum.</p>';
+ $("sugarAdvice").innerHTML='<strong>Cukry celkom: '+c.sugarsReference+' g/deň</strong> je európska referenčná hodnota pre priemerného dospelého pri 2 000 kcal, nie bezpečnostný limit.<br><strong>Voľné cukry: menej než '+c.freeSugarMax+' g/deň</strong> pri tvojom kalorickom cieli (WHO do 10 % energie), ideálne približne '+c.freeSugarIdeal+' g (5 %).';
  $("gymBurn").textContent="45 min ≈ "+fmt(exerciseBurn("gym",45))+" kcal";
  $("walkBurn").textContent="30 min ≈ "+fmt(exerciseBurn("walk",30))+" kcal";
  renderWorkouts();
