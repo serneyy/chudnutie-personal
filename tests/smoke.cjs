@@ -11,11 +11,12 @@ const fs=require("node:fs");
  console.log("NODE BARCODE READ:",JSON.stringify(nodeResults.map(x=>({text:x.text,format:x.format}))));
  const browser=await chromium.launch({headless:true,args:["--use-fake-ui-for-media-stream","--use-fake-device-for-media-stream"]});
  const mockProduct=JSON.stringify({status:"success",product:{product_name:"Testovací jogurt",nutriments:{"energy-kcal_100g":180,"proteins_100g":8,"carbohydrates_100g":12,"fat_100g":9,"sugars_100g":7,"fiber_100g":1}}});
+ const mockSearch=JSON.stringify({count:1,products:[{code:"9876543210123",product_name:"Proteínové kakao",brands:"Testová značka",serving_size:"250 ml",serving_quantity:"250",serving_quantity_unit:"ml",nutriments:{"energy-kcal_100g":62,"proteins_100g":6,"carbohydrates_100g":7,"fat_100g":1.4,"sugars_100g":6.2,"fiber_100g":0.6}}]});
  async function setup(page){
   const errors=[];
   page.on("pageerror",e=>errors.push(e.message));
   page.on("console",m=>{if(m.type()==="error")console.error("BROWSER:",m.text())});
-  await page.route("https://world.openfoodfacts.org/**",r=>r.fulfill({status:200,contentType:"application/json",body:mockProduct}));
+  await page.route("https://world.openfoodfacts.org/**",r=>r.fulfill({status:200,contentType:"application/json",headers:{"Access-Control-Allow-Origin":"*"},body:r.request().url().includes("/cgi/search.pl")?mockSearch:mockProduct}));
   await page.route(/fonts\.googleapis\.com|fonts\.gstatic\.com/,r=>r.abort());
   return errors;
  }
@@ -100,6 +101,31 @@ const fs=require("node:fs");
   await page.locator("#foodSave").click();
   assert(await page.locator("#foodOverlay").isHidden());
   assert.equal((await page.locator("#homeCalories").innerText()).trim(),"570");
+  // Common drink: typo-tolerant autocomplete + realistic editable portion in ml.
+  await page.locator("#homeAdd").click();
+  await page.locator("#foodName").fill("capucino");
+  await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible"});
+  assert((await page.locator("#foodSuggestions").innerText()).includes("Cappuccino"));
+  await page.locator("#foodSuggestions [data-suggest]").first().click();
+  assert.equal(await page.locator("#foodUnit").inputValue(),"ml");
+  assert.equal(await page.locator("#foodGrams").inputValue(),"180");
+  assert((await page.locator("#foodPreviewCalories").innerText()).includes("76"));
+  assert(!await page.locator("#foodDetails").evaluate(el=>el.open),"Generic suggestion has complete estimates");
+  await page.locator("#foodSave").click();
+  assert.equal((await page.locator("#homeCalories").innerText()).trim(),"646");
+  // Remote product search: live text entry, real serving_quantity_unit and label.
+  await page.locator("#homeAdd").click();
+  await page.locator("#foodName").fill("prote");
+  await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible",timeout:15000});
+  await page.locator("#foodSuggestions [data-suggest]").first().click();
+  assert.equal(await page.locator("#foodName").inputValue(),"Proteínové kakao");
+  assert.equal(await page.locator("#foodUnit").inputValue(),"ml");
+  assert.equal(await page.locator("#foodGrams").inputValue(),"250");
+  assert.equal(await page.locator("#fKcal").inputValue(),"62");
+  assert((await page.locator("#foodPreviewCalories").innerText()).includes("155"));
+  await page.locator("#closeFood").click();
+  await page.setViewportSize({width:320,height:568});
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=2,"320px screen must not overflow");
   assert.deepEqual(errors,[],"Browser errors (photo): "+errors.join(" | "));
   console.log("PASS: layout, calorie logging, diary, plan, weight, persistence, REAL EAN13 photo via WebAssembly");
 
