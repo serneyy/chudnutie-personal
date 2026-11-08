@@ -359,3 +359,13 @@ input,select,textarea{min-height:44px}
  .meal-total strong{font-size:15px}
  .meal-total strong small{font-size:9px}
 }
+
+
+.cloud-home-status{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;min-height:46px;margin:13px 0 7px;border:1px solid #dfe9da;border-radius:12px;background:#f4f7ef;color:#657d65;font-size:12px;font-weight:700;line-height:1.4;text-align:left;cursor:pointer}
+.cloud-home-status>span:nth-child(2){flex:1;min-width:0}
+.cloud-home-dot{width:9px;height:9px;flex:none;border-radius:50%;background:#b6bcaf}
+.cloud-home-status[data-level="success"]{color:#3c7b46;background:#e9f6df;border-color:#d1e6c7}
+.cloud-home-status[data-level="success"] .cloud-home-dot{background:#51a455}
+.cloud-home-status[data-level="busy"] .cloud-home-dot{background:#d4a95e}
+.cloud-home-status[data-level="error"]{background:#fff2e9;color:#9b5f4a;border-color:#ead9d1}
+.cloud-home-status[data-level="error"] .cloud-home-dot{background:#c57655}
