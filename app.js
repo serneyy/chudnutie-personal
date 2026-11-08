@@ -925,8 +925,25 @@ function renderDiary(){
  $("diaryMacroText").textContent="Bielkoviny "+dec(s.protein)+" g  ·  Sacharidy "+dec(s.carbs)+" g  ·  Tuky "+dec(s.fat)+" g";
  $("diaryExtrasText").textContent="Cukry "+dec(s.sugar)+" / "+c.sugarsReference+" g (EU referencia) · Vláknina "+dec(s.fiber)+" / "+c.fiber+" g";
  $("diarySections").innerHTML=MEALS.map(([key,name])=>{
-   const foods=foodsFor(selectedDay).filter(f=>f.meal===key),sum=foods.reduce((n,f)=>n+f.kcal,0);
-   return '<section class="diary-group"><div class="diary-head"><div><h2>'+name+'</h2><small>'+fmt(sum)+' kcal</small></div><button data-add-meal="'+key+'">+ Pridať</button></div><div class="card">'+(foods.length?foods.map(f=>mealMarkup(f)).join(""):'<div class="empty-state">Zatiaľ žiadne jedlo.</div>')+'</div></section>';
+   const foods=foodsFor(selectedDay).filter(f=>f.meal===key);
+   const total=foods.reduce((sum,f)=>({
+     kcal:sum.kcal+(Number(f.kcal)||0),
+     protein:sum.protein+(Number(f.protein)||0),
+     carbs:sum.carbs+(Number(f.carbs)||0),
+     fat:sum.fat+(Number(f.fat)||0)
+   }),{kcal:0,protein:0,carbs:0,fat:0});
+   const stat=(cls,label,value,unit)=>'<div class="meal-total '+cls+'"><span>'+label+'</span><strong>'+dec(value)+' <small>'+unit+'</small></strong></div>';
+   return '<section class="diary-group" data-meal-section="'+key+'">'+
+    '<div class="diary-head"><div><h2>'+name+'</h2><small>'+foods.length+' '+(foods.length===1?'jedlo':foods.length>=2&&foods.length<=4?'jedlá':'jedál')+'</small></div><button data-add-meal="'+key+'">+ Pridať</button></div>'+
+    '<div class="meal-totals" aria-label="Súhrn '+name+'">'+
+      stat('calories','Kalórie',total.kcal,'kcal')+
+      stat('protein','Bielkoviny',total.protein,'g')+
+      stat('carbs','Sacharidy',total.carbs,'g')+
+      stat('fat','Tuky',total.fat,'g')+
+    '</div>'+
+    (foods.length?'<div class="card meal-foods">'+foods.map(f=>mealMarkup(f)).join("")+'</div>':
+    '<p class="meal-empty">Zatiaľ bez jedla. Pridaj, čo si zjedol.</p>')+
+   '</section>';
  }).join("");
 }
 function macroRow(key,name,g,show){return '<div class="macro-row '+key+'"><div class="row"><strong>'+name+'</strong><small>'+fmt(g)+' g / deň</small></div><div class="macro-line"><div style="width:'+show+'%"></div></div></div>'}
