@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 31
+# FORMA. Personal · verzia 32
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -51,6 +51,15 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Dôležité:** nasadenie Cloudflare Worker robí vlastník ručne. Kým Worker nebeží a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
 - Prvá synchronizácia lokálne dáta nevymaže; profily sa zlúčia podľa času poslednej úpravy, pri zlyhaní servera sa zachovajú v `localStorage`. Mobilné testy simulujú dve zariadenia a nedostupný server.
 - Upozornenie: verejný GitHub repo umožňuje komukoľvek prezerať údaje v histórii commitov. Endpoint POST nie je autentifikovaný na strane používateľa (požiadavka na rodinný prototyp); CORS/Origin nie je bezpečnostné overenie klienta, takže endpoint nie je vhodný pre produkčné osobné údaje.
+
+## FORMA v32: lokálne zapamätanie prihláseného profilu
+
+- Po výbere profilu zostáva voľba v `localStorage` na **tom istom prehliadači a zariadení** aj po reštarte, obnovení stránky, návrate do aplikácie a synchronizácii cez Cloudflare. Nevyžaduje sa znova výber profilu pri každom otvorení.
+- Ak je profil chránený heslom, po úspešnom odomknutí si aplikácia lokálne uloží **iba identifikátor profilu a identifikátor verzie PBKDF2 záznamu (salt a krátky odtlačok hashu)**, nie používateľovo heslo. Rovnaké zariadenie ostáva odomknuté, kým sa používateľ neodhlási.
+- **Odhlásiť sa z profilu** explicitne zruší lokálne zapamätanie, ale nevymaže jedlá, profil ani cloudovú zálohu. Po odhlásení je opäť potrebné profil zvoliť a pri zamknutom profile zadať heslo.
+- Pri zmene hesla sa predchádzajúca verzia zapamätania zneplatní. Pri cloudovej synchronizácii sa overuje, či má aktuálny profil stále rovnakú verziu hesla, takže synchronizácia nesmie používateľa odhlásiť bez príčiny.
+- Zapamätanie platí len pre **danú inštaláciu prehliadača**. Neplatí po vymazaní dát stránky, v anonymnom režime po jeho skončení alebo na novom zariadení. Aplikácia nepridáva serverové prihlásenie ani nezabezpečuje/nešifruje obsah localStorage či verejných GitHub dát.
+- Rodinné profily na novom zariadení stále vyžadujú explicitný výber a pri chránenom profile jeho heslo. Cloud a profily zostávajú v rovnakom formáte.
 
 ## FORMA v31: jednoduchší výber jedál
 
