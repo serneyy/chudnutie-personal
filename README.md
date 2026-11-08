@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 3
+# FORMA. Personal · verzia 7
 
 Mobilná osobná aplikácia v slovenčine. Bez účtu, bez backendu. GitHub Pages slúži iba na načítanie webových súborov; **záznamy zostávajú lokálne v tvojom prehliadači**.
 
@@ -12,9 +12,10 @@ Ak web nie je aktívny, v **Settings → Pages → Deploy from a branch → main
 ## Funkcie
 
 - **Dnes**: kalórie, cieľ, makrá, základné motivačné zobrazenie.
-- **Jedlá**: raňajky / desiata / obed / olovrant / večera, detailné živiny, úprava aj odstránenie.
+- **Jedlá**: raňajky / desiata / obed / olovrant / večera, návrhy pri písaní, detailné živiny, úprava aj odstránenie.
 - **Skener**: automatické načítanie EAN cez kameru, nezávislý ZXing-C++ dekodér WebAssembly (lokálne v repozitári), prepínanie kamery, fotenie obalu a ručný EAN.
-- **Open Food Facts**: doplnenie názvu produktu a živín na 100 g. Údaje si over podľa etikety.
+- **Open Food Facts**: textové vyhľadávanie značkových výrobkov cez legacy search API, vyhľadanie EAN, údaje na 100 g a porcia z etikety, ak existuje. Výsledky sú obmedzené kvôli limitom API.
+- **Bežné jedlá**: prednastavené orientačné hodnoty napr. cappuccino s polotučným mliekom a porcia 180 ml, banán alebo ryža. Odhad nie je údaj od výrobcu.
 - **Plán**: TDEE, deficit, makrá, približný čas, fitko, chôdza a zápis aktivít.
 - **Progres**: záznamy váhy, trend, vzdialenosť od cieľa.
 - **Zálohy**: export/import JSON.
@@ -26,9 +27,17 @@ Ak web nie je aktívny, v **Settings → Pages → Deploy from a branch → main
 3. Pri prvom použití potvrď **Povoliť kameru**.
 4. Namier zadnú kameru na celý EAN čiarový kód s dostatočným svetlom. Skener **automaticky rozpozná číslice**, nespúšťa ukladanie fotografie na server.
 5. Ak sa nedarí, klikni **Prepnúť kameru**, alebo **Odfotiť obal** (mobilný fotoaparát), prípadne napíš číslo EAN.
-6. Po nájdení produktu doplň **množstvo v gramoch** a over údaje podľa obalu.
+6. Po nájdení produktu uprav **množstvo v gramoch alebo mililitroch** a over údaje podľa obalu.
 
 Foto režim potrebuje prístup k obrázku. Po odfotení sa lokálne pokúsi rozpoznať EAN. Appka **nevytvára nový čiarový kód produktu**; číta existujúci.
+
+### Vyhľadanie jedla pri písaní
+
+1. Otvor **Pridať jedlo** a napíš napr. `capucino`, `banán` alebo názov značkového výrobku.
+2. Ťukni na návrh. Aplikácia vyplní výživové hodnoty a predvolenú porciu (`180 ml` pri bežnom cappuccine). Porciu môžeš zmeniť tlačidlami alebo zadaním čísla.
+3. Klikni **Uložiť jedlo**. Technické hodnoty sú schované pod rozbaľovacím detailom.
+
+Vyhľadávanie je oneskorené a obmedzené na najviac 8 vyhľadávaní za minútu na jednom zariadení, lebo Open Food Facts má limit 10 vyhľadávaní za minútu na IP. Bežné potraviny sa filtrujú priamo v prehliadači a fungujú aj pri nedostupnosti API.
 
 ### Súčasné obmedzenia
 
