@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 11
+# FORMA. Personal · verzia 12
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -17,6 +17,14 @@ Ak web nie je aktívny, v **Settings → Pages → Deploy from a branch → main
 - Ak na tejto adrese v tomto prehliadači už boli údaje z predošlej verzie, automaticky sa nakopírujú do profilu **Môj pôvodný profil**. Je možné ho premenovať.
 - JSON záloha v Nastaveniach obsahuje **iba údaje práve otvoreného profilu**.
 - **Nie je to účet s heslom ani synchronizovaná databáza.** Profily nie sú súkromné pred iným človekom na tom istom telefóne a nebudú dostupné na inom zariadení bez exportu/importu. Na synchronizáciu medzi tvojím telefónom a maminým by bolo potrebné pridať autentifikovaný online backend.
+
+## Praženica a varenie podľa počtu kusov
+
+- Pridať jedlo → **Praženica** alebo vyhľadať **„praženica z 3 vajíčok“**.
+- Vyber počet vajec tlačidlami **− / +** (1 až 8 vajec) a či si použil maslo alebo olej.
+- Jedno väčšie vajce (50 g) má orientačne **72 kcal a 6,3 g bielkovín**. Tri vajcia bez tuku ≈ **216 kcal**. Pri 5 g masla ≈ **252 kcal**; pri 5 g oleja ≈ **261 kcal**.
+- Jedlo sa uloží ako jedna položka vrátane vajec a zvoleného tuku. Chlieb, slaninu, mlieko a ďalšie suroviny treba pridať osobitne.
+- Odhad podľa [USDA referenčného veľkého vajca](https://www.myfoodanalysis.com/food/whole-egg-raw-171287). Skutočná veľkosť vajec a množstvo tuku výsledok menia.
 
 ## Hotové a reštauračné jedlá
 
