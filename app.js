@@ -122,9 +122,15 @@ function findCommon(query){
  if(q.length<2)return [];
  return COMMON_FOODS.map(item=>{
   const fields=[item.name,...item.aliases].map(normalizeTerm);
-  const match=fields.some(text=>text.includes(q)||q.includes(text)&&text.length>3);
-  return match?{...item,id:"common:"+item.key,source:item.dish?"dish":"estimate",brand:"Orientačný údaj",fromLabel:false}:null;
- }).filter(Boolean).slice(0,5);
+  let score=0;
+  for(const text of fields){
+   if(text===q)score=Math.max(score,100);
+   else if(text.startsWith(q))score=Math.max(score,55);
+   else if(text.includes(q))score=Math.max(score,30);
+   else if(text.length>=8&&q.includes(text))score=Math.max(score,10);
+  }
+  return score?{...item,id:"common:"+item.key,source:item.dish?"dish":"estimate",brand:"Orientačný údaj",fromLabel:false,_searchScore:score}:null;
+ }).filter(Boolean).sort((a,b)=>b._searchScore-a._searchScore).slice(0,8);
 }
 function renderQuickFoods(){
  const recent=[],seen=new Set();
