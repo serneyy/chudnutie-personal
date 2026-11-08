@@ -5,18 +5,18 @@
       "id": "67389e4b-74d1-4736-9a2d-c1e0b1ecf02e",
       "name": "Suško",
       "createdAt": "2026-11-08",
-      "updatedAt": "2026-11-08T21:38:27.963Z",
+      "updatedAt": "2026-11-08T21:38:38.094Z",
       "data": {
         "profile": {
           "weight": 93,
-          "target": 98,
+          "target": 88,
           "height": 189,
           "age": 22,
           "sex": "male",
           "activity": 1.2,
           "rate": 0.3,
-          "mode": "gain",
-          "lossTarget": 98
+          "mode": "lose",
+          "lossTarget": 88
         },
         "foods": [
           {
