@@ -208,13 +208,14 @@ const fs=require("node:fs");
   await page.locator("#homeAdd").click();
   await page.locator("#foodName").fill("kakao");
   await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible",timeout:15000});
+  assert((await page.locator("#foodSuggestions .food-suggestion-image").count())>=1,"Autocomplete must show images");
   await page.locator("#foodSuggestions [data-suggest]").first().click();
   assert.equal(await page.locator("#foodName").inputValue(),"Proteínové kakao");
   assert.equal(await page.locator("#foodUnit").inputValue(),"ml");
   assert.equal(await page.locator("#foodGrams").inputValue(),"250");
   assert.equal(await page.locator("#fKcal").inputValue(),"62");
   assert((await page.locator("#foodPreviewCalories").innerText()).includes("155"));
-  assert((await page.locator("#foodSuggestions .food-suggestion-image").count())>=1,"Autocomplete must show images");
+
   assert(await page.locator("#selectedProductVisual").isVisible(),"Selected online product should show front-of-pack photo");
   assert((await page.locator("#portionHint").innerText()).includes("1 ml ≈ 1 g"),"ml must be identified as an approximation");
   await page.locator("#closeFood").click();
