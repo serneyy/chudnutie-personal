@@ -132,12 +132,12 @@
   <div class="camera-frame"><div id="nativeCamera"><video id="cameraVideo" autoplay playsinline muted></video></div><div id="html5Camera" hidden></div><div class="scan-mask" aria-hidden="true"><div class="scan-target"><i></i><i></i><i></i><i></i><span></span></div></div><div class="camera-placeholder" id="cameraPlaceholder"><svg><use href="#ic-camera"/></svg><span>Pripravujem kameru…</span></div></div>
   <div class="scan-status" id="scanStatus" aria-live="polite">Spúšťam kameru…</div>
   <div class="scan-actions">
-   <button class="outline-button" id="fallbackScan"><svg><use href="#ic-scan"/></svg> Alternatívny skener</button>
+   <button class="outline-button" id="fallbackScan"><svg><use href="#ic-camera"/></svg> Prepnúť kameru</button>
    <button class="outline-button" id="photoScan"><svg><use href="#ic-camera"/></svg> Odfotiť obal</button>
    <input id="barcodePhoto" type="file" accept="image/*" capture="environment" hidden>
   </div>
   <div class="scan-manual"><label for="manualEAN">Alebo zadaj EAN ručne</label><div><input id="manualEAN" inputmode="numeric" maxlength="14" placeholder="EAN, napr. 3017624010701"><button class="primary-button" id="manualLookup">Nájsť</button></div></div>
-  <div class="tiny-note">Skener hľadá EAN/UPC automaticky v živom obraze. Foto režim prečíta kód po odfotení alebo výbere fotografie. Ak produkt chýba v databáze, môžeš ho pridať ručne.</div>
+  <div class="tiny-note">Snímanie funguje automaticky cez ZXing. Ak kód nie je ostrý, odfoť celý čiarový kód vrátane bielych okrajov. Fotografie sa neodosielajú na server.</div>
  </div>
 </div>
 
@@ -158,7 +158,6 @@
  </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-<script defer src="app.js?v=3"></script>
+<script defer src="app.js?v=4"></script>
 </body>
 </html>
