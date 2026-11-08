@@ -26,7 +26,9 @@ jobs:
           s=Path("index.html").read_text(encoding="utf-8")
           j=Path("app.js").read_text(encoding="utf-8")
           assert '<html lang="sk">' in s
-          assert 'src="app.js?v=29"' in s
+          assert 'src="app.js?v=30"' in s
+          assert 'src="slovak-foods.js?v=30"' in s
+          assert s.index('src="slovak-foods.js?v=30"')<s.index('src="app.js?v=30"')
           assert Path("styles.css").exists()
           assert Path("manifest.webmanifest").exists()
           class Check(HTMLParser):
