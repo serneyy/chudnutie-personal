@@ -94,7 +94,7 @@ export default {
     const requestOrigin = req.headers.get('Origin') || '';
     const allowed = requestOrigin === ORIGIN || !requestOrigin;
     if (req.method === 'OPTIONS')
-      return allowed ? response({ok: true}, 204) : response({error: 'Origin not allowed'}, 403);
+      return allowed ? response({ok: true}, 200) : response({error: 'Origin not allowed'}, 403);
     if (!allowed) return response({error: 'Origin not allowed'}, 403);
     const path = new URL(req.url).pathname;
     if (path === '/health' && req.method === 'GET')
