@@ -57,7 +57,7 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - Režim Nabrať svaly obsahuje voľbu pomaly (+150 kcal), stredne (+250 kcal) a rýchlejšie (+350 kcal) nad odhad TDEE, pred zaokrúhlením na 50 kcal. Nejde o sľúbený rast svalstva; rýchlejší nadbytok môže zvýšiť ukladanie tuku. Voľba sa ukladá samostatne v každom profile do JSON.
 - Každý člen rodiny môže v Nastaveniach nastaviť heslo aspoň 6 znakov, pri vytváraní nového profilu je voliteľné. Heslo sa nikdy neukladá ako čitateľný text, ale ako náhodne solený PBKDF2-SHA256 hash. Pri otvorení uzamknutého profilu sa vyžaduje heslo vrátane obnovenia stránky.
 - **Bezpečnostné obmedzenie:** Verejný GitHub JSON a Cloudflare Worker API nie sú autentifikované heslom. Zamykanie chráni len bežný prístup cez UI, **nie súkromie dát v GitHube** a nie je náhradou za serverovú autentifikáciu.
-- Profil Dedko identifikovaný podľa ID `02c947bf-dd36-4ddc-bf9d-2a0a055c0ac0` je blokovaný v novej verzii klienta a odstránený z aktuálneho GitHub JSON. Staršie klienty ho môžu znovu synchronizovať, pokým nie je aktualizovaný aj Cloudflare Worker.
+- Profil Dedko identifikovaný podľa ID `02c947bf-dd36-4ddc-bf9d-2a0a055c0ac0` je blokovaný v novej verzii klienta. Priamy zápis do existujúceho GitHub JSON bol zamietnutý konektorom, preto ho ešte treba z cloud súboru odstrániť. Staršie klienty ho môžu znovu synchronizovať, pokým nie je aktualizovaný aj Cloudflare Worker.
 
 ## FORMA v23: detail potravín, makier a naberanie svalov
 
