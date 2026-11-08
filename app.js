@@ -181,7 +181,7 @@ function updateEggUI(item){
  $("amountHeading").hidden=isEgg;
  $("amountControls").hidden=isEgg;
  $("portionHint").hidden=isEgg;
- $("basicPortions").hidden=isEgg;
+ $("basicPortions").hidden=isEgg||!$("dishPortions").hidden;
  if(isEgg){
   $("dishPortions").hidden=true;
   activeEggCount=Math.max(1,Math.min(8,Number(item.eggCount)||3));
