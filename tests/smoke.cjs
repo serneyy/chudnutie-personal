@@ -16,7 +16,10 @@ const fs=require("node:fs");
   const errors=[];
   page.on("pageerror",e=>errors.push(e.message));
   page.on("console",m=>{if(m.type()==="error")console.error("BROWSER:",m.text())});
-  await page.route("https://world.openfoodfacts.org/**",r=>r.fulfill({status:200,contentType:"application/json",headers:{"Access-Control-Allow-Origin":"*"},body:r.request().url().includes("/cgi/search.pl")?mockSearch:mockProduct}));
+  await page.route("https://world.openfoodfacts.org/**",r=>{
+   const url=r.request().url(),broken=url.includes("serverfail");
+   return r.fulfill({status:broken?503:200,contentType:"application/json",headers:{"Access-Control-Allow-Origin":"*"},body:broken?'{"error":"temporarily unavailable"}':url.includes("/cgi/search.pl")?mockSearch:mockProduct});
+  });
   await page.route(/fonts\.googleapis\.com|fonts\.gstatic\.com/,r=>r.abort());
   return errors;
  }
@@ -213,6 +216,22 @@ const fs=require("node:fs");
   await page.locator("#homeAdd").click();
   assert(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=2,"320px food modal overflow");
   assert((await page.locator("#quickFoods [data-quick-food]").count())===8);
+  await page.locator("#closeFood").click();
+  // The remote provider may return 503. Local suggestions must still work.
+  await page.locator("#homeAdd").click();
+  await page.locator("#foodName").fill("serverfail");
+  await page.waitForFunction(()=>document.getElementById("foodSuggestions")?.innerText?.includes("Nenačítali sa značkové produkty"),{timeout:25000});
+  assert((await page.locator("#foodSuggestions").innerText()).includes("naskenovať čiarový kód"));
+  await page.locator("#foodName").fill("proteín");
+  await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible",timeout:7000});
+  assert((await page.locator("#foodSuggestions").innerText()).includes("Proteínový prášok"),"Local foods remain usable during API outage");
+  await page.locator("#closeFood").click();
+  // A known successful search should be cached in localStorage and survive reload.
+  await page.reload({waitUntil:"domcontentloaded"});
+  await page.locator("#homeAdd").click();
+  await page.locator("#foodName").fill("kakao");
+  await page.waitForFunction(()=>document.getElementById("foodSuggestions")?.innerText?.includes("Proteínové kakao"),{timeout:12000});
+  assert((await page.locator("#foodSuggestions").innerText()).includes("Konkrétne výrobky"));
   await page.locator("#closeFood").click();
   assert.deepEqual(errors,[],"Browser errors (photo): "+errors.join(" | "));
   console.log("PASS: layout, calorie logging, diary, plan, weight, persistence, REAL EAN13 photo via WebAssembly");
