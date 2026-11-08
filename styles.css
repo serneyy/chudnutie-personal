@@ -207,3 +207,18 @@ input,select,textarea{min-height:44px}
 .dish-portions-grid button.selected{border:2px solid #8aba64;background:#e5f4d6}
 .dish-portions-grid button.selected small{color:#48723d}
 @media(max-width:350px){.dish-portions-grid{gap:6px}.dish-portions-grid button strong{font-size:12px}}
+
+
+/* Praženica: zápis podľa počtu kusov, bez zadávania gramáže */
+.egg-recipe[hidden],#amountHeading[hidden],#amountControls[hidden],#portionHint[hidden]{display:none!important}
+.egg-recipe{background:#f0f6e9;border:1px solid #d6e6d0;padding:14px 13px;border-radius:17px;margin:12px 0 15px}
+.egg-recipe-title{font-size:15px;font-weight:800;color:#294b36;line-height:1.4;margin-bottom:10px}
+.egg-count-row{display:grid;grid-template-columns:60px minmax(0,1fr) 60px;gap:10px;align-items:center;margin-bottom:15px}
+.egg-count-row>button{background:#fff;color:#2e5a3b;border:1px solid #cfe2cb;border-radius:15px;min-height:62px;font:800 28px Manrope,sans-serif;touch-action:manipulation}
+.egg-count-row>button:active{background:#dcefc8}
+.egg-count-text{display:flex;gap:3px;flex-direction:column;align-items:center;justify-content:center;min-height:62px;background:#fff;border-radius:15px;border:1px solid #cfe2cb}
+.egg-count-text strong{font:800 28px Manrope,sans-serif;color:#183e26}
+.egg-count-text span{font-size:12px;font-weight:700;color:#708c73}
+.egg-fat-label{display:block;font-size:13px;font-weight:800;color:#31563d}
+.egg-fat-label select{width:100%;margin-top:8px;border:1px solid #cddfca;background:#fff;color:#22452e;border-radius:13px;padding:10px 13px;min-height:52px;font-size:16px;font-weight:700}
+.egg-recipe-note{font-size:12px;line-height:1.55;color:#6c826b;margin:11px 0 0}
