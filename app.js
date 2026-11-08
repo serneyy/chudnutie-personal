@@ -523,7 +523,7 @@ function saveProfiles(options={}){
   const selected=findActiveProfile();
   if(selected)selected.updatedAt=new Date().toISOString();
  }
- try{localStorage.setItem(PROFILE_STORE_KEY,JSON.stringify(profileStore));if(githubSyncEnabled)scheduleGithubSync();return true}
+ try{localStorage.setItem(PROFILE_STORE_KEY,JSON.stringify(profileStore));if(githubSyncEnabled)scheduleGithubSync();else if($("githubSyncStatus"))githubStatus("Lokálne uložené. Cloudflare záloha ešte nie je pripravená.","error");return true}
  catch(e){console.error("Lokálna databáza sa neuložila",e);notify("Údaje sa nepodarilo uložiť. Urob JSON zálohu.");return false}
 }
 function initializeProfiles(){
@@ -624,54 +624,28 @@ function renameProfile(){
 /* Voliteľná synchronizácia do GitHub JSON.
    GitHub token sa nikdy neposiela inam než na api.github.com. Nepatrí do repo kódu,
    JSON záloh, URL ani persistentného localStorage. Ukladá sa len do sessionStorage. */
+
+/* Token-free cloud backup. The GitHub credential is server-side, never shipped to browsers.
+   Do not mark synced unless the server confirms the GitHub commit. */
+const FORMA_CLOUD_URL = "https://forma-github-sync.threadid.workers.dev";
 function githubStatus(message,level="neutral"){
  $("githubSyncStatus").textContent=message;
  $("githubSyncStatus").dataset.level=level;
- $("githubSyncActions").hidden=!githubSyncEnabled;
-}
-function githubRepository(value){
- const text=String(value||"").trim();
- return /^[a-zA-Z0-9_.-]{1,100}\/[a-zA-Z0-9_.-]{1,100}$/.test(text)?text:"";
-}
-function getGithubToken(){
- return githubConnection&&typeof githubConnection.token==="string"?githubConnection.token:"";
-}
-async function githubRequest(repo,token,method,path,payload){
- const [owner,name]=repo.split("/");
- const segment=path?"/contents/"+path.split("/").map(encodeURIComponent).join("/"):"";
- const url="https://api.github.com/repos/"+encodeURIComponent(owner)+"/"+encodeURIComponent(name)+segment;
- const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),16000);
- try{
-  const resp=await fetch(url,{method,signal:controller.signal,cache:"no-store",
-   headers:{"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Authorization":"Bearer "+token,...(payload?{"Content-Type":"application/json"}:{})},
-   ...(payload?{body:JSON.stringify(payload)}:{})});
-  const data=await resp.json().catch(()=>({}));
-  if(!resp.ok){
-   const error=new Error(resp.status===401?"Neplatný alebo neplatný token.":
-    resp.status===403?"Nemáš oprávnenie alebo si dosiahol limit GitHub API.":
-    resp.status===404?"Repozitár alebo súbor neexistuje, prípadne token nemá prístup.":
-    resp.status===409?"Súbor sa medzitým zmenil.":data.message||"Chyba GitHub API "+resp.status);
-   error.status=resp.status;throw error;
-  }
-  return data;
- }finally{clearTimeout(timer)}
-}
-function githubEncode(data){
- const bytes=new TextEncoder().encode(data);
- let binary="";
- for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
- return btoa(binary);
-}
-function githubDecode(data){
- const binary=atob(String(data||"").replace(/\s/g,""));
- const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
- return new TextDecoder("utf-8",{fatal:true}).decode(bytes);
+ $("githubSyncActions").hidden=false;
+ const home=$("cloudHomeStatus");
+ if(home){
+  home.dataset.level=level;
+  $("cloudHomeText").textContent=level==="success"?"Uložené aj na GitHube.":
+   level==="busy"?"Ukladám na GitHub…":
+   level==="error"?"GitHub záloha nefunguje. Jedlá sú uložené lokálne.":
+   "Údaje sú len v tomto zariadení. GitHub záloha čaká na pripojenie.";
+ }
 }
 function parseGithubProfiles(value){
- if(!value||value.version!==1||!Array.isArray(value.profiles))throw Error("GitHub JSON má neplatný formát, nebude prepísaný.");
- if(value.profiles.length>25)throw Error("GitHub JSON má viac profilov než podporujeme.");
+ if(!value||value.version!==1||!Array.isArray(value.profiles))throw Error("Neplatná cloud databáza");
+ if(value.profiles.length>25)throw Error("Priveľa cloud profilov");
  return {version:1,profiles:value.profiles.map(p=>{
-  if(!p||typeof p.id!=="string"||typeof p.name!=="string")throw Error("Neplatný profil v GitHub JSON");
+  if(!p||typeof p.id!=="string"||typeof p.name!=="string")throw Error("Neplatný profil");
   return {id:p.id.slice(0,100),name:sanitizeProfileName(p.name)||"Používateľ",
    createdAt:p.createdAt||today,updatedAt:typeof p.updatedAt==="string"?p.updatedAt:"",
    data:normalize(p.data)};
@@ -680,17 +654,25 @@ function parseGithubProfiles(value){
 function mergeGithubProfiles(remote,local){
  const merged=new Map(remote.profiles.map(p=>[p.id,p]));
  for(const p of local.profiles){
-  const other=merged.get(p.id);
-  if(!other||Date.parse(p.updatedAt||0)>Date.parse(other.updatedAt||0))merged.set(p.id,p);
+  const old=merged.get(p.id);
+  if(!old||Date.parse(p.updatedAt||0)>Date.parse(old.updatedAt||0))
+   merged.set(p.id,p);
  }
- if(merged.size>25)throw Error("Databáza má viac než 25 profilov; sprav zálohu a uprav duplicity.");
+ if(merged.size>25)throw Error("Priveľa profilov");
  return {version:1,profiles:Array.from(merged.values())};
 }
-function applyGithubProfiles(merged){
- const before=activeProfileId;
+function applyGithubProfiles(remote){
+ // Keep the local diary and capture a rollback copy before merging remote data.
+ const current=parseGithubProfiles(profileStore);
+ const merged=mergeGithubProfiles(remote,current);
+ try{
+  const previous=localStorage.getItem(PROFILE_STORE_KEY);
+  if(previous)sessionStorage.setItem("forma-cloud-previous-local-v1",previous);
+ }catch(e){}
+ const previousId=activeProfileId;
  profileStore=merged;
- localStorage.setItem(PROFILE_STORE_KEY,JSON.stringify(profileStore));
- let selected=profileStore.profiles.find(p=>p.id===before);
+ localStorage.setItem(PROFILE_STORE_KEY,JSON.stringify(merged));
+ let selected=profileStore.profiles.find(p=>p.id===previousId);
  if(!selected&&profileStore.profiles.length){
   selected=profileStore.profiles[0];
   activeProfileId=selected.id;
@@ -699,63 +681,56 @@ function applyGithubProfiles(merged){
  if(selected){
   state=structuredCloneSafe(selected.data);
   lossTargetDraft=state.profile.lossTarget||state.profile.target;
-  selectedDay=today;
   syncProfileBadge();render();
  }
  if(!$("profileOverlay").hidden)renderProfileList();
 }
-function scheduleGithubSync(delay=1600){
- if(!githubSyncEnabled||!getGithubToken())return;
+async function workerRequest(path,method="GET",payload){
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),17000);
+ try{
+  const resp=await fetch(FORMA_CLOUD_URL+path,{
+   method,signal:ctrl.signal,cache:"no-store",
+   headers:{"Accept":"application/json",...(payload?{"Content-Type":"application/json"}:{})},
+   ...(payload?{body:JSON.stringify(payload)}:{})
+  });
+  const data=await resp.json().catch(()=>({}));
+  if(!resp.ok)throw Error(data.error||"Cloudflare API "+resp.status);
+  if(!data.ok)throw Error("Nedostupný server");
+  return data;
+ }finally{clearTimeout(timer)}
+}
+function scheduleGithubSync(delay=1800){
+ if(!githubSyncEnabled)return;
  ++githubSyncRevision;
  clearTimeout(githubSyncTimer);
+ githubStatus("Lokálne uložené, čakám na potvrdenie GitHubu…","busy");
  githubSyncTimer=setTimeout(()=>void syncGithubProfiles(),delay);
- githubStatus("Lokálne uložené. Ukladám na GitHub…","busy");
 }
 async function syncGithubProfiles(){
- if(!githubSyncEnabled||!getGithubToken())return false;
+ if(!githubSyncEnabled)return false;
  if(githubSyncInFlight){githubSyncAgain=true;return githubSyncInFlight}
  const job=(async()=>{
-  githubStatus("Synchronizujem rodinné profily…","busy");
-  const token=getGithubToken(),repo=githubConnection.repo;
-  let latestError;
-  for(let attempt=0;attempt<3;attempt++){
-   const revisionAtStart=githubSyncRevision;
-   try{
-    let remote={version:1,profiles:[]},sha=null;
-    try{
-     const obj=await githubRequest(repo,token,"GET",GITHUB_JSON_PATH);
-     sha=obj.sha;
-     remote=parseGithubProfiles(JSON.parse(githubDecode(obj.content)));
-    }catch(e){if(e.status!==404)throw e}
-    // Get the current in-memory local data *after* fetching the remote version.
-    const local=parseGithubProfiles(profileStore);
-    const merged=mergeGithubProfiles(remote,local);
-    const changed=JSON.stringify(remote.profiles)!==JSON.stringify(merged.profiles);
-    if(changed){
-     await githubRequest(repo,token,"PUT",GITHUB_JSON_PATH,{
-      message:"sync: FORMA family profiles",
-      content:githubEncode(JSON.stringify(merged,null,2)),
-      ...(sha?{sha}:{})
-     });
-    }
-    // If the user saved data while the upload was running, do not overwrite it.
-    const finalMerged=mergeGithubProfiles(merged,parseGithubProfiles(profileStore));
-    applyGithubProfiles(finalMerged);
-    githubSyncLastRead=Date.now();
-    if(githubSyncRevision===revisionAtStart){
-     githubStatus("Synchronizované s GitHubom. Údaje sú uložené aj lokálne.","success");
-    }else{
-     githubSyncAgain=true;
-    }
-    return true;
-   }catch(e){
-    latestError=e;
-    if(e.status===409||e.status===422)continue;
-    break;
+  const revision=githubSyncRevision;
+  githubStatus("Overujem GitHub zálohu…","busy");
+  try{
+   // Read first, merge local data into the remote snapshot, and send the union.
+   const remote=parseGithubProfiles(await workerRequest("/profiles"));
+   const snapshot=mergeGithubProfiles(remote,parseGithubProfiles(profileStore));
+   const committed=parseGithubProfiles(await workerRequest("/profiles","POST",snapshot));
+   if(committed.profiles.length<snapshot.profiles.length)throw Error("Server nevrátil všetky profily");
+   applyGithubProfiles(committed);
+   githubSyncLastRead=Date.now();
+   if(githubSyncRevision!==revision){
+    githubSyncAgain=true;
+   }else{
+    githubStatus("Záloha je uložená na GitHube.","success");
    }
+   return true;
+  }catch(e){
+   console.warn("FORMA cloud:",e);
+   githubStatus("Záloha nie je aktuálna: "+(e.message||"Nedostupná služba")+". Lokálne údaje zostali uložené.","error");
+   return false;
   }
-  githubStatus("Nepodarilo sa synchronizovať: "+(latestError?.message||"Neznáma chyba")+". Lokálne údaje zostali zachované.","error");
-  return false;
  })();
  githubSyncInFlight=job;
  try{return await job}
@@ -763,69 +738,26 @@ async function syncGithubProfiles(){
   githubSyncInFlight=null;
   if(githubSyncAgain){
    githubSyncAgain=false;
-   scheduleGithubSync(500);
+   scheduleGithubSync(400);
   }
  }
 }
-async function githubConnect(e){
- e.preventDefault();
- const repo=githubRepository($("githubRepo").value),inputToken=$("githubToken").value.trim();
- const previousRepo=githubConnection?.repo;
- const token=inputToken||(repo===previousRepo?getGithubToken():"");
- if(!repo){githubStatus("Repozitár zadaj vo formáte meno/repozitár.","error");return}
- if(!/^(github_pat_|ghp_)/.test(token)){githubStatus("Vlož platný GitHub fine-grained token, ktorý začína github_pat_.","error");return}
- const btn=$("githubConnectBtn");
- btn.disabled=true;githubStatus("Kontrolujem prístup k repozitáru…","busy");
+async function githubRestoreSession(){
+ githubStatus("Kontrolujem dostupnosť servera…","busy");
  try{
-  const repository=await githubRequest(repo,token,"GET");
-  const isPublic=!repository.private;
-  if(isPublic&&!$("githubPublicConsent").checked){
-   githubStatus("Repozitár je VEREJNÝ. Najprv potvrď upozornenie o zverejnení zdravotných údajov.","error");
+  const health=await workerRequest("/health");
+  if(!health.ready){
+   githubSyncEnabled=false;
+   githubStatus("Cloudflare Worker čaká na serverový GitHub token. Údaje sú zatiaľ len lokálne.","error");
    return;
   }
-  // Validate remote JSON before activating sync. Invalid cloud data must never
-  // destroy the local diary. Creating or updating file happens only after opt-in.
-  let remote={version:1,profiles:[]};
-  try{
-   const file=await githubRequest(repo,token,"GET",GITHUB_JSON_PATH);
-   remote=parseGithubProfiles(JSON.parse(githubDecode(file.content)));
-  }catch(error){if(error.status!==404)throw error}
-  const merged=mergeGithubProfiles(remote,parseGithubProfiles(profileStore));
-  if(isPublic&&!confirm("UPOZORNENIE: Tento repozitár je verejný. Po synchronizácii môže celý internet vidieť vaše osobné údaje a ich staré verzie v histórii GitHubu. Chceš pokračovať?"))return;
-  githubConnection={repo,token};
   githubSyncEnabled=true;
-  sessionStorage.setItem(GITHUB_SESSION_KEY,JSON.stringify(githubConnection));
-  localStorage.setItem(GITHUB_REPO_KEY,repo);
-  $("githubToken").value="";
-  $("githubSyncActions").hidden=false;
-  githubStatus("Repozitár pripojený. Synchronizujem…","busy");
   await syncGithubProfiles();
  }catch(e){
-  githubStatus("Pripojenie zlyhalo: "+(e.message||e),"error");
- }finally{btn.disabled=false}
+  githubSyncEnabled=false;
+  githubStatus("Cloudflare záloha ešte nie je spustená. Údaje zostali lokálne.","error");
+ }
 }
-function githubDisconnect(){
- githubSyncEnabled=false;githubConnection=null;
- clearTimeout(githubSyncTimer);
- sessionStorage.removeItem(GITHUB_SESSION_KEY);
- $("githubToken").value="";
- githubStatus("Odpojené. Lokálne údaje zostali uložené. GitHub sa už neaktualizuje.","neutral");
-}
-function githubRestoreSession(){
- const saved=localStorage.getItem(GITHUB_REPO_KEY)||GITHUB_DEFAULT_REPO;
- $("githubRepo").value=saved;
- try{
-  const session=JSON.parse(sessionStorage.getItem(GITHUB_SESSION_KEY)||"null");
-  if(session&&githubRepository(session.repo)&&typeof session.token==="string"){
-   githubConnection={repo:session.repo,token:session.token};
-   githubSyncEnabled=true;
-   $("githubRepo").value=session.repo;
-   githubStatus("Obnovujem spojenie s GitHubom…","busy");
-   void syncGithubProfiles();
-  }else{githubStatus("Nepripojené. Údaje sa zatiaľ ukladajú len lokálne.","neutral")}
- }catch(e){sessionStorage.removeItem(GITHUB_SESSION_KEY)}
-}
-
 initializeProfiles();
 function save(){const profile=findActiveProfile();if(!profile)return;profile.data=structuredCloneSafe(state);saveProfiles({touch:true})}
 function notify(text){$("toast").textContent=text;$("toast").classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.remove("show"),3300)}
@@ -1408,13 +1340,16 @@ $("profileGithubConnect").addEventListener("click",()=>{
  $("profileOverlay").hidden=true;
  bodyUnlock();
  setView("settings");
- $("githubToken").focus();
+ $("githubSyncSettings").scrollIntoView({block:"start",behavior:"smooth"});
+ void githubRestoreSession();
 });
-$("githubSyncForm").addEventListener("submit",githubConnect);
-$("githubRefreshBtn").addEventListener("click",()=>void syncGithubProfiles());
-$("githubDisconnectBtn").addEventListener("click",githubDisconnect);
+$("githubRefreshBtn").addEventListener("click",()=>void githubRestoreSession());
+$("cloudHomeStatus").addEventListener("click",()=>{
+ setView("settings");
+ $("githubSyncSettings").scrollIntoView({block:"start",behavior:"smooth"});
+});
 document.addEventListener("visibilitychange",()=>{
- if(!document.hidden&&githubSyncEnabled&&Date.now()-githubSyncLastRead>30000)void syncGithubProfiles();
+ if(!document.hidden&&Date.now()-githubSyncLastRead>30000)void githubRestoreSession();
 });
 $("profileHeaderBtn").addEventListener("click",openProfiles);
 $("changeProfileBtn").addEventListener("click",openProfiles);
