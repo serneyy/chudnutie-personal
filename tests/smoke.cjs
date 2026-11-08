@@ -599,8 +599,10 @@ const fs=require("node:fs");
   await page.locator("#closeFood").click();
   await page.locator('[data-nav="home"]').first().click();
   await page.locator("#homeAdd").click();
-  await page.locator('[data-quick-food="scrambled_eggs"]').click();
-  assert(await page.locator("#eggRecipe").isVisible(),"Quick pick scrambled eggs should open egg counter");
+  await page.locator("#foodName").fill("praženica");
+  await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible"});
+  await page.locator("#foodSuggestions [data-suggest]").first().click();
+  assert(await page.locator("#eggRecipe").isVisible(),"Searching scrambled eggs must open the egg counter");
   await page.locator("#closeFood").click();
 
   assert.deepEqual(errors,[],"Browser errors (photo): "+errors.join(" | "));
