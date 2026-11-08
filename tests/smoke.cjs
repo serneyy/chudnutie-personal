@@ -342,6 +342,86 @@ const fs=require("node:fs");
   assert(!await live.locator("#foodDetails").evaluate(el=>el.open),"Live scanner should hide advanced fields");
   assert.deepEqual(liveErrors,[],"Live browser runtime errors: "+liveErrors.join(" | "));
   console.log("PASS: REAL streaming barcode scan using Canvas MediaStream + ZXing WASM");
+
+  // GitHub cloud JSON syncing: public repo consent, authenticated PUT and cross-device pull.
+  let cloudState={version:1,profiles:[]},cloudSha="sha-init",cloudWrites=0;
+  async function mockGithub(route){
+   const request=route.request(),url=request.url(),method=request.method();
+   const headers={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization,content-type,accept,x-github-api-version"};
+   if(url.endsWith("/repos/serneyy/chudnutie-personal")){
+    return route.fulfill({status:200,contentType:"application/json",headers,body:JSON.stringify({private:false,name:"chudnutie-personal"})});
+   }
+   if(url.includes("/contents/data/forma-family.json")){
+    if(method==="GET"){
+     return route.fulfill({status:200,contentType:"application/json",headers,body:JSON.stringify({sha:cloudSha,content:Buffer.from(JSON.stringify(cloudState)).toString("base64")})});
+    }
+    if(method==="PUT"){
+     const payload=request.postDataJSON();
+     assert.equal(payload.sha,cloudSha,"GitHub must use optimistic SHA");
+     assert.equal(request.headers().authorization,"Bearer github_pat_test_fake");
+     cloudState=JSON.parse(Buffer.from(payload.content,"base64").toString("utf8"));
+     cloudWrites++;
+     cloudSha="sha-"+cloudWrites;
+     return route.fulfill({status:200,contentType:"application/json",headers,body:JSON.stringify({content:{sha:cloudSha}})});
+    }
+   }
+   throw Error("Unexpected GitHub API call "+method+" "+url);
+  }
+  await page.route("https://api.github.com/**",mockGithub);
+  await page.locator('[data-nav="settings"]').first().click();
+  await page.locator("#githubRepo").fill("serneyy/chudnutie-personal");
+  await page.locator("#githubToken").fill("github_pat_test_fake");
+  await page.locator("#githubConnectBtn").click();
+  assert((await page.locator("#githubSyncStatus").innerText()).includes("VEREJNÝ"),"Do not upload personal data before explicit consent");
+  assert.equal(cloudWrites,0,"No uploads without consent");
+  await page.locator("#githubPublicConsent").check();
+  page.once("dialog",dialog=>dialog.accept());
+  await page.locator("#githubConnectBtn").click();
+  await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:15000});
+  assert(cloudWrites>=1,"Connecting must upload JSON");
+  assert(cloudState.profiles.some(p=>p.name==="Daniel")&&cloudState.profiles.some(p=>p.name==="Mama"),"Both profiles must sync");
+  const danielCloud=cloudState.profiles.find(p=>p.name==="Daniel");
+  assert(danielCloud.data.foods.some(x=>x.name.includes("Praženica")),"Diary must be in cloud data");
+  assert.equal(JSON.stringify(cloudState).includes("github_pat_test_fake"),false,"Do not leak PAT into JSON");
+  await page.locator('[data-nav="home"]').first().click();
+  await page.locator("#homeAdd").click();
+  await page.locator('[data-quick-food="banana"]').click();
+  await page.locator("#foodSave").click();
+  await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:15000});
+  await page.waitForTimeout(1900);
+  assert(cloudState.profiles.find(p=>p.name==="Daniel").data.foods.some(x=>x.name==="Banán (jedlá časť)"),"Autosave food into GitHub must work");
+  const second=await browser.newContext({viewport:{width:390,height:844}});
+  const momDevice=await second.newPage();
+  await momDevice.route("https://api.github.com/**",mockGithub);
+  await momDevice.goto("http://127.0.0.1:8765/",{waitUntil:"domcontentloaded"});
+  assert(await momDevice.locator("#profileOverlay").isVisible());
+  await momDevice.locator("#profileGithubConnect").click();
+  await momDevice.locator("#githubRepo").fill("serneyy/chudnutie-personal");
+  await momDevice.locator("#githubToken").fill("github_pat_test_fake");
+  await momDevice.locator("#githubPublicConsent").check();
+  momDevice.once("dialog",dialog=>dialog.accept());
+  await momDevice.locator("#githubConnectBtn").click();
+  await momDevice.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:15000});
+  assert((await momDevice.locator("#currentProfileLabel").innerText()).length>0);
+  await momDevice.locator("#profileHeaderBtn").click();
+  assert((await momDevice.locator("#profileList").innerText()).includes("Mama"),"Second device should download family profiles");
+  await momDevice.locator('#profileList [data-profile-select]').filter({hasText:"Mama"}).click();
+  assert.equal(await momDevice.locator("#homeCalories").innerText(),"0","Mom still has her isolated diary");
+  await momDevice.locator("#homeAdd").click();
+  await momDevice.locator('[data-quick-food="skyr"]').click();
+  await momDevice.locator("#foodSave").click();
+  await momDevice.waitForTimeout(2600);
+  assert(cloudState.profiles.find(p=>p.name==="Mama").data.foods.some(x=>x.name==="Skyr biely"),"Mom's food must autosave to GitHub");
+  // Owner can pull Mom's new food without losing Daniel's entries.
+  await page.locator('[data-nav="settings"]').first().click();
+  await page.locator("#githubRefreshBtn").click();
+  await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:15000});
+  await page.locator("#profileHeaderBtn").click();
+  await page.locator('#profileList [data-profile-select]').filter({hasText:"Mama"}).click();
+  assert((await page.locator("#homeMealList").innerText()).includes("Skyr biely"),"Manual refresh must pull other device changes");
+  await second.close();
+  console.log("PASS: authenticated GitHub JSON sync, consent, multi-device profiles and autosave");
+
   await context.close();
  }finally{await browser.close()}
 })().catch(err=>{console.error(err);process.exit(1)});
