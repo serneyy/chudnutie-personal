@@ -392,3 +392,48 @@ input,select,textarea{min-height:44px}
 .food-simplified .food-choice{margin-top:12px}
 .food-simplified .food-preview{border-radius:15px}
 .food-more summary{font-size:12px}
+
+
+/* FORMA v23: tappable nutrition breakdown and muscle-gain goal */
+#homeEnergyCard[data-nutrient],#homeMacros [data-nutrient],#homeExtras [data-nutrient],.meal-item[data-food-detail]{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .16s ease,box-shadow .16s ease}
+#homeEnergyCard[data-nutrient]:active,#homeMacros [data-nutrient]:active,#homeExtras [data-nutrient]:active,.meal-item[data-food-detail]:active{transform:scale(.986)}
+#homeEnergyCard[data-nutrient]:focus-visible,#homeMacros [data-nutrient]:focus-visible,#homeExtras [data-nutrient]:focus-visible,.meal-item[data-food-detail]:focus-visible{outline:3px solid #81b75a;outline-offset:3px}
+#homeEnergyCard button,#homeEnergyCard input{position:relative;z-index:1}
+.insight-overlay{z-index:1090;align-items:flex-end;justify-content:center}
+.insight-sheet{background:#f8faf6;border-radius:25px 25px 0 0;width:min(100%,540px);max-height:89dvh;overflow-y:auto;overscroll-behavior:contain;padding:22px 20px max(24px,env(safe-area-inset-bottom));box-shadow:0 -10px 40px #112c1b20}
+.insight-sheet .sheet-title{margin-bottom:16px}
+.nutrition-content{display:grid;gap:14px}
+.nutrition-product-top{display:flex;align-items:center;gap:14px;padding:16px;background:white;border:1px solid #e0e9db;border-radius:17px}
+.nutrition-product-top>.nutrition-item-image{width:72px;height:72px;flex-basis:72px;border-radius:14px}
+.nutrition-product-top>div{display:grid;gap:4px}
+.nutrition-product-top>div strong{font-size:22px;color:#213d2b}
+.nutrition-product-top>div span{color:#8a978a;font-size:12px}
+.nutrition-item-image{width:45px;height:45px;flex:0 0 45px;display:flex;align-items:center;justify-content:center;border-radius:11px;background:#f2f6ee;overflow:hidden;color:#799878}
+.nutrition-item-image img{width:100%;height:100%;object-fit:contain}
+.nutrition-item-image svg{width:24px;height:24px}
+.nutrition-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.nutrition-detail-stat{min-width:0;background:white;border:1px solid #e2e9de;border-radius:14px;padding:15px;display:grid;gap:9px}
+.nutrition-detail-stat>span{color:#7c8c80;font-size:12px;font-weight:700}
+.nutrition-detail-stat strong{color:#213d2b;font-size:20px;font-weight:800;word-break:break-word}
+.nutrition-detail-stat strong small{font-size:12px;color:#849389}
+.nutrition-total-panel{background:#eaf5e2;border:1px solid #d2e6cb;border-radius:18px;padding:18px;display:grid;gap:5px}
+.nutrition-total-panel>span{font-size:12px;font-weight:800;color:#53754e}
+.nutrition-total-panel>strong{font-size:32px;line-height:1.2;color:#254b2c;font-weight:850}
+.nutrition-total-panel>strong small{font-size:15px}
+.nutrition-total-panel>small{color:#789177;font-size:12px}
+.nutrition-item-list{display:grid;gap:8px}
+.nutrition-item{display:flex;align-items:center;gap:11px;width:100%;padding:12px 10px;border:1px solid #e1e9dd;border-radius:15px;background:white;min-height:74px;cursor:pointer;text-align:left;color:#263f2d;font:inherit}
+.nutrition-item:active{background:#f2f8ef}
+.nutrition-item-description{display:grid;gap:4px;flex:1;min-width:0}
+.nutrition-item-description>strong{font-size:13px;line-height:1.3;overflow-wrap:anywhere}
+.nutrition-item-description>small{font-size:10px;color:#889589}
+.nutrition-contribution{display:block;width:100%;height:4px;background:#edf2e9;border-radius:4px;overflow:hidden}
+.nutrition-contribution i{display:block;background:#8fc068;height:100%;border-radius:inherit}
+.nutrition-item-amount{white-space:nowrap;font-size:16px}
+.nutrition-item-amount small{font-size:11px;color:#7d8c7e}
+.nutrition-footnote{font-size:11px;color:#879488;line-height:1.65;margin:0}
+.nutrition-no-food{text-align:center;color:#829084;font-size:13px;padding:25px 12px}
+.mode-switch:has(#modeGain){display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.mode-switch:has(#modeGain) label{min-width:0}
+.mode-switch:has(#modeGain) label span{font-size:12px;line-height:1.25;padding:10px 5px}
+@media(max-width:370px){.insight-sheet{padding:20px 14px 25px}.nutrition-item{gap:8px;padding:10px 7px}.nutrition-item-amount{font-size:14px}.mode-switch:has(#modeGain) label span{font-size:11px}}
