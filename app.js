@@ -504,7 +504,7 @@ async function remoteFoodSearch(query,token,local,{force=false}={}){
  const modern=new URL("https://search.openfoodfacts.org/search");
  modern.searchParams.set("q",q);
  modern.searchParams.set("page_size","12");
- modern.searchParams.set("langs","en,de,fr");
+ modern.searchParams.set("langs","sk,cs,en,de,fr");
  modern.searchParams.set("fields",fields);
  endpoints.push(modern);
  const legacy=new URL("https://world.openfoodfacts.org/cgi/search.pl");
