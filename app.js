@@ -234,6 +234,7 @@ async function getZxing(){
  if(zxingPromise)return zxingPromise;
  zxingPromise=(async()=>{
   const urls=[
+   "./vendor/zxing-reader.js",
    "https://cdn.jsdelivr.net/npm/zxing-wasm@"+LIB_VERSION+"/dist/iife/reader/index.js",
    "https://unpkg.com/zxing-wasm@"+LIB_VERSION+"/dist/iife/reader/index.js"
   ];
@@ -244,6 +245,7 @@ async function getZxing(){
   }
   // Load WebAssembly explicitly: this also lets us retry on another CDN.
   const binaryUrls=[
+   "./vendor/zxing_reader.wasm",
    "https://cdn.jsdelivr.net/npm/zxing-wasm@"+LIB_VERSION+"/dist/reader/zxing_reader.wasm",
    "https://unpkg.com/zxing-wasm@"+LIB_VERSION+"/dist/reader/zxing_reader.wasm"
   ];
