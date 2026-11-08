@@ -1,0 +1,40 @@
+name: FORMA - external protein image diagnostics
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app.js'
+      - '.github/workflows/check-protein-images.yml'
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check product photo hosts (external services may reject crawlers)
+        run: |
+          python3 - <<'PY'
+          import re, json, urllib.request, urllib.error
+          source=open("app.js",encoding="utf-8").read()
+          images=re.findall(r'"image":"(https://[^"]+)","imageCredit":"[^"]+","imageCreditUrl":"[^"]+"',source)
+          urls=[]
+          for u in images:
+            if any(host in u for host in ["nutriland.ro","kaloricketabulky.sk/file/image","alienvgalaxy.pl","tablycjakalorijnosti.com.ua","najsport.cloud","voxberg.com/buxus","kosik.sk","bodyworld.eu","pilulkacz.vshcdn.net","lunys-cdn.rshop.sk","notinoimg.com"]):
+              if u not in urls:urls.append(u)
+          print("PHOTO ITEMS",len(urls))
+          assert len(urls)>=11,"Missing branded protein photo sources"
+          ok=0
+          for u in urls:
+            try:
+              req=urllib.request.Request(u,headers={"User-Agent":"Mozilla/5.0 (compatible; FORMA-ImageCheck/1.0)"})
+              with urllib.request.urlopen(req,timeout=9) as r:
+                mime=r.headers.get("Content-Type","")
+                chunk=r.read(32)
+                print("PHOTO",r.status,mime,"bytes",len(chunk),"host",urllib.request.urlparse(u).netloc if False else u.split('/')[2])
+                if r.status==200 and mime.startswith("image/"):ok+=1
+            except Exception as e:
+              print("PHOTO FAILED",u.split('/')[2],str(e)[:120])
+          print("PHOTO HOSTS ONLINE",ok,"/",len(urls))
+          # Host-side bot blocking is not proof that an image is broken for web users.
+          PY
