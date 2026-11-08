@@ -106,6 +106,21 @@ const fs=require("node:fs");
 
   await page.locator('[data-nav="diary"]').first().click();
   assert((await page.locator("#diarySections").innerText()).includes("Jogurt vlastný"));
+  assert.equal(await page.locator("#diarySections [data-meal-section]").count(),6,"All daily meal categories should display");
+  assert.equal(await page.locator("#diarySections [data-meal-section] .meal-totals").count(),6,"Each category has its own nutrition totals");
+  const filled=page.locator('#diarySections [data-meal-section="ine"]');
+  // Depending on the time of entry the meal type varies, so locate the group by its food.
+  const mealGroup=page.locator("#diarySections [data-meal-section]").filter({hasText:"Jogurt vlastný"});
+  assert.equal(await mealGroup.locator(".meal-total.calories strong").innerText(),"300 kcal");
+  assert.equal(await mealGroup.locator(".meal-total.protein strong").innerText(),"15 g");
+  assert.equal(await mealGroup.locator(".meal-total.carbs strong").innerText(),"30 g");
+  assert.equal(await mealGroup.locator(".meal-total.fat strong").innerText(),"7,5 g");
+  const zeroGroup=page.locator("#diarySections [data-meal-section]").filter({has:page.locator(".meal-empty")}).first();
+  assert.equal(await zeroGroup.locator(".meal-total.calories strong").innerText(),"0 kcal");
+  assert.equal(await zeroGroup.locator(".meal-empty").count(),1);
+  assert(await zeroGroup.locator(".meal-empty").evaluate(e=>e.getBoundingClientRect().height<65),"Empty diary section should not waste vertical space");
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=2,"Diary macro tiles must not overflow 390px screen");
+
   await page.locator('[data-nav="plan"]').first().click();
   await page.locator("#planForm button[type=submit]").click();
   const lossKcal=Number((await page.locator("#planCalories").innerText()).replace(/[^0-9]/g,""));
