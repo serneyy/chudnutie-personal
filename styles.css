@@ -288,3 +288,48 @@ input,select,textarea{min-height:44px}
 .food-search-retry{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:51px;background:#edf5e5;color:#2e6840;border:0;border-top:1px solid #d7e9d2;font-weight:800;font-size:14px;padding:12px 16px;text-align:left;touch-action:manipulation}
 .food-search-retry span{font-size:20px;font-weight:700}
 .food-search-retry:active{background:#dceecf}
+
+
+/* FORMA v17 | circular remaining goals + unobtrusive daily movement recommendation */
+.hero-bottom{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,.8fr) minmax(0,1fr);gap:14px;align-items:start}
+.hero-bottom>div{min-width:0}
+.hero-bottom .hero-activity-goal{border-left:1px solid #ffffff26;padding-left:12px}
+.hero-bottom .hero-activity-goal strong{white-space:nowrap;font-size:21px}
+.hero-activity-goal strong small{font-size:11px;font-weight:800;letter-spacing:0}
+.hero-activity-goal>small{display:block;font-size:10px;color:#d2edc0;line-height:1.4;margin-top:4px}
+.hero-activity-note{font-size:10px;line-height:1.6;color:#b5cbb6;margin:12px 0 0}
+.macro-card{padding:13px 9px 15px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-width:0}
+.macro-card>span{font-size:11px;min-height:17px}
+.macro-card>strong{font-size:18px;white-space:nowrap;margin:7px 0 1px}
+.macro-card>small{font-size:10px}
+.macro-card .macro-line{display:none}
+.nutrient-ring{--ring-fill:0deg;--ring-color:#8bbb63;width:80px;height:80px;flex:0 0 80px;display:grid;place-items:center;border-radius:50%;background:conic-gradient(var(--ring-color) var(--ring-fill),#ebeee8 0);margin:11px auto 2px}
+.nutrient-ring-center{width:64px;height:64px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.nutrient-ring-center>strong{font:800 17px Manrope,sans-serif;letter-spacing:-.8px;line-height:1.1;color:#213c2a}
+.nutrient-ring-center>small{font-size:9px;font-weight:700;color:#819083;line-height:1.1}
+.nutrient-ring.protein{--ring-color:#86ba63}
+.nutrient-ring.carbs{--ring-color:#8aa5e6}
+.nutrient-ring.fat{--ring-color:#edb96e}
+.nutrient-ring.sugar{--ring-color:#d99b91}
+.nutrient-ring.fiber{--ring-color:#92b267}
+.nutrient-extras .nutrient-card{display:flex;text-align:center;justify-content:center;padding:14px 10px;min-height:167px}
+.nutrient-extras .nutrient-body{display:flex;flex-direction:column;align-items:center;width:100%;min-width:0}
+.nutrient-extras .nutrient-body>span{font-size:12px}
+.nutrient-extras .nutrient-body .nutrient-ring{margin:10px auto 2px}
+.nutrient-extras .nutrient-body>strong{font-size:17px;white-space:normal;margin:6px 0 2px}
+.nutrient-extras .nutrient-body>strong small{font-size:11px}
+.nutrient-extras .nutrient-body>small{max-width:160px;font-size:10px;line-height:1.4}
+@media(max-width:380px){
+ .hero-bottom{gap:8px}
+ .hero-bottom>div strong{font-size:19px}
+ .hero-bottom .hero-activity-goal{padding-left:8px}
+ .hero-bottom .hero-activity-goal strong{font-size:17px}
+ .hero-bottom>div span{font-size:10px}
+ .hero-activity-goal>small{font-size:9px}
+ .nutrient-ring{width:70px;height:70px;flex-basis:70px}
+ .nutrient-ring-center{width:56px;height:56px}
+ .nutrient-ring-center>strong{font-size:15px}
+ .macro-card{padding:12px 5px 13px}
+ .macro-card>strong{font-size:16px}
+ .macro-card>small{font-size:10px}
+}
