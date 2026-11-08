@@ -870,6 +870,22 @@ function mealMarkup(f,mini=false){
  const del=mini?"":'<button class="small-button" data-remove-food="'+escapeHTML(f.id)+'" aria-label="Zmazať">'+icon("trash")+'</button>';
  return '<div class="meal-item"><span class="meal-icon '+(safeFoodImage(f.image)?'meal-photo':'')+'">'+(foodImageMarkup(f.image,"meal-image")||icon("list"))+'</span><div class="meal-details"><strong>'+escapeHTML(f.name)+'</strong><small>'+dec(f.grams)+' '+(f.unit||'g')+' · B '+dec(f.protein)+' g · S '+dec(f.carbs)+' g</small></div><div class="meal-kcal">'+fmt(f.kcal)+' kcal</div>'+edit+del+'</div>';
 }
+function nutrientCircle(actual,goal,colorClass){
+ const remaining=Math.max(0,Math.ceil(goal-actual));
+ const complete=actual>=goal;
+ const progress=capProgress(actual,goal);
+ const label=complete?"splnené":"zostáva";
+ const value=complete?"0":fmt(remaining);
+ return '<div class="nutrient-ring '+colorClass+'" role="progressbar" aria-label="'+(complete?"Cieľ splnený":"Zostáva "+value+" gramov")+'" aria-valuemin="0" aria-valuemax="'+fmt(goal)+'" aria-valuenow="'+fmt(Math.min(actual,goal))+'" style="--ring-fill:'+(progress*3.6)+'deg"><div class="nutrient-ring-center"><strong>'+value+'</strong><small>'+label+'</small></div></div>';
+}
+function recommendedDailyMovement(){
+ // ~150 min/week of moderate activity, spread over six 25-minute days.
+ // This is a practical activity benchmark, not calories to compensate with food.
+ const minutes=25;
+ const kcal=Math.round(exerciseBurn("walk",minutes)/25)*25;
+ const totalToday=state.workouts.filter(w=>w.date===today).reduce((sum,w)=>sum+exerciseBurn(w.type,w.minutes),0);
+ return {minutes,target:Math.max(75,kcal),burned:totalToday};
+}
 function renderHome(){
  const c=plan(),s=daily(today),sCount=streak(),start=state.profile.weight,target=state.profile.target;
  $("headerDate").textContent=formatDate(today);
@@ -879,6 +895,10 @@ function renderHome(){
  $("heroRemainingLabel").textContent=c.maintain?"približné rozpätie":"zostáva do cieľa";
  $("heroWeeks").textContent=c.maintain?fmt(c.calories):c.weeks===null?"–":c.weeks;
  $("heroWeeklyLabel").textContent=c.maintain?"kcal denne":"týždňov (odhad)";
+ const movement=recommendedDailyMovement();
+ $("heroActivityTarget").innerHTML=fmt(movement.target)+' <small>kcal</small>';
+ $("heroActivityProgress").textContent=fmt(movement.burned)+' / '+fmt(movement.target)+' kcal dnes';
+ $("heroActivityNote").textContent='Orientačne '+movement.minutes+' min svižnej chôdze denne (v priemere 150 min týždenne). Pohyb sa nepripočítava k limitu jedla.';
  let p=c.maintain?100:start<=target?100:capProgress(start-lastWeight(),start-target);
  $("heroTrack").style.width=p+"%";
  $("heroCaption").textContent=c.maintain?"Cieľ je stabilná váha. Sleduj trend, nie jednotlivý deň.":c.remaining===0?"Cieľ dosiahnutý. Prejdi na udržiavanie.":p>0?"Už si prešiel "+fmt(p)+" % cesty.":"Prvý krok je začať.";
@@ -888,10 +908,10 @@ function renderHome(){
  $("calorieFill").style.width=capProgress(s.kcal,c.calories)+"%";
  $("calorieNote").textContent=s.kcal>c.calories?"Cieľ je prekročený. Zajtra pokračuj normálne, bez kompenzovania.":s.kcal?"Sleduj príjem a jedz pravidelne.":"Pridaj svoje prvé jedlo. Začínaš jednoducho.";
  const macro=[["protein","Bielkoviny",s.protein,c.protein],["carbs","Sacharidy",s.carbs,c.carbs],["fat","Tuky",s.fat,c.fat]];
- $("homeMacros").innerHTML=macro.map(x=>'<div class="macro-card '+x[0]+'"><span>'+x[1]+'</span><strong>'+fmt(x[2])+' <small>g</small></strong><small>z '+fmt(x[3])+' g</small><div class="macro-line"><div style="width:'+capProgress(x[2],x[3])+'%"></div></div></div>').join("");
+ $("homeMacros").innerHTML=macro.map(x=>'<div class="macro-card '+x[0]+'"><span>'+x[1]+'</span>'+nutrientCircle(x[2],x[3],x[0])+'<strong>'+fmt(x[2])+' <small>g</small></strong><small>z '+fmt(x[3])+' g</small></div>').join("");
  const hasUnknown=foodsFor(today).some(f=>f.fiber===null);
- $("homeExtras").innerHTML='<div class="nutrient-card sugar"><div class="nutrient-symbol">◈</div><div class="nutrient-body"><span>Cukry celkom</span><strong>'+dec(s.sugar)+' <small>/ '+c.sugarsReference+' g</small></strong><div class="nutrient-progress"><i style="width:'+capProgress(s.sugar,c.sugarsReference)+'%"></i></div><small>EU referenčný príjem, nie pevný limit</small></div></div>'+
- '<div class="nutrient-card fiber"><div class="nutrient-symbol">≋</div><div class="nutrient-body"><span>Vláknina</span><strong>'+dec(s.fiber)+' <small>/ '+c.fiber+' g</small></strong><div class="nutrient-progress"><i style="width:'+capProgress(s.fiber,c.fiber)+'%"></i></div><small>'+(hasUnknown?"minimum zo známych hodnôt":"orientačný denný cieľ")+'</small></div></div>';
+ $("homeExtras").innerHTML='<div class="nutrient-card sugar"><div class="nutrient-body"><span>Cukry celkom</span>'+nutrientCircle(s.sugar,c.sugarsReference,"sugar")+'<strong>'+dec(s.sugar)+' <small>/ '+c.sugarsReference+' g</small></strong><small>EU referencia, nie limit</small></div></div>'+
+ '<div class="nutrient-card fiber"><div class="nutrient-body"><span>Vláknina</span>'+nutrientCircle(s.fiber,c.fiber,"fiber")+'<strong>'+dec(s.fiber)+' <small>/ '+c.fiber+' g</small></strong><small>'+(hasUnknown?"minimum zo známych hodnôt":"orientačný denný cieľ")+'</small></div></div>';
  const items=foodsFor(today).slice().reverse();
  $("homeMealList").innerHTML=items.length?items.slice(0,5).map(x=>mealMarkup(x,true)).join(""):'<div class="empty-state">'+icon("list")+'Dnes ešte nič nezaznamenané.<br>Začni prvým jedlom.</div>';
  if(s.kcal>c.calories){$("quoteTitle").textContent="Jeden deň nie je celý výsledok.";$("quoteText").textContent="Netrestaj sa hladovaním. Ďalším jedlom sa vráť do bežného režimu."}
