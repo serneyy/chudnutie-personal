@@ -646,8 +646,11 @@ async function createProfile(e){
  const target=Number($("newProfileTarget").value),age=Number($("newProfileAge").value),sex=$("newProfileSex").value;
  if(name.length<2||profileStore.profiles.some(x=>x.name.toLocaleLowerCase("sk-SK")===name.toLocaleLowerCase("sk-SK"))){notify("Zadaj jedinečné meno s aspoň 2 znakmi.");return}
  const data=structuredCloneSafe(DEFAULT);
- data.profile={weight,height,target,age,sex,activity:1.2,rate:.3,gainRate:"moderate",mode:weight===target?"maintain":"lose",lossTarget:target};
- if(!validProfile(data.profile)||target>weight){notify("Skontroluj údaje. Cieľ nesmie byť väčší než aktuálna váha.");return}
+ const goal=$("newProfileGoal").value;
+ data.profile={weight,height,target,age,sex,activity:1.2,rate:.3,gainRate:"moderate",mode:goal,lossTarget:target};
+ if(!validProfile(data.profile)||goal==="lose"&&target>weight||goal==="gain"&&target<=weight||goal==="maintain"&&target!==weight){
+  notify(goal==="gain"?"Pri naberaní nastav vyššiu cieľovú váhu.":goal==="lose"?"Pri chudnutí nastav nižšiu cieľovú váhu.":"Pri udržiavaní nastav rovnakú aktuálnu a cieľovú váhu.");return
+ }
  if(profileStore.profiles.length>=25){notify("Maximum je 25 miestnych profilov.");return}
  const password=$("newProfilePassword").value;
  if(password&&password.length<6){notify("Heslo musí mať aspoň 6 znakov.");return}
@@ -1552,6 +1555,20 @@ $("profileList").addEventListener("click",e=>{
  const btn=e.target.closest("[data-profile-select]");
  if(btn)switchProfile(btn.dataset.profileSelect);
 });
+function suggestRegistrationGoal(){
+ const weight=Number($("newProfileWeight").value),target=Number($("newProfileTarget").value);
+ if(!(weight>0&&target>0))return;
+ const goal=target>weight?"gain":target===weight?"maintain":"lose";
+ $("newProfileGoal").value=goal;
+ updateRegistrationGoalHelp();
+}
+function updateRegistrationGoalHelp(){
+ const goal=$("newProfileGoal").value;
+ $("newProfileGoalHelp").textContent=goal==="gain"?"Pri naberaní nastav vyššiu cieľovú váhu. Tempo naberania zmeníš potom v Pláne.":goal==="maintain"?"Pri udržiavaní nastav rovnakú aktuálnu a cieľovú váhu.":"Pri chudnutí nastav nižšiu cieľovú váhu.";
+}
+$("newProfileWeight").addEventListener("change",suggestRegistrationGoal);
+$("newProfileTarget").addEventListener("input",suggestRegistrationGoal);
+$("newProfileGoal").addEventListener("change",updateRegistrationGoalHelp);
 $("newProfileForm").addEventListener("submit",createProfile);
 $("homeAdd").addEventListener("click",()=>{foodContextMeal=preferredMeal();foodModal({meal:foodContextMeal,date:today})});
 $("prevDay").addEventListener("click",()=>{selectedDay=addDays(selectedDay,-1);renderDiary()});
