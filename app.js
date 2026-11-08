@@ -5,6 +5,7 @@ const KEY="forma-personal-v2"; // Legacy single-profile data, retained as a safe
 const PROFILE_STORE_KEY="forma-local-profiles-v1";
 const PROFILE_ACTIVE_KEY="forma-active-profile-v1";
 const GITHUB_REPO_KEY="forma-github-repository-v1";
+const PROFILE_LOGGED_OUT_KEY="forma-profile-logged-out-v1";
 const GITHUB_SESSION_KEY="forma-github-session-v1";
 const GITHUB_JSON_PATH="data/forma-family.json";
 const GITHUB_DEFAULT_REPO="serneyy/chudnutie-personal";
@@ -550,7 +551,7 @@ function initializeProfiles(){
    }catch(e){console.warn("Pôvodné údaje sa nepodarilo načítať",e)}
   }
  }
- const active=localStorage.getItem(PROFILE_ACTIVE_KEY);
+ const active=sessionStorage.getItem(PROFILE_LOGGED_OUT_KEY)==="1"?null:localStorage.getItem(PROFILE_ACTIVE_KEY);
  if(active&&profileStore.profiles.some(p=>p.id===active)){
   activeProfileId=active;
   state=structuredCloneSafe(findActiveProfile().data);
@@ -588,6 +589,7 @@ function switchProfile(id){
  const target=profileStore.profiles.find(p=>p.id===id);
  if(!target)return;
  activeProfileId=id;
+ sessionStorage.removeItem(PROFILE_LOGGED_OUT_KEY);
  localStorage.setItem(PROFILE_ACTIVE_KEY,id);
  state=structuredCloneSafe(target.data);
  lossTargetDraft=state.profile.lossTarget||state.profile.target;
@@ -614,11 +616,37 @@ function createProfile(e){
 function renameProfile(){
  const profile=findActiveProfile();
  if(!profile)return;
- const value=prompt("Nové meno profilu",profile.name);
- if(value===null)return;
- const name=sanitizeProfileName(value);
- if(name.length<2||profileStore.profiles.some(x=>x.id!==profile.id&&x.name.toLocaleLowerCase("sk-SK")===name.toLocaleLowerCase("sk-SK"))){notify("Zadaj jedinečné meno s aspoň 2 znakmi.");return}
- profile.name=name;saveProfiles({touch:true});syncProfileBadge();notify("Meno profilu zmenené.");
+ $("profileRenameInput").value=profile.name;
+ $("profileRenameForm").hidden=false;
+ $("profileRenameInput").focus();
+ $("profileRenameInput").select();
+}
+function submitProfileRename(e){
+ e.preventDefault();
+ const profile=findActiveProfile();
+ if(!profile)return;
+ const name=sanitizeProfileName($("profileRenameInput").value);
+ if(name.length<2||profileStore.profiles.some(x=>x.id!==profile.id&&x.name.toLocaleLowerCase("sk-SK")===name.toLocaleLowerCase("sk-SK"))){
+  notify("Zadaj jedinečné meno s aspoň 2 znakmi.");return
+ }
+ if(name===profile.name){$("profileRenameForm").hidden=true;return}
+ profile.name=name;
+ saveProfiles({touch:true});
+ syncProfileBadge();
+ $("profileRenameForm").hidden=true;
+ renderProfileList();
+ notify("Meno profilu zmenené.");
+}
+function logoutProfile(){
+ // The logout affects only the active UI selection. Saved data, profiles and
+ // background cloud sync stay untouched; no deletions are sent to GitHub.
+ sessionStorage.setItem(PROFILE_LOGGED_OUT_KEY,"1");
+ localStorage.removeItem(PROFILE_ACTIVE_KEY);
+ activeProfileId=null;
+ $("profileRenameForm").hidden=true;
+ syncProfileBadge();
+ setView("home");
+ openProfiles();
 }
 
 /* Voliteľná synchronizácia do GitHub JSON.
@@ -632,14 +660,7 @@ function githubStatus(message,level="neutral"){
  $("githubSyncStatus").textContent=message;
  $("githubSyncStatus").dataset.level=level;
  $("githubSyncActions").hidden=false;
- const home=$("cloudHomeStatus");
- if(home){
-  home.dataset.level=level;
-  $("cloudHomeText").textContent=level==="success"?"Uložené aj na GitHube.":
-   level==="busy"?"Ukladám na GitHub…":
-   level==="error"?"GitHub záloha nefunguje. Jedlá sú uložené lokálne.":
-   "Údaje sú len v tomto zariadení. GitHub záloha čaká na pripojenie.";
- }
+
 }
 function parseGithubProfiles(value){
  if(!value||value.version!==1||!Array.isArray(value.profiles))throw Error("Neplatná cloud databáza");
@@ -673,7 +694,7 @@ function applyGithubProfiles(remote){
  profileStore=merged;
  localStorage.setItem(PROFILE_STORE_KEY,JSON.stringify(merged));
  let selected=profileStore.profiles.find(p=>p.id===previousId);
- if(!selected&&profileStore.profiles.length){
+ if(!selected&&profileStore.profiles.length&&sessionStorage.getItem(PROFILE_LOGGED_OUT_KEY)!=="1"){
   selected=profileStore.profiles[0];
   activeProfileId=selected.id;
   localStorage.setItem(PROFILE_ACTIVE_KEY,activeProfileId);
@@ -938,12 +959,13 @@ function bodyUnlock(){document.body.style.overflow=""}
 function foodModal(options={}){
  ++activeLookupNonce;
  hideFoodSuggestions();
- $("foodSearchHelp").textContent="Napíš napríklad tikka masala, pizza alebo proteín.";
+ $("foodSearchHelp").textContent="Vyhľadaj jedlo alebo si vyber z rýchlej ponuky.";
  $("quickFoods").hidden=false;renderQuickFoods();selectedFoodName="";
  $("foodForm").reset();$("foodEditId").value="";
  setProductImage("","");
  $("foodTitle").textContent=options.product?"Načítavam produkt…":"Pridať jedlo";
- $("foodStep").textContent="JEDNODUCHÝ ZÁPIS JEDLA";
+ $("foodStep").textContent="JEDÁLNIČEK";
+ $("quickDishesExpand").open=false;
  $("foodSave").innerHTML='Uložiť jedlo '+icon("check");
  $("foodSave").disabled=Boolean(options.product);
  $("foodMeal").value=options.meal||preferredMeal();
@@ -1344,16 +1366,15 @@ $("profileGithubConnect").addEventListener("click",()=>{
  void githubRestoreSession();
 });
 $("githubRefreshBtn").addEventListener("click",()=>void githubRestoreSession());
-$("cloudHomeStatus").addEventListener("click",()=>{
- setView("settings");
- $("githubSyncSettings").scrollIntoView({block:"start",behavior:"smooth"});
-});
 document.addEventListener("visibilitychange",()=>{
  if(!document.hidden&&Date.now()-githubSyncLastRead>30000)void githubRestoreSession();
 });
 $("profileHeaderBtn").addEventListener("click",openProfiles);
 $("changeProfileBtn").addEventListener("click",openProfiles);
 $("renameProfileBtn").addEventListener("click",renameProfile);
+$("profileRenameForm").addEventListener("submit",submitProfileRename);
+$("profileRenameCancel").addEventListener("click",()=>{$("profileRenameForm").hidden=true});
+$("logoutProfileBtn").addEventListener("click",logoutProfile);
 $("closeProfile").addEventListener("click",closeProfiles);
 $("toggleNewProfile").addEventListener("click",()=>{
  const form=$("newProfileForm");
