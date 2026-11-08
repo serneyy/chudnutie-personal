@@ -108,7 +108,7 @@ let suggestions=[],suggestionCursor=-1,searchTimer=null,searchAbort=null,searchG
 let recentQuickFoods=[],activeDishPortion=null;
 const searchCache=new Map();
 const FOOD_SEARCH_CACHE_KEY="forma-off-search-cache-v2";
-const FOOD_SEARCH_CACHE_TTL_MS=24*60*60*1000;
+const FOOD_SEARCH_CACHE_TTL_MS=7*24*60*60*1000;
 let remoteSearchPauseUntil=0;
 function getCachedFoodSearch(query){
  const item=searchCache.get(query);
@@ -117,18 +117,42 @@ function getCachedFoodSearch(query){
 }
 function rememberFoodSearch(query,products){
  searchCache.set(query,{ts:Date.now(),products});
- const recent=[...searchCache.entries()].filter(([q,v])=>q.length<100&&Date.now()-v.ts<FOOD_SEARCH_CACHE_TTL_MS).slice(-25);
+ const recent=[...searchCache.entries()].filter(([q,v])=>q.length<100&&Date.now()-v.ts<FOOD_SEARCH_CACHE_TTL_MS).slice(-50);
  try{localStorage.setItem(FOOD_SEARCH_CACHE_KEY,JSON.stringify(recent))}catch(e){console.warn("Vyhľadávacia cache:",e)}
 }
 try{
  const entries=JSON.parse(localStorage.getItem(FOOD_SEARCH_CACHE_KEY)||"[]");
- if(Array.isArray(entries))for(const [q,v] of entries.slice(-25)){
+ if(Array.isArray(entries))for(const [q,v] of entries.slice(-50)){
   if(typeof q==="string"&&v&&Array.isArray(v.products)&&Number.isFinite(v.ts)&&Date.now()-v.ts<FOOD_SEARCH_CACHE_TTL_MS){
    searchCache.set(q,{ts:v.ts,products:v.products.slice(0,6)});
   }
  }
 }catch(e){console.warn("Cache produktov sa nepodarilo načítať:",e)}
 
+function findKnownProducts(query){
+ const q=normalizeTerm(query);
+ if(q.length<2)return [];
+ const pool=new Map();
+ const consider=(item,priority=0)=>{
+  if(!item||!item.name||item.kcal===null||item.kcal===undefined)return;
+  const text=normalizeTerm(item.name+" "+(item.brand||""));
+  const name=normalizeTerm(item.name);
+  const words=q.split(" ");
+  if(!words.every(word=>text.includes(word)))return;
+  const score=(name===q?500:name.startsWith(q)?300:text.includes(q)?150:80)+priority;
+  const key=item.code||item.id||name;
+  if(!pool.has(key)||pool.get(key).score<score)pool.set(key,{item,score});
+ };
+ for(const [cachedQuery,v] of searchCache){
+  if(Date.now()-v.ts>FOOD_SEARCH_CACHE_TTL_MS)continue;
+  for(const item of v.products)consider(item,normalizeTerm(cachedQuery)===q?100:0);
+ }
+ for(const f of state.foods.slice(-120)){
+  const factor=f.grams?100/f.grams:1;
+  consider({id:"recent:"+f.id,source:"recent",name:f.name,brand:"Tvoj jedálniček",unit:f.unit||"g",portion:f.grams,code:f.code||"",image:safeFoodImage(f.image),kcal:round(f.kcal*factor),protein:round(f.protein*factor),carbs:round(f.carbs*factor),fat:round(f.fat*factor),sugar:round(f.sugar*factor),fiber:f.fiber===null?null:round(f.fiber*factor)},50);
+ }
+ return [...pool.values()].sort((a,b)=>b.score-a.score).slice(0,8).map(x=>x.item);
+}
 function normalizeTerm(value){
  return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
 }
@@ -331,8 +355,8 @@ function renderFoodSuggestions(local=[],remote=[],loading=false,error=""){
  const localItems=suggestions.filter(x=>x.source==="estimate"||x.source==="dish"||x.source==="recipe"),remoteItems=suggestions.filter(x=>x.source==="off");
  if(localItems.length)html+='<div class="food-suggestions-heading">Jedlá a nápoje (orientačné údaje)</div>'+localItems.map(x=>row(x,suggestions.indexOf(x))).join("");
  if(remoteItems.length)html+='<div class="food-suggestions-heading">Konkrétne výrobky z databázy</div>'+remoteItems.map(x=>row(x,suggestions.indexOf(x))).join("");
- if(loading)html+='<div class="food-search-empty">Hľadám výrobky v databáze…</div>';
- if(!loading&&error)html+='<button type="button" class="food-search-retry" id="foodSearchRetry">Skúsiť znova vyhľadať <span>↻</span></button>';
+ if(loading)html+='<div class="food-search-empty">Hľadám v online katalógu…</div>';
+ if(!loading&&error)html+='<div class="food-search-empty">'+escapeHTML(error)+'</div><button type="button" class="food-search-retry" id="foodSearchRetry">Skúsiť znova vyhľadať <span>↻</span></button>';
  else if(error)html+='<div class="food-search-empty">'+escapeHTML(error)+'</div>';
  else if(!suggestions.length)html+='<div class="food-search-empty">Nič som nenašiel. Môžeš jedlo zadať ručne.</div>';
  out.innerHTML=html;out.hidden=false;$("foodName").setAttribute("aria-expanded","true");
@@ -418,22 +442,22 @@ async function remoteFoodSearch(query,token,local,{force=false}={}){
  }
  const now=Date.now();
  searchNetworkHistory=searchNetworkHistory.filter(t=>now-t<60000);
- const minDelay=Math.max(0,lastSearchAt+1700-now);
+ const minDelay=Math.max(0,lastSearchAt+1300-now);
  const windowDelay=searchNetworkHistory.length>=8?Math.max(0,searchNetworkHistory[0]+61000-now):0;
  const outageDelay=force||matchingFoodBrand(q)?0:Math.max(0,remoteSearchPauseUntil-now);
  const delay=Math.max(minDelay,windowDelay,outageDelay);
  if(delay>0){
-  if(delay<8500){
+  if(delay<9500){
    searchTimer=setTimeout(()=>remoteFoodSearch(query,token,local,{force}),delay+120);
-   renderFoodSuggestions(local,[],true,"");
+   renderFoodSuggestions(local,findKnownProducts(q),true,"");
    return;
   }
-  if(token===searchGeneration)renderFoodSuggestions(local,[],false,"Online vyhľadávanie má dočasný limit. Môžeš skúsiť znova.");
+  if(token===searchGeneration)renderFoodSuggestions(local,findKnownProducts(q),false,"Online vyhľadávanie je dočasne obmedzené. Skús znova.");
   return;
  }
  searchNetworkHistory.push(now);lastSearchAt=now;
  searchAbort=new AbortController();
- const ctrl=searchAbort,timer=setTimeout(()=>ctrl.abort(),10000);
+ const ctrl=searchAbort,timer=setTimeout(()=>ctrl.abort(),6500);
  const fields=foodSearchFields();
  const brand=matchingFoodBrand(q);
  const endpoints=[];
@@ -466,11 +490,11 @@ async function remoteFoodSearch(query,token,local,{force=false}={}){
    renderFoodSuggestions(local,products,false);
   }else if(foundHealthyResponse){
    // Do not persist an empty query for 24 h: database search availability varies.
-   renderFoodSuggestions(local,[],false,"Nenašli sa produkty pre tento názov. Skús iný názov alebo čiarový kód.");
+   renderFoodSuggestions(local,findKnownProducts(q),false,"V online katalógu sa nenašla nová zhoda. Skús iný názov alebo čiarový kód.");
   }else{
    if([429,500,502,503,504].includes(lastError?.httpStatus))remoteSearchPauseUntil=Date.now()+20000;
    console.warn("Open Food Facts vyhľadávanie:",lastError?.message||"Nedostupné");
-   renderFoodSuggestions(local,[],false,"Databáza teraz neodpovedá. Ťukni na „Skúsiť znova“.");
+   renderFoodSuggestions(local,findKnownProducts(q),false,"Online databáza je dočasne nedostupná. Použi návrhy alebo skús znova.");
   }
  }finally{
   clearTimeout(timer);
@@ -495,12 +519,12 @@ function foodNameChanged(){
  if(searchAbort){searchAbort.abort();searchAbort=null}
  const token=++searchGeneration;
  if(value.length<2){hideFoodSuggestions();$("foodSearchHelp").textContent="Začni písať a vyber jedlo z návrhov.";return}
- const local=findCommon(value);
- renderFoodSuggestions(local,[],normalizeTerm(value).length>=3);
+ const local=findCommon(value),known=findKnownProducts(value);
+ renderFoodSuggestions(local,known,normalizeTerm(value).length>=3&&!known.length);
  $("foodSearchHelp").textContent="Vyhľadávam: "+value+". Po výbere sa vyplnia kalórie a porcia.";
  if(normalizeTerm(value).length<3)return;
- // Local suggestions are immediate; one online request only after typing stops.
- const wait=1650;
+ // Show known matches immediately; delay new requests until typing has stopped.
+ const wait=850;
  searchTimer=setTimeout(()=>remoteFoodSearch(value,token,local),wait);
 }
 function foodNameKeys(e){
