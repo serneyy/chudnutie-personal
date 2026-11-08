@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 13
+# FORMA. Personal · verzia 14
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -17,6 +17,14 @@ Ak web nie je aktívny, v **Settings → Pages → Deploy from a branch → main
 - Ak na tejto adrese v tomto prehliadači už boli údaje z predošlej verzie, automaticky sa nakopírujú do profilu **Môj pôvodný profil**. Je možné ho premenovať.
 - JSON záloha v Nastaveniach obsahuje **iba údaje práve otvoreného profilu**.
 - **Nie je to účet s heslom ani synchronizovaná databáza.** Profily nie sú súkromné pred iným človekom na tom istom telefóne a nebudú dostupné na inom zariadení bez exportu/importu. Na synchronizáciu medzi tvojím telefónom a maminým by bolo potrebné pridať autentifikovaný online backend.
+
+## Fotografie výrobkov a overenie výpočtov
+
+- **Open Food Facts fotografie:** pri textovom vyhľadávaní alebo skene EAN sa načíta predná fotografia produktu, pokiaľ existuje. Zobrazuje sa v návrhoch, detaili vybraného výrobku a pri uloženom jedle. Fotografie sú čítané len z oficiálnych obrazových domén Open Food Facts. Pri produktoch bez fotografie zostáva jednoduchá ikonka; orientačné domáce/reštauračné jedlá nepoužívajú vymyslené produktové fotografie.
+- **Výpočet energie a makier**: hodnoty na 100 g sa násobia skutočne zadanými gramami / 100; napr. výrobok 180 kcal, 8 g bielkovín, 12 g sacharidov, 9 g tuku na 100 g má pri 150 g **270 kcal, 12 g bielkovín, 18 g sacharidov a 13,5 g tuku**. Programový test overuje aj cukry, vlákninu a uloženie do profilu.
+- **Pozor na mililitre:** databáza môže uvádzať 100 g, ale nápoj sa zapisuje v ml; preto FORMA uvádza, že prepočet ml používa orientačnú konverziu 1 ml ≈ 1 g. Presný prepočet pri inom druhu nápoja závisí od hustoty a údajov na etikete.
+- **Rozdiel kcal a makrá:** kcal podľa etikety alebo databázy sa **neprepočítavajú nanovo zo vzorca 4/4/9**, pretože kalorická energia môže zohľadňovať vlákninu, polyoly a zákonné zaokrúhľovanie. Skontroluj hodnoty na obale, ak záznam databázy vyzerá nezvyčajne.
+- **Čo test neoverí:** kvalitu nutričných údajov každého externého produktu ani presnú hmotnosť receptu z reštaurácie. Výpočtové pravidlo je overené, ale správnosť vstupu závisí od etikety/databázy.
 
 ## Ciele bielkovín a cukrov
 
