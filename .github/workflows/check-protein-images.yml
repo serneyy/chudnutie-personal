@@ -20,10 +20,10 @@ jobs:
           images=re.findall(r'"image":"(https://[^"]+)","imageCredit":"[^"]+","imageCreditUrl":"[^"]+"',source)
           urls=[]
           for u in images:
-            if any(host in u for host in ["nutriland.ro","kaloricketabulky.sk/file/image","alienvgalaxy.pl","tablycjakalorijnosti.com.ua","najsport.cloud","voxberg.com/buxus","kosik.sk","bodyworld.eu","lunys-cdn.rshop.sk","notinoimg.com"]):
+            if any(host in u for host in ["nutriland.ro","kaloricketabulky.sk/file/image","alienvgalaxy.pl","tablycjakalorijnosti.com.ua","najsport.cloud","voxberg.com/buxus","kosik.sk","bodyworld.eu","pilulkacz.vshcdn.net","lunys-cdn.rshop.sk","notinoimg.com"]):
               if u not in urls:urls.append(u)
           print("PHOTO ITEMS",len(urls))
-          assert len(urls)>=10,"Missing branded protein photo sources"
+          assert len(urls)>=11,"Missing branded protein photo sources"
           ok=0
           for u in urls:
             try:
