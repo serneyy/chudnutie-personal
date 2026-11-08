@@ -1344,6 +1344,12 @@ function delegatedClick(e){
  const ex=e.target.closest("[data-remove-workout]");if(ex){if(confirm("Vymazať túto aktivitu?")){state.workouts=state.workouts.filter(x=>x.id!==ex.dataset.removeWorkout);save();render()}return}
 }
 document.addEventListener("click",delegatedClick);
+$("profileGithubConnect").addEventListener("click",()=>{
+ $("profileOverlay").hidden=true;
+ bodyUnlock();
+ setView("settings");
+ $("githubToken").focus();
+});
 $("githubSyncForm").addEventListener("submit",githubConnect);
 $("githubRefreshBtn").addEventListener("click",()=>void syncGithubProfiles());
 $("githubDisconnectBtn").addEventListener("click",githubDisconnect);
