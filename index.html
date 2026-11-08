@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="styles.css?v=7">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -148,9 +148,13 @@
    <input type="hidden" id="foodEditId">
    <div id="foodLookupMessage" class="lookup-message" aria-live="polite" hidden></div>
    <div class="food-simplified">
-    <label class="block-label food-main-name">Čo si jedol?
-     <input id="foodName" maxlength="100" placeholder="Názov potraviny" required autocomplete="off">
-    </label>
+    <div class="food-search-wrap">
+     <label class="block-label food-main-name" for="foodName">Čo si jedol?
+      <input id="foodName" maxlength="100" placeholder="Napr. cappuccino, banán, jogurt…" required autocomplete="off" autocapitalize="sentences" aria-autocomplete="list" aria-expanded="false" aria-controls="foodSuggestions" role="combobox">
+     </label>
+     <p class="food-search-help" id="foodSearchHelp">Začni písať. Zobrazím ti jedlá a produkty s výživovými hodnotami.</p>
+     <div id="foodSuggestions" class="food-suggestions" role="listbox" aria-label="Návrhy potravín" hidden></div>
+    </div>
     <div class="food-choice">
      <label class="food-simple-label" for="foodMeal">Kedy si to jedol?</label>
      <select id="foodMeal" aria-label="Typ jedla"><option value="ranajky">Raňajky</option><option value="desiata">Desiata</option><option value="obed">Obed</option><option value="olovrant">Olovrant</option><option value="vecera">Večera</option><option value="ine">Ostatné</option></select>
@@ -158,10 +162,10 @@
     <div class="amount-heading">Koľko si zjedol?</div>
     <div class="quantity-row">
      <button type="button" class="quantity-step" id="amountMinus" aria-label="Znížiť množstvo o 25 gramov">−</button>
-     <div class="quantity-input"><input id="foodGrams" type="number" inputmode="decimal" min="1" max="10000" step="any" value="100" required aria-label="Množstvo v gramoch alebo mililitroch"><span>g / ml</span></div>
+     <div class="quantity-input"><input id="foodGrams" type="number" inputmode="decimal" min="1" max="10000" step="any" value="100" required aria-label="Množstvo porcie"><span id="portionUnit">g</span><input type="hidden" id="foodUnit" value="g"></div>
      <button type="button" class="quantity-step" id="amountPlus" aria-label="Zvýšiť množstvo o 25 gramov">+</button>
     </div>
-    <div class="quantity-presets"><button type="button" data-grams="50">50 g</button><button type="button" data-grams="100">100 g</button><button type="button" data-grams="150">150 g</button><button type="button" data-grams="200">200 g</button></div>
+    <div class="quantity-presets"><button type="button" data-grams="50">50 g</button><button type="button" data-grams="100">100 g</button><button type="button" data-grams="150">150 g</button><button type="button" data-grams="200">200 g</button></div><div id="portionHint" class="portion-hint" aria-live="polite"></div>
     <div class="food-preview"><span>PRIDÁŠ DO DENNÍKA</span><strong id="foodPreviewCalories">0 kcal</strong><small id="foodPreviewMacros">Bielkoviny 0 g · Sacharidy 0 g · Tuky 0 g</small></div>
    </div>
    <details class="food-more" id="foodDetails">
@@ -185,6 +189,6 @@
  </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=6"></script>
+<script defer src="app.js?v=7"></script>
 </body>
 </html>
