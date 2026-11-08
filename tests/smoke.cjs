@@ -3,7 +3,7 @@ const {chromium}=require("playwright");
 const bwipjs=require("bwip-js");
 const fs=require("node:fs");
 (async()=>{
- const png=await bwipjs.toBuffer({bcid:"ean13",text:"301762401070",scale:4,height:27,includetext:false,padding:25});
+ const png=await bwipjs.toBuffer({bcid:"ean13",text:"301762401070",scale:4,height:27,includetext:false,paddingwidth:35,paddingheight:30,backgroundcolor:"FFFFFF"});
  const zxing=require("zxing-wasm/reader");
  const wasmBytes=fs.readFileSync("node_modules/zxing-wasm/dist/reader/zxing_reader.wasm");
  await zxing.prepareZXingModule({overrides:{wasmBinary:new Uint8Array(wasmBytes)},fireImmediately:true});
