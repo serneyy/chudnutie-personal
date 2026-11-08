@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 9
+# FORMA. Personal · verzia 10
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -17,6 +17,15 @@ Ak web nie je aktívny, v **Settings → Pages → Deploy from a branch → main
 - Ak na tejto adrese v tomto prehliadači už boli údaje z predošlej verzie, automaticky sa nakopírujú do profilu **Môj pôvodný profil**. Je možné ho premenovať.
 - JSON záloha v Nastaveniach obsahuje **iba údaje práve otvoreného profilu**.
 - **Nie je to účet s heslom ani synchronizovaná databáza.** Profily nie sú súkromné pred iným človekom na tom istom telefóne a nebudú dostupné na inom zariadení bez exportu/importu. Na synchronizáciu medzi tvojím telefónom a maminým by bolo potrebné pridať autentifikovaný online backend.
+
+## Hotové a reštauračné jedlá
+
+- Klikni **Pridať jedlo** a vyhľadaj napr. `tikka masala`, `pizza`, `rizoto`, `bolognese`, `halušky`, `guláš`, `rezeň` alebo `sushi`.
+- Pri **Chicken tikka masala** sú **dva samostatné záznamy: s ryžou a bez ryže**. Zvolíš správnu verziu, aby sa príloha nezapočítavala dvakrát.
+- Ak nevieš gramáž, vyber **Menšia / Bežná / Väčšia porcia**. Ak vieš viac, prepíš počet gramov v strede.
+- Kalórie, bielkoviny, sacharidy, tuky, cukry a vláknina sa vyplnia ako jeden pokrm. Hodnoty sú **hrubý orientačný odhad**, nie certifikované nutričné hodnoty tvojho jedla.
+- Recepty sa výrazne líšia: napríklad tikka masala **s ryžou** môže mať v balených výrobkoch asi **130–173 kcal na 100 g**; bez ryže sa podiel bielkovín a tukov podstatne zmení. Ak poznáš jedáleň či presný recept, radšej použi ich údaje.
+- Príklady zdrojov: [Tesco SK tikka s ryžou, 137 kcal/100g](https://potravinydomov.itesco.sk/shop/en-SK/products/105006688), [Patient.info tikka bez ryže, 156 kcal/100g](https://patient.info/nutrition/foods/curry-chicken-tikka-masala-retail-reheated), [Lidl variant v Open Food Facts, 173 kcal/100g](https://www.foodnutrifacts.com/products/lidl-deluxe-chicken-tikka-masala-w-rice-4056489899792).
 
 ## Jednoduché ovládanie pre rodinu
 
