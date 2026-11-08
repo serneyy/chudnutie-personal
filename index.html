@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=26">
+<link rel="stylesheet" href="styles.css?v=30">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -178,6 +178,44 @@
        <button type="button" data-quick-food="roll">Rožok</button>
        <button type="button" data-quick-food="cappuccino">Cappuccino</button>
       </div>
+      <details class="quick-dishes-expand" id="quickSlovakSoupExpand"><summary>Slovenské polievky <span aria-hidden="true">⌄</span></summary>
+       <p class="quick-category-note">Orientačné kalórie na 100 g. Pre presnosť uprav gramáž a recept.</p><div class="quick-foods-grid quick-dishes-grid">
+        <button type="button" data-quick-food="sk_chicken_noodles">Slepačí vývar</button>
+        <button type="button" data-quick-food="sk_chicken_meat_noodles">Vývar s mäsom</button>
+        <button type="button" data-quick-food="sk_kapustnica">Kapustnica</button>
+        <button type="button" data-quick-food="sk_cesnacka">Cesnačka</button>
+        <button type="button" data-quick-food="sk_gulasova">Gulášová</button>
+        <button type="button" data-quick-food="sk_fazulova">Fazuľová</button>
+        <button type="button" data-quick-food="sk_sosovicova">Šošovicová</button>
+        <button type="button" data-quick-food="sk_drzkova">Držková</button>
+        <button type="button" data-quick-food="sk_zemiakova">Zemiaková</button>
+        <button type="button" data-quick-food="sk_hubova">Hubová</button>
+        <button type="button" data-quick-food="sk_rajcinova">Rajčinová</button>
+        <button type="button" data-quick-food="sk_demikat">Demikát</button>
+       </div></details>
+      <details class="quick-dishes-expand" id="quickSlovakMeatExpand"><summary>Domáce mäsité jedlá <span aria-hidden="true">⌄</span></summary>
+       <p class="quick-category-note">Hmotnosť celej porcie vrátane prílohy, ak je uvedená v názve.</p><div class="quick-foods-grid quick-dishes-grid">
+        <button type="button" data-quick-food="sk_chicken_schnitzel">Kurací rezeň</button>
+        <button type="button" data-quick-food="sk_pork_schnitzel">Bravčový rezeň</button>
+        <button type="button" data-quick-food="sk_chicken_paprikas_dumplings">Kurací perkelt</button>
+        <button type="button" data-quick-food="sk_segedin_dumpling">Segedín</button>
+        <button type="button" data-quick-food="sk_beef_goulash_dumpling">Hovädzí guláš</button>
+        <button type="button" data-quick-food="sk_meatballs">Fašírky</button>
+        <button type="button" data-quick-food="sk_stuffed_peppers">Plnená paprika</button>
+        <button type="button" data-quick-food="sk_roast_pork_cabbage">Bravčové s kapustou</button>
+        <button type="button" data-quick-food="sk_roast_duck">Pečená kačica</button>
+        <button type="button" data-quick-food="sk_roast_chicken">Pečené kurča</button>
+        <button type="button" data-quick-food="sk_svieckova">Sviečková</button>
+        <button type="button" data-quick-food="sk_french_potatoes">Francúzske zemiaky</button>
+       </div></details>
+      <details class="quick-dishes-expand" id="quickSlovakClassicExpand"><summary>Slovenské klasiky a prílohy <span aria-hidden="true">⌄</span></summary><div class="quick-foods-grid quick-dishes-grid">
+        <button type="button" data-quick-food="sk_bryndzove_halusky">Bryndzové halušky</button>
+        <button type="button" data-quick-food="sk_bryndzove_pirohy">Bryndzové pirohy</button>
+        <button type="button" data-quick-food="sk_sauerkraut_halusky">Strapačky</button>
+        <button type="button" data-quick-food="sk_cabbage_rolls">Holúbky</button>
+        <button type="button" data-quick-food="sk_pancake_meat">Placky s mäsom</button>
+        <button type="button" data-quick-food="sk_lokse">Lokše</button>
+       </div></details>
       <details class="quick-dishes-expand" id="quickVeinyExpand"><summary>Proteíny Veiny Galaxy <span aria-hidden="true">⌄</span></summary><div class="quick-foods-grid quick-dishes-grid">
        <button type="button" data-quick-food="vg_nutty">Nutty Cream</button>
        <button type="button" data-quick-food="vg_caramel_biscuit">Caramel Biscuit</button>
@@ -301,6 +339,7 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=29"></script>
+<script defer src="slovak-foods.js?v=30"></script>
+<script defer src="app.js?v=30"></script>
 </body>
 </html>

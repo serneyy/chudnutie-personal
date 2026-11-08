@@ -53,6 +53,7 @@ const LIB_VERSION="3.1.6";
 /* Nutričné údaje všeobecných jedál sú orientačné na 100 g/ml.
    Veľkosť porcie nie je univerzálna: používateľ ju vždy môže upraviť. */
 const COMMON_FOODS=[
+ ...(Array.isArray(window.SLOVAK_FOODS)?window.SLOVAK_FOODS:[]),
 
  // HOTOVÉ JEDLÁ: hrubé orientačné hodnoty hotového jedla na 100 g.
  // Pri tikka masale existujú napr. balené varianty 130–173 kcal/100g s ryžou,
@@ -226,7 +227,7 @@ function pickOFFImage(product){
 }
 function foodImageMarkup(url,cssClass=""){
  const safe=safeFoodImage(url);
- return safe?'<img class="'+cssClass+'" src="'+escapeHTML(safe)+'" alt="'+(safe.includes("commons.wikimedia.org")?"Ilustračná fotografia pečiva":"Fotografia balenia")+'" loading="lazy" decoding="async" referrerpolicy="no-referrer">':"";
+ return safe?'<img class="'+cssClass+'" src="'+escapeHTML(safe)+'" alt="'+(safe.includes("commons.wikimedia.org")?"Ilustračná fotografia jedla":"Fotografia balenia")+'" loading="lazy" decoding="async" referrerpolicy="no-referrer">':"";
 }
 function setProductImage(url,name="",item=null){
  const image=safeFoodImage(url);
@@ -236,8 +237,9 @@ function setProductImage(url,name="",item=null){
  $("selectedProductPicture").innerHTML=foodImageMarkup(image,"selected-product-img");
  $("selectedProductLabel").textContent=name||"Vybraný výrobok";
  const illustrative=image.includes("commons.wikimedia.org");
+ const isDishIllustration=illustrative&&item?.imageCategory==="dish";
  const branded=!!item?.imageCreditUrl&&!illustrative;
- $("selectedProductPhotoNote").textContent=illustrative?"Ilustračná fotografia pečiva, nie konkrétny výrobok Lidl.":branded?"Fotografia konkrétnej príchute, obal sa môže meniť.":"Fotografia obalu z Open Food Facts.";
+ $("selectedProductPhotoNote").textContent=isDishIllustration?"Ilustračná fotografia podobného jedla, recept a porcia sa môžu líšiť.":illustrative?"Ilustračná fotografia pečiva, nie konkrétny výrobok Lidl.":branded?"Fotografia konkrétnej príchute, obal sa môže meniť.":"Fotografia obalu z Open Food Facts.";
  const credit=$("selectedProductPhotoCredit");
  if(item?.imageCreditUrl){
   credit.textContent=item.imageCredit||"Wikimedia Commons";
@@ -360,7 +362,7 @@ function findCommon(query){
    else if(text.length>=8&&q.includes(text))score=Math.max(score,10);
   }
   return score?{...item,id:"common:"+item.key,source:item.dish?"dish":"estimate",brand:"Orientačný údaj",fromLabel:false,_searchScore:score}:null;
- }).filter(Boolean).sort((a,b)=>b._searchScore-a._searchScore).slice(0,18);
+ }).filter(Boolean).sort((a,b)=>b._searchScore-a._searchScore).slice(0,normalizeTerm(query)==="polievka"||normalizeTerm(query)==="polievky"?30:20);
 }
 function renderQuickFoods(){
  const recent=[],seen=new Set();
@@ -399,7 +401,7 @@ function renderFoodSuggestions(local=[],remote=[],loading=false,error=""){
  const out=$("foodSuggestions");
  if(!suggestions.length&&!loading&&!error){out.hidden=true;$("foodName").setAttribute("aria-expanded","false");return}
  const row=(item,index)=>{
-  const text=item.source==="recipe"?"RECEPT • zvoľ počet vajec a tuk":item.source==="dish"?"HOTOVÉ JEDLO • hrubý odhad":item.source==="estimate"?(item.sourceUrl?(item.brand||item.sourceLabel||"Overený zdroj")+" • na 100 g":"Odhad • bežná porcia"):item.source==="recent"?"Z posledného zápisu":"Open Food Facts"+(item.brand?" • "+item.brand:"");
+  const text=item.source==="recipe"?"RECEPT • zvoľ počet vajec a tuk":item.source==="dish"?(item.group==="soup"?"POLIEVKA":item.group==="main"?"DOMÁCE JEDLO":"HOTOVÉ JEDLO")+(item.sourceUrl?" • KalorickéTabuľky.sk / 100 g":" • orientačne / 100 g"):item.source==="estimate"?(item.sourceUrl?(item.brand||item.sourceLabel||"Overený zdroj")+" • na 100 g":"Odhad • bežná porcia"):item.source==="recent"?"Z posledného zápisu":"Open Food Facts"+(item.brand?" • "+item.brand:"");
   return '<button type="button" class="food-suggestion" role="option" aria-selected="false" data-suggest="'+index+'"><span class="food-suggestion-icon '+(item.source==="off"?"remote":"")+'">'+(foodImageMarkup(item.image,"food-suggestion-image")||(item.unit==="ml"?"☕":"◉"))+'</span><span class="food-suggestion-body"><span class="food-suggestion-title">'+escapeHTML(item.name)+'</span><span class="food-suggestion-meta">'+escapeHTML(text)+' · '+fmt(item.portion)+' '+item.unit+'</span></span><span class="food-suggestion-calories">'+(item.kcal==null?"Doplniť":fmt(item.kcal*item.portion/100)+" kcal")+'</span></button>';
  };
  let html="";
@@ -455,7 +457,7 @@ function applyFoodSuggestion(item){
  $("foodLookupMessage").hidden=false;
  $("foodLookupMessage").classList.toggle("warn",item.source==="estimate"||item.source==="dish"||item.source==="recipe"||missing.length>0);
  $("foodLookupMessage").textContent=missing.length?"Niektoré hodnoty produktu chýbajú. Otvorené detaily doplň z etikety.":
-  item.source==="recipe"?"Počet vajec a použitý tuk sa počítajú automaticky.":item.source==="dish"?"Odhad pre celé jedlo. Recept, olej, smotana a príloha môžu kalórie výrazne zmeniť. Zvoľ veľkosť porcie.":item.source==="estimate"?(item.nutritionNote?item.nutritionNote:item.sourceUrl?"Na 100 g podľa uvedeného zdroja. Hmotnosť porcie je orientačná, uprav podľa kusu a over etiketu.":"Orientačné údaje. Výrobky sa môžu líšiť, najmä proteín. Skontroluj obal."):item.source==="recent"?"Načítané z tvojho predchádzajúceho zápisu.":"Výrobok z databázy. Skontroluj množstvo a obal.";
+  item.source==="recipe"?"Počet vajec a použitý tuk sa počítajú automaticky.":item.source==="dish"?(item.nutritionNote||"Odhad pre celé jedlo. Recept, olej, smotana a príloha môžu kalórie výrazne zmeniť. Zvoľ veľkosť porcie."):item.source==="estimate"?(item.nutritionNote?item.nutritionNote:item.sourceUrl?"Na 100 g podľa uvedeného zdroja. Hmotnosť porcie je orientačná, uprav podľa kusu a over etiketu.":"Orientačné údaje. Výrobky sa môžu líšiť, najmä proteín. Skontroluj obal."):item.source==="recent"?"Načítané z tvojho predchádzajúceho zápisu.":"Výrobok z databázy. Skontroluj množstvo a obal.";
  $("foodSearchHelp").textContent=item.recipe==="eggs"?"Uprav počet vajec a tuk, potom ulož.":item.dish?"Odhad hotového jedla. Vyber veľkosť porcie a ulož.":"Jedlo vybrané. Teraz nastav množstvo a ulož.";
  $("quickFoods").hidden=true;
  renderFoodPreview();updateFoodSaveState();

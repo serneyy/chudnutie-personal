@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 29
+# FORMA. Personal · verzia 30
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -37,7 +37,7 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 
 ## Fotografie výrobkov a overenie výpočtov
 
-- **Open Food Facts fotografie:** pri textovom vyhľadávaní alebo skene EAN sa načíta predná fotografia produktu, pokiaľ existuje. Zobrazuje sa v návrhoch, detaili vybraného výrobku a pri uloženom jedle. Fotografie sú čítané len z oficiálnych obrazových domén Open Food Facts. Pri produktoch bez fotografie zostáva jednoduchá ikonka; orientačné domáce/reštauračné jedlá nepoužívajú vymyslené produktové fotografie.
+- **Open Food Facts fotografie:** pri textovom vyhľadávaní alebo skene EAN sa načíta predná fotografia produktu, pokiaľ existuje. Pri domácich slovenských jedlách sa môže zobrazovať označená ilustračná fotografia z Wikimedia Commons. Zobrazuje sa v návrhoch, detaili vybraného výrobku a pri uloženom jedle. Fotografie sú čítané len z oficiálnych obrazových domén Open Food Facts. Pri produktoch bez fotografie zostáva jednoduchá ikonka; orientačné domáce/reštauračné jedlá nepoužívajú vymyslené produktové fotografie.
 - **Výpočet energie a makier**: hodnoty na 100 g sa násobia skutočne zadanými gramami / 100; napr. výrobok 180 kcal, 8 g bielkovín, 12 g sacharidov, 9 g tuku na 100 g má pri 150 g **270 kcal, 12 g bielkovín, 18 g sacharidov a 13,5 g tuku**. Programový test overuje aj cukry, vlákninu a uloženie do profilu.
 - **Pozor na mililitre:** databáza môže uvádzať 100 g, ale nápoj sa zapisuje v ml; preto FORMA uvádza, že prepočet ml používa orientačnú konverziu 1 ml ≈ 1 g. Presný prepočet pri inom druhu nápoja závisí od hustoty a údajov na etikete.
 - **Rozdiel kcal a makrá:** kcal podľa etikety alebo databázy sa **neprepočítavajú nanovo zo vzorca 4/4/9**, pretože kalorická energia môže zohľadňovať vlákninu, polyoly a zákonné zaokrúhľovanie. Skontroluj hodnoty na obale, ak záznam databázy vyzerá nezvyčajne.
@@ -51,6 +51,17 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Dôležité:** nasadenie Cloudflare Worker robí vlastník ručne. Kým Worker nebeží a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
 - Prvá synchronizácia lokálne dáta nevymaže; profily sa zlúčia podľa času poslednej úpravy, pri zlyhaní servera sa zachovajú v `localStorage`. Mobilné testy simulujú dve zariadenia a nedostupný server.
 - Upozornenie: verejný GitHub repo umožňuje komukoľvek prezerať údaje v histórii commitov. Endpoint POST nie je autentifikovaný na strane používateľa (požiadavka na rodinný prototyp); CORS/Origin nie je bezpečnostné overenie klienta, takže endpoint nie je vhodný pre produkčné osobné údaje.
+
+## FORMA v30: Slovenské polievky, mäsité jedlá a klasiky
+
+- **81 miestnych receptových položiek**, z toho **30 polievok** a **51 hlavných jedál a slovenských klasík**, uložených v `slovak-foods.js`. Sú súčasťou nasadenej aplikácie, po načítaní sú dostupné aj pri nedostupnom Open Food Facts.
+- Základné polievky: slepačí a kurací vývar (vrátane variantu s mäsom a rezancami), hovädzí vývar, kapustnica, cesnačka, gulášová, držková, fazuľová, šošovicová, hrachová, zemiaková, hubová, rajčinová, zeleninová, bryndzový demikát a ďalšie.
+- Najmä mäsité jedlá: kurací/bravčový rezeň, perkelt a paprikáš, segedínsky a hovädzí guláš, fašírky, plnená paprika, pečené bravčové, holúbky, kačica s kapustou a lokšami, sviečková, španielske vtáčiky, ďalšie domáce jedlá, plus bryndzové halušky, pirohy a strapačky.
+- **Nutričné údaje sú vždy uvedené na 100 g hotového jedla**. **21 záznamov má odkaz na konkrétnu položku z KalorickéTabuľky.sk**, zvyšných 60 používa orientačný odhad charakteristického receptu, ktorý nie je laboratórne ani externým zdrojom overený. Všetky záznamy majú viditeľné upozornenie na receptové odchýlky. Pri zložkách bez overeného cukru či vlákniny sa ukladá `null`, nie zavádzajúca nula.
+- **Ilustračné fotografie:** 43 jedál má odkaz na fotografiu vizuálne podobného jedla z Wikimedia Commons (25 rôznych obrázkov); sú dostupné iba pri internetovom pripojení a nie sú to fotografie vlastného receptu používateľa. Každá fotografia má na detaile odkaz na stránku súboru s autorom a licenciou. Nevhodné či zameniteľné ilustračné fotografie (napr. slepačí obrázok pri hovädzom vývare) boli vynechané.
+- **Rýchly výber** má tri nové rozbaľovacie sekcie (Slovenské polievky, Domáce mäsité jedlá, Slovenské klasiky a prílohy). `polievka` vyhľadá všetkých 30 lokálnych polievok, podobne fungujú názvy bez diakritiky, napr. `slepaci vyvar`, `segedinsky gulas`, `fasirky`.
+- Uvedená porcia v gramoch je len návrh hmotnosti **celého hotového jedla**; prílohy sa počítajú iba ak sú uvedené v názve. Recepty od rôznych domácností môžu mať podstatne iné kalórie podľa oleja, klobásy, slaniny, smotany či porcie mäsa. Na presný záznam je nutné vlastný recept zadať alebo jedlo zvážiť.
+- Nezasahuje sa do profilu, denníka, cloudovej synchronizácie ani nutričnej matematiky. Katalóg funguje offline; vzdialené ilustračné fotky nie.
 
 ## FORMA v29: Veiny Galaxy a Voxberg proteíny
 
