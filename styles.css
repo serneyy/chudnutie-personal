@@ -381,6 +381,7 @@ input,select,textarea{min-height:44px}
 .profile-rename-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .profile-rename-actions button{min-width:0;min-height:46px;font-size:12px}
 .profile-logout{color:#8e655f!important}
+.quick-category-note{font-size:11px;line-height:1.45;color:#718371;margin:2px 2px 7px}
 .quick-dishes-expand{border-top:1px solid #e7ece3;margin-top:10px;padding-top:5px}
 .quick-dishes-expand summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;color:#5c785f;font-size:12px;font-weight:800;padding:11px 3px;min-height:42px}
 .quick-dishes-expand summary::-webkit-details-marker{display:none}
