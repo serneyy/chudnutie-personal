@@ -862,7 +862,7 @@ function showNutrientBreakdown(key){
  if(!Object.hasOwn(NUTRIENT_LABELS,key))return;
  const list=foodsFor(today).slice().sort((a,b)=>(nutrientValue(b,key)||0)-(nutrientValue(a,key)||0));
  const total=nutrientTotal(key,list),unit=key==="kcal"?"kcal":"g";
- const goal=plan()[key]??(key==="sugar"?plan().sugarsReference:0);
+ const targets=plan(),goal=key==="sugar"?targets.sugarsReference:targets[key]??0;
  let rows=list.map(food=>{
   const amount=nutrientValue(food,key);
   const pct=total>0&&amount!==null?Math.min(100,(amount/total)*100):0;
@@ -973,6 +973,7 @@ function renderPlan(){
  $("modeMaintain").checked=c.maintain;$("modeGain").checked=c.gain;$("modeLose").checked=!c.maintain&&!c.gain;updatePlanModeUI();
  $("planCalories").textContent=fmt(c.calories);$("planTdee").textContent=fmt(c.tdee);
  $("planDeficit").textContent=c.maintain?"0":c.gain?"+"+fmt(c.surplus):"−"+fmt(c.deficit);
+ $("planEnergyLabel").textContent=c.gain?"Denný nadbytok":c.maintain?"Energetický rozdiel":"Denný deficit";
  $("planWeeks").textContent=c.maintain?"Stabilne":c.weeks===null?"–":c.weeks+" t.";
  $("planDate").textContent=c.maintain?"bez termínu":c.targetDate?"cca "+formatDate(c.targetDate):"Odlišné tempo";
  $("planSubtitle").textContent=c.maintain?"Približne toľko energie potrebuješ na udržiavanie váhy.":c.gain?"Mierny kalorický nadbytok na podporu silového tréningu; sleduj trend váhy a výkonu.":c.capped?"Tempo bolo zmiernené, aby príjem nebol extrémne nízky.":"Odhad pri zvolenej aktivite a tempe.";
@@ -1407,14 +1408,15 @@ async function lookupCode(code){
 }
 function delegatedClick(e){
  const nav=e.target.closest("[data-nav]");if(nav){setView(nav.dataset.nav);return}
- const foodDetail=e.target.closest("[data-food-detail]");
- if(foodDetail){showFoodNutrition(foodDetail.dataset.foodDetail);return}
- const metric=e.target.closest("[data-nutrient]");
- if(metric){showNutrientBreakdown(metric.dataset.nutrient);return}
  if(e.target.closest('[data-action="scan"]')){foodContextMeal=preferredMeal();selectedDay=today;openScanner();return}
  const meal=e.target.closest("[data-add-meal]");if(meal){foodContextMeal=meal.dataset.addMeal;foodModal({meal:foodContextMeal,date:selectedDay});return}
  const edit=e.target.closest("[data-edit-food]");if(edit){let f=state.foods.find(x=>x.id===edit.dataset.editFood);if(f)foodModal({record:f});return}
  const remove=e.target.closest("[data-remove-food]");if(remove){if(confirm("Vymazať toto jedlo?")){state.foods=state.foods.filter(x=>x.id!==remove.dataset.removeFood);save();render();notify("Jedlo vymazané.")}return}
+ if(e.target.closest("#homeAdd"))return;
+ const foodDetail=e.target.closest("[data-food-detail]");
+ if(foodDetail){showFoodNutrition(foodDetail.dataset.foodDetail);return}
+ const metric=e.target.closest("[data-nutrient]");
+ if(metric){showNutrientBreakdown(metric.dataset.nutrient);return}
  const wr=e.target.closest("[data-remove-weight]");if(wr){if(confirm("Vymazať toto váženie?")){state.weights=state.weights.filter(x=>x.date!==wr.dataset.removeWeight);save();render()}return}
  const ex=e.target.closest("[data-remove-workout]");if(ex){if(confirm("Vymazať túto aktivitu?")){state.workouts=state.workouts.filter(x=>x.id!==ex.dataset.removeWorkout);save();render()}return}
 }
