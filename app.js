@@ -592,6 +592,8 @@ function openProfiles(){
  if(!$("scanOverlay").hidden)closeScan();
  if(!$("foodOverlay").hidden)closeFood();
  renderProfileList();
+ $("profileList").hidden=false;
+ $("toggleNewProfile").hidden=false;
  $("profileUnlockForm").hidden=true;pendingUnlockId=null;
  $("newProfileForm").hidden=profileStore.profiles.length>0;
  $("profileOverlay").hidden=false;
