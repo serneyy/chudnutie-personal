@@ -4,6 +4,7 @@
 const KEY="forma-personal-v2"; // Legacy single-profile data, retained as a safety backup
 const PROFILE_STORE_KEY="forma-local-profiles-v1";
 const PROFILE_ACTIVE_KEY="forma-active-profile-v1";
+const PROFILE_REMEMBER_KEY="forma-remembered-profile-v1";
 const GITHUB_REPO_KEY="forma-github-repository-v1";
 const PROFILE_LOGGED_OUT_KEY="forma-profile-logged-out-v1";
 const REMOVED_PROFILE_IDS=new Set(["02c947bf-dd36-4ddc-bf9d-2a0a055c0ac0"]);
@@ -659,6 +660,30 @@ function sanitizeProfileName(value){
  return String(value||"").trim().replace(/\s+/g," ").slice(0,30);
 }
 function findActiveProfile(){return profileStore.profiles.find(p=>p.id===activeProfileId)||null}
+// Keep only this browser's already-verified profile selection in localStorage.
+// The value is not a password or an authentication token. It is tied to the
+// current PBKDF2 record; a changed password invalidates the remembered device.
+function isRememberedProfile(profile){
+ if(!profile?.password)return false;
+ try{
+  const remembered=JSON.parse(localStorage.getItem(PROFILE_REMEMBER_KEY)||"null");
+  return remembered?.id===profile.id
+   &&remembered.salt===profile.password.salt
+   &&remembered.hashPrefix===profile.password.hash.slice(0,16);
+ }catch{return false}
+}
+function rememberProfileOnThisDevice(profile){
+ try{
+  if(profile?.password){
+   localStorage.setItem(PROFILE_REMEMBER_KEY,JSON.stringify({
+    id:profile.id,salt:profile.password.salt,hashPrefix:profile.password.hash.slice(0,16)
+   }));
+  }else localStorage.removeItem(PROFILE_REMEMBER_KEY);
+ }catch(error){console.warn("Zapamätanie profilu nie je dostupné",error)}
+}
+function forgetRememberedProfile(){
+ try{localStorage.removeItem(PROFILE_REMEMBER_KEY)}catch(error){console.warn("Odhlásenie profilu",error)}
+}
 function saveProfiles(options={}){
  if(options.touch){
   const selected=findActiveProfile();
@@ -692,10 +717,15 @@ function initializeProfiles(){
   }
  }
  const active=sessionStorage.getItem(PROFILE_LOGGED_OUT_KEY)==="1"?null:localStorage.getItem(PROFILE_ACTIVE_KEY);
- if(active&&profileStore.profiles.some(p=>p.id===active&&!p.password)){
-  activeProfileId=active;
-  state=structuredCloneSafe(findActiveProfile().data);
+ const profile=profileStore.profiles.find(p=>p.id===active);
+ if(profile&&(!profile.password||isRememberedProfile(profile))){
+  activeProfileId=profile.id;
+  unlockedProfileId=profile.password?profile.id:null;
+  state=structuredCloneSafe(profile.data);
   lossTargetDraft=state.profile.lossTarget||state.profile.target;
+ }else if(active){
+  // A missing or changed password must not silently re-open the old profile.
+  localStorage.removeItem(PROFILE_ACTIVE_KEY);
  }
 }
 function renderProfileList(){
@@ -751,6 +781,7 @@ function switchProfile(id,verified=false){
  activeProfileId=id;
  sessionStorage.removeItem(PROFILE_LOGGED_OUT_KEY);
  localStorage.setItem(PROFILE_ACTIVE_KEY,id);
+ rememberProfileOnThisDevice(target);
  state=structuredCloneSafe(target.data);
  lossTargetDraft=state.profile.lossTarget||state.profile.target;
  selectedDay=today;
@@ -809,6 +840,7 @@ function logoutProfile(){
  // background cloud sync stay untouched; no deletions are sent to GitHub.
  sessionStorage.setItem(PROFILE_LOGGED_OUT_KEY,"1");
  localStorage.removeItem(PROFILE_ACTIVE_KEY);
+ forgetRememberedProfile();
  activeProfileId=null;
  $("profileRenameForm").hidden=true;
  syncProfileBadge();
@@ -859,6 +891,7 @@ async function saveProfilePassword(e){
   const record=await createPasswordRecord(next);
   profile.password=record;
   unlockedProfileId=profile.id;
+  rememberProfileOnThisDevice(profile);
   saveProfiles({touch:true});
   $("profilePasswordForm").reset();
   renderPasswordSettings();
@@ -913,17 +946,26 @@ function applyGithubProfiles(remote){
  profileStore=merged;
  localStorage.setItem(PROFILE_STORE_KEY,JSON.stringify(merged));
  let selected=profileStore.profiles.find(p=>p.id===previousId);
+ if(!selected&&previousId){
+  activeProfileId=null;unlockedProfileId=null;
+  localStorage.removeItem(PROFILE_ACTIVE_KEY);
+ }
  if(!selected&&profileStore.profiles.length&&sessionStorage.getItem(PROFILE_LOGGED_OUT_KEY)!=="1"&&!profileStore.profiles[0].password){
   selected=profileStore.profiles[0];
   activeProfileId=selected.id;
   localStorage.setItem(PROFILE_ACTIVE_KEY,activeProfileId);
  }
+ // A remote password change invalidates previously remembered devices. A
+ // normal sync, refresh or return to the app must not log out a trusted device.
+ if(selected?.password)unlockedProfileId=isRememberedProfile(selected)?selected.id:null;
  if(selected&&(!selected.password||unlockedProfileId===selected.id)){
   state=structuredCloneSafe(selected.data);
   lossTargetDraft=state.profile.lossTarget||state.profile.target;
   syncProfileBadge();render();
  }
- if(selected?.password&&unlockedProfileId!==selected.id){activeProfileId=null;localStorage.removeItem(PROFILE_ACTIVE_KEY);openProfiles()}
+ if(selected?.password&&unlockedProfileId!==selected.id){
+  activeProfileId=null;localStorage.removeItem(PROFILE_ACTIVE_KEY);forgetRememberedProfile();openProfiles();
+ }
  if(!$("profileOverlay").hidden)renderProfileList();
 }
 async function workerRequest(path,method="GET",payload){
