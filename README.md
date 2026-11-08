@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 25
+# FORMA. Personal · verzia 26
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -51,6 +51,13 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Dôležité:** nasadenie Cloudflare Worker robí vlastník ručne. Kým Worker nebeží a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
 - Prvá synchronizácia lokálne dáta nevymaže; profily sa zlúčia podľa času poslednej úpravy, pri zlyhaní servera sa zachovajú v `localStorage`. Mobilné testy simulujú dve zariadenia a nedostupný server.
 - Upozornenie: verejný GitHub repo umožňuje komukoľvek prezerať údaje v histórii commitov. Endpoint POST nie je autentifikovaný na strane používateľa (požiadavka na rodinný prototyp); CORS/Origin nie je bezpečnostné overenie klienta, takže endpoint nie je vhodný pre produkčné osobné údaje.
+
+## FORMA v26: lokálne pečivo, Lidl a zdroje
+
+- Offline katalóg obsahuje biely rožok, celozrnný rožok Lidl, cereálnu kaiserku Lidl, horskú, fitness, proteínovú a špaldovú žemľu Lidl, kornbagetu, maslový croissant, praclík, bielu bagetu a pizza taštičku Lidl.
+- Všetky nutričné hodnoty (na 100 g) majú individuálny odkaz na zdroj na KalorickéTabuľky.sk. Nejde o certifikované údaje výrobcu. Porcie sú orientačné a možno ich zmeniť; pri alternatívnych receptúrach rovnakého pečiva sa čísla môžu líšiť.
+- Fotky sú ilustračné, nie sú to presné produktové fotografie Lidl. V aplikácii sú odkazy na ich zdroj. Všetky použité fotografie z Wikimedia Commons sú CC0: Rohlík bílý tukový.jpg; Home-baked breadrolls.jpg; Baguette-246424.jpg; Croissant bread.jpg; Mini pretzel.jpg.
+- V rýchlom výbere pribudlo rozbaľovacie pečivo z Lidla. Chybná hláška „Nič som nenašiel“ počas načítavania sa už nezobrazuje. Zobrazenie vyhľadávania a lokálne výsledky nevyžadujú fungujúce externé API.
 
 ## FORMA v25: registrácia na naberanie a odolnejšie vyhľadávanie
 

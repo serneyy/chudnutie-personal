@@ -254,6 +254,9 @@ input,select,textarea{min-height:44px}
 .selected-product-description{min-width:0;flex:1;display:flex;flex-direction:column;gap:5px}
 .selected-product-description strong{font-size:14px;color:#284835;font-weight:800;line-height:1.4;overflow-wrap:anywhere}
 .selected-product-description small{font-size:11px;color:#829083;line-height:1.5}
+.selected-product-description a{font-size:11px;color:#447a4d;text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+.food-nutrition-source{display:block;color:#356d42;font-size:12px;font-weight:700;line-height:1.5;margin:8px 4px 12px;text-decoration:underline;text-underline-offset:2px}
+.food-nutrition-source[hidden],#selectedProductPhotoCredit[hidden]{display:none!important}
 .meal-icon.meal-photo{background:#fff;border:1px solid #e7eee3;border-radius:10px;overflow:hidden;padding:3px}
 .meal-image{width:100%;height:100%;object-fit:contain}
 @media(max-width:360px){

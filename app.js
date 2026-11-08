@@ -102,7 +102,19 @@ const COMMON_FOODS=[
  {key:"rice",name:"Ryža uvarená",aliases:["ryza","rice"],unit:"g",portion:180,kcal:130,protein:2.7,carbs:28.2,fat:0.3,sugar:0.1,fiber:0.4},
  {key:"oats",name:"Ovsené vločky suché",aliases:["ovsene vlocky","vlocky","oats"],unit:"g",portion:50,kcal:379,protein:13.2,carbs:67.7,fat:6.5,sugar:1,fiber:10.1},
  {key:"chicken",name:"Kuracie prsia tepelne upravené",aliases:["kuracie","kuracie prsia","chicken"],unit:"g",portion:150,kcal:165,protein:31,carbs:0,fat:3.6,sugar:0,fiber:0},
- {key:"bread",name:"Chlieb pšenično-ražný",aliases:["chlieb","bread"],unit:"g",portion:40,kcal:240,protein:8,carbs:47,fat:2,sugar:3,fiber:5}
+ {key:"bread",name:"Chlieb pšenično-ražný",aliases:["chlieb","bread"],unit:"g",portion:40,kcal:240,protein:8,carbs:47,fat:2,sugar:3,fiber:5},
+ {"key":"roll","name":"Biely rožok (bežný)","aliases":["rožok","rozok","rožky","rozky","biely rozok","biely rožok","rohlik","rohlík","pecivo"],"unit":"g","portion":50,"kcal":286,"protein":9,"carbs":55,"fat":3,"sugar":1,"fiber":2,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/rozok-biely","image":"https://commons.wikimedia.org/wiki/Special:FilePath/Rohl%C3%ADk%20b%C3%ADl%C3%BD%20tukov%C3%BD.jpg?width=320","imageCredit":"Wikimedia Commons (CC0)","imageCreditUrl":"https://commons.wikimedia.org/wiki/File:Rohl%C3%ADk%20b%C3%ADl%C3%BD%20tukov%C3%BD.jpg"},
+ {"key":"roll_whole_lidl","name":"Celozrnný rožok Lidl","aliases":["celozrnny rozok","celozrnný rožok","rozok celozrnny lidl","pecivo lidl"],"unit":"g","portion":60,"kcal":307,"protein":9.3,"carbs":51,"fat":6.2,"sugar":4.9,"fiber":3.7,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/celozrnny-rozok-lidl"},
+ {"key":"kaiser_cereal_lidl","name":"Kaiserka cereálna Lidl","aliases":["kaiserka","kajzerka","cerealna kaiserka","cerealna kajzerka","pecivo lidl"],"unit":"g","portion":60,"kcal":293,"protein":10.8,"carbs":46,"fat":5.4,"sugar":5.3,"fiber":7.8,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/kaiserka-cerealna-lidl-60g-1","image":"https://commons.wikimedia.org/wiki/Special:FilePath/Home-baked%20breadrolls.jpg?width=320","imageCredit":"Wikimedia Commons (CC0)","imageCreditUrl":"https://commons.wikimedia.org/wiki/File:Home-baked%20breadrolls.jpg"},
+ {"key":"bun_mountain_lidl","name":"Horská žemľa Lidl","aliases":["horska zemla","zemla","žemľa","pecivo lidl"],"unit":"g","portion":80,"kcal":282,"protein":9.4,"carbs":55.9,"fat":1.1,"sugar":3.6,"fiber":3.8,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/horska-zemla-lidl","image":"https://commons.wikimedia.org/wiki/Special:FilePath/Home-baked%20breadrolls.jpg?width=320","imageCredit":"Wikimedia Commons (CC0)","imageCreditUrl":"https://commons.wikimedia.org/wiki/File:Home-baked%20breadrolls.jpg"},
+ {"key":"bun_fitness_lidl","name":"Fitness žemľa Lidl","aliases":["fitness zemla","fitness žemľa","fit zemla","pecivo lidl"],"unit":"g","portion":70,"kcal":284,"protein":10,"carbs":49,"fat":3.9,"sugar":2.2,"fiber":4.6,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/fitness-zemla-lidl","image":"https://commons.wikimedia.org/wiki/Special:FilePath/Home-baked%20breadrolls.jpg?width=320","imageCredit":"Wikimedia Commons (CC0)","imageCreditUrl":"https://commons.wikimedia.org/wiki/File:Home-baked%20breadrolls.jpg"},
+ {"key":"bun_protein_lidl","name":"Proteínová žemľa Lidl","aliases":["proteinova zemla","proteínová žemľa","pecivo lidl"],"unit":"g","portion":70,"kcal":274,"protein":22.6,"carbs":8.8,"fat":13.9,"sugar":2.1,"fiber":11.4,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/proteinova-zemla-lidl"},
+ {"key":"bun_spelt_lidl","name":"Žemľa špaldová Lidl","aliases":["spaldova zemla","špaldová žemľa","spaldova kaiserka","pecivo lidl"],"unit":"g","portion":70,"kcal":288,"protein":10.4,"carbs":44.2,"fat":5.9,"sugar":2.6,"fiber":7.4,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/spaldova-kaiserka-lidl","image":"https://commons.wikimedia.org/wiki/Special:FilePath/Home-baked%20breadrolls.jpg?width=320","imageCredit":"Wikimedia Commons (CC0)","imageCreditUrl":"https://commons.wikimedia.org/wiki/File:Home-baked%20breadrolls.jpg"},
+ {"key":"kornbaguette_lidl","name":"Kornbageta Lidl","aliases":["kornbageta","korn bageta","pecivo lidl"],"unit":"g","portion":90,"kcal":303,"protein":10,"carbs":53,"fat":3.8,"sugar":2,"fiber":5.5,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/kornbageta-lidl","image":"https://commons.wikimedia.org/wiki/Special:FilePath/Baguette-246424.jpg?width=320","imageCredit":"Wikimedia Commons (CC0)","imageCreditUrl":"https://commons.wikimedia.org/wiki/File:Baguette-246424.jpg"},
+ {"key":"croissant_butter_lidl","name":"Maslový croissant Lidl","aliases":["croissant","krosan","maslovy croissant","pecivo lidl"],"unit":"g","portion":60,"kcal":394,"protein":6.7,"carbs":40,"fat":23.3,"sugar":5,"fiber":1.5,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/maslovy-croissant-lidl","image":"https://commons.wikimedia.org/wiki/Special:FilePath/Croissant%20bread.jpg?width=320","imageCredit":"Wikimedia Commons (CC0)","imageCreditUrl":"https://commons.wikimedia.org/wiki/File:Croissant%20bread.jpg"},
+ {"key":"pretzel_lidl","name":"Praclík Lidl","aliases":["praclik","praclík","brezel","preclik","pecivo lidl"],"unit":"g","portion":80,"kcal":291,"protein":9.1,"carbs":54.2,"fat":3.5,"sugar":3.7,"fiber":3.1,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/praclik-lidl","image":"https://commons.wikimedia.org/wiki/Special:FilePath/Mini%20pretzel.jpg?width=320","imageCredit":"Wikimedia Commons (CC0)","imageCreditUrl":"https://commons.wikimedia.org/wiki/File:Mini%20pretzel.jpg"},
+ {"key":"baguette_plain","name":"Bageta biela (bežná)","aliases":["bageta","biela bageta","bageta biela","baguette"],"unit":"g","portion":100,"kcal":301,"protein":7.8,"carbs":60,"fat":2.9,"sugar":1.4,"fiber":2.5,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/bageta-biela","image":"https://commons.wikimedia.org/wiki/Special:FilePath/Baguette-246424.jpg?width=320","imageCredit":"Wikimedia Commons (CC0)","imageCreditUrl":"https://commons.wikimedia.org/wiki/File:Baguette-246424.jpg"},
+ {"key":"pizza_pocket_lidl","name":"Pizza taštička Lidl","aliases":["pizza tasticka","pizza taštička","pecivo lidl"],"unit":"g","portion":100,"kcal":258,"protein":6.6,"carbs":27.4,"fat":13.1,"sugar":2.3,"fiber":2.2,"sourceUrl":"https://www.kaloricketabulky.sk/potraviny/pizza_tasticka"}
 ];
 let suggestions=[],suggestionCursor=-1,searchTimer=null,searchAbort=null,searchGeneration=0,searchNetworkHistory=[],lastSearchAt=0,selectedFoodName="";
 let recentQuickFoods=[],activeDishPortion=null;
@@ -170,7 +182,7 @@ function safeFoodImage(url){
  if(typeof url!=="string"||!url)return "";
  try{
   const parsed=new URL(url);
-  if(parsed.protocol!=="https:"||!["images.openfoodfacts.org","static.openfoodfacts.org"].includes(parsed.hostname))return "";
+  if(parsed.protocol!=="https:"||!["images.openfoodfacts.org","static.openfoodfacts.org","commons.wikimedia.org"].includes(parsed.hostname))return "";
   return parsed.href;
  }catch(e){return ""}
 }
@@ -191,14 +203,29 @@ function pickOFFImage(product){
 }
 function foodImageMarkup(url,cssClass=""){
  const safe=safeFoodImage(url);
- return safe?'<img class="'+cssClass+'" src="'+escapeHTML(safe)+'" alt="Fotografia balenia" loading="lazy" decoding="async" referrerpolicy="no-referrer">':"";
+ return safe?'<img class="'+cssClass+'" src="'+escapeHTML(safe)+'" alt="'+(safe.includes("commons.wikimedia.org")?"Ilustračná fotografia pečiva":"Fotografia balenia")+'" loading="lazy" decoding="async" referrerpolicy="no-referrer">':"";
 }
-function setProductImage(url,name=""){
+function setProductImage(url,name="",item=null){
  const image=safeFoodImage(url);
  const container=$("selectedProductVisual");
  container.hidden=!image;
+ if(!item)setFoodNutritionSource(null);
  $("selectedProductPicture").innerHTML=foodImageMarkup(image,"selected-product-img");
  $("selectedProductLabel").textContent=name||"Vybraný výrobok";
+ const illustrative=image.includes("commons.wikimedia.org");
+ $("selectedProductPhotoNote").textContent=illustrative?"Ilustračná fotografia pečiva, nie konkrétny výrobok Lidl.":"Fotografia obalu z Open Food Facts.";
+ const credit=$("selectedProductPhotoCredit");
+ if(illustrative&&item?.imageCreditUrl){
+  credit.textContent=item.imageCredit||"Wikimedia Commons";
+  credit.href=item.imageCreditUrl;credit.hidden=false;
+ }else{credit.hidden=true;credit.removeAttribute("href");credit.textContent="";}
+}
+function setFoodNutritionSource(item){
+ const link=$("foodNutritionSource");
+ if(item?.sourceUrl){
+  link.href=item.sourceUrl;link.hidden=false;
+  link.textContent="Nutričné hodnoty: KalorickéTabuľky.sk (na 100 g) ↗";
+ }else{link.hidden=true;link.removeAttribute("href");link.textContent="";}
 }
 function bestServing(product){
  const isDrink=/\b(ml|l)\b/i.test(String(product.serving_size||""))||product.serving_quantity_unit==="ml"||product.product_quantity_unit==="ml"||/(cappuccino|latte|coffee|drink|juice|tea|kava|caj|napoj|mlieko|voda|cola)/i.test(String(product.product_name||""));
@@ -348,7 +375,7 @@ function renderFoodSuggestions(local=[],remote=[],loading=false,error=""){
  const out=$("foodSuggestions");
  if(!suggestions.length&&!loading&&!error){out.hidden=true;$("foodName").setAttribute("aria-expanded","false");return}
  const row=(item,index)=>{
-  const text=item.source==="recipe"?"RECEPT • zvoľ počet vajec a tuk":item.source==="dish"?"HOTOVÉ JEDLO • hrubý odhad":item.source==="estimate"?"Odhad • bežná porcia":item.source==="recent"?"Z posledného zápisu":"Open Food Facts"+(item.brand?" • "+item.brand:"");
+  const text=item.source==="recipe"?"RECEPT • zvoľ počet vajec a tuk":item.source==="dish"?"HOTOVÉ JEDLO • hrubý odhad":item.source==="estimate"?(item.sourceUrl?"KalorickéTabuľky.sk • na 100 g":"Odhad • bežná porcia"):item.source==="recent"?"Z posledného zápisu":"Open Food Facts"+(item.brand?" • "+item.brand:"");
   return '<button type="button" class="food-suggestion" role="option" aria-selected="false" data-suggest="'+index+'"><span class="food-suggestion-icon '+(item.source==="off"?"remote":"")+'">'+(foodImageMarkup(item.image,"food-suggestion-image")||(item.unit==="ml"?"☕":"◉"))+'</span><span class="food-suggestion-body"><span class="food-suggestion-title">'+escapeHTML(item.name)+'</span><span class="food-suggestion-meta">'+escapeHTML(text)+' · '+fmt(item.portion)+' '+item.unit+'</span></span><span class="food-suggestion-calories">'+(item.kcal==null?"Doplniť":fmt(item.kcal*item.portion/100)+" kcal")+'</span></button>';
  };
  let html="";
@@ -359,7 +386,7 @@ function renderFoodSuggestions(local=[],remote=[],loading=false,error=""){
  if(loading)html+='<div class="food-search-empty">Hľadám v online katalógu…</div>';
  if(!loading&&error)html+='<div class="food-search-empty">'+escapeHTML(error)+'</div><button type="button" class="food-search-retry" id="foodSearchRetry">Skúsiť znova vyhľadať <span>↻</span></button>';
  else if(error)html+='<div class="food-search-empty">'+escapeHTML(error)+'</div>';
- else if(!suggestions.length)html+='<div class="food-search-empty">Nič som nenašiel. Môžeš jedlo zadať ručne.</div>';
+ else if(!suggestions.length&&!loading)html+='<div class="food-search-empty">Nič som nenašiel. Môžeš jedlo zadať ručne.</div>';
  out.innerHTML=html;out.hidden=false;$("foodName").setAttribute("aria-expanded","true");
  suggestionCursor=-1;
 }
@@ -388,7 +415,8 @@ function applyFoodSuggestion(item){
  hideFoodSuggestions();
  $("foodName").value=item.name;
  $("foodEAN").value=item.code||"";
- setProductImage(item.image,item.name);
+ setProductImage(item.image,item.name,item);
+ setFoodNutritionSource(item);
  for(const [field,key] of [["fKcal","kcal"],["fProtein","protein"],["fCarbs","carbs"],["fFat","fat"],["fSugar","sugar"],["fFiber","fiber"]])
   $(field).value=item[key]===null||item[key]===undefined?"":round(item[key]);
  const note=item.dish?"Celé jedlo vrátane prílohy, ak je v názve. Hrubý odhad, gramáž môžeš upraviť.":item.fromLabel?"Porcia podľa výrobku. Ak si mal inú, zmeň množstvo.":"Bežná porcia. Môžeš ju zmeniť.";
@@ -403,7 +431,7 @@ function applyFoodSuggestion(item){
  $("foodLookupMessage").hidden=false;
  $("foodLookupMessage").classList.toggle("warn",item.source==="estimate"||item.source==="dish"||item.source==="recipe"||missing.length>0);
  $("foodLookupMessage").textContent=missing.length?"Niektoré hodnoty produktu chýbajú. Otvorené detaily doplň z etikety.":
-  item.source==="recipe"?"Počet vajec a použitý tuk sa počítajú automaticky.":item.source==="dish"?"Odhad pre celé jedlo. Recept, olej, smotana a príloha môžu kalórie výrazne zmeniť. Zvoľ veľkosť porcie.":item.source==="estimate"?"Orientačné údaje. Výrobky sa môžu líšiť, najmä proteín. Skontroluj obal.":item.source==="recent"?"Načítané z tvojho predchádzajúceho zápisu.":"Výrobok z databázy. Skontroluj množstvo a obal.";
+  item.source==="recipe"?"Počet vajec a použitý tuk sa počítajú automaticky.":item.source==="dish"?"Odhad pre celé jedlo. Recept, olej, smotana a príloha môžu kalórie výrazne zmeniť. Zvoľ veľkosť porcie.":item.source==="estimate"?(item.sourceUrl?"Na 100 g podľa KalorickéTabuľky.sk. Hmotnosť porcie je orientačná, uprav podľa kusu a over etiketu.":"Orientačné údaje. Výrobky sa môžu líšiť, najmä proteín. Skontroluj obal."):item.source==="recent"?"Načítané z tvojho predchádzajúceho zápisu.":"Výrobok z databázy. Skontroluj množstvo a obal.";
  $("foodSearchHelp").textContent=item.recipe==="eggs"?"Uprav počet vajec a tuk, potom ulož.":item.dish?"Odhad hotového jedla. Vyber veľkosť porcie a ulož.":"Jedlo vybrané. Teraz nastav množstvo a ulož.";
  $("quickFoods").hidden=true;
  renderFoodPreview();updateFoodSaveState();
@@ -424,7 +452,9 @@ async function fetchOFFProducts(url,signal){
   error.httpStatus=response.status;throw error;
  }
  const data=await response.json();
- return (Array.isArray(data.products)?data.products:[])
+ // Legacy/API v2 returns products; Search-a-licious returns hits.
+ const rows=Array.isArray(data.products)?data.products:Array.isArray(data.hits)?data.hits:[];
+ return rows.map(p=>p?._source||p?.source||p)
   .filter(p=>p&&p.nutriments&&(p.product_name||p.product_name_sk||p.product_name_en))
   .map(nutritionFromOFF).filter(p=>p.name&&p.kcal!==null&&validNum(p.kcal,0,2000)&&p.portion>0)
   .slice(0,8);
@@ -469,6 +499,14 @@ async function remoteFoodSearch(query,token,local,{force=false}={}){
   url.searchParams.set("page_size","24");url.searchParams.set("fields",fields);
   endpoints.push(url);
  }
+ // The old full-text CGI frequently returns 503; prefer the documented search service.
+ // Keep the legacy endpoint as a fallback for a stale or unavailable search index.
+ const modern=new URL("https://search.openfoodfacts.org/search");
+ modern.searchParams.set("q",q);
+ modern.searchParams.set("page_size","12");
+ modern.searchParams.set("langs","sk,cs,en,de,fr");
+ modern.searchParams.set("fields",fields);
+ endpoints.push(modern);
  const legacy=new URL("https://world.openfoodfacts.org/cgi/search.pl");
  legacy.searchParams.set("search_terms",q);
  legacy.searchParams.set("search_simple","1");
@@ -510,7 +548,7 @@ function foodNameChanged(){
   ["fProtein","fCarbs","fFat","fSugar"].forEach(id=>$(id).value="0");
   $("fFiber").value="";
   $("foodEAN").value="";
-  setProductImage("","");
+  setProductImage("","");setFoodNutritionSource(null);
   $("foodLookupMessage").hidden=true;
   updateEggUI(null);
   renderFoodPreview();updateFoodSaveState();
@@ -522,7 +560,7 @@ function foodNameChanged(){
  if(value.length<2){hideFoodSuggestions();$("foodSearchHelp").textContent="Začni písať a vyber jedlo z návrhov.";return}
  const local=findCommon(value),known=findKnownProducts(value);
  renderFoodSuggestions(local,known,normalizeTerm(value).length>=3&&!known.length);
- $("foodSearchHelp").textContent="Vyhľadávam: "+value+". Po výbere sa vyplnia kalórie a porcia.";
+ $("foodSearchHelp").textContent="Vyhľadávam: "+value+". Miestne jedlá sú dostupné ihneď aj bez internetu.";
  if(normalizeTerm(value).length<3)return;
  // Show known matches immediately; delay new requests until typing has stopped.
  const wait=850;
