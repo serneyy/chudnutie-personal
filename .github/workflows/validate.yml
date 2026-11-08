@@ -1,33 +1,54 @@
-name: Overenie HTML aplikácie
+name: FORMA - test mobilnej aplikacie
 on:
   push:
     branches: [main]
   workflow_dispatch:
 jobs:
-  check:
+  test:
     runs-on: ubuntu-latest
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
-      - name: Skontrolovať HTML a JavaScript
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Kontrola syntaxe
         run: |
+          node --check app.js
+          node --check tests/smoke.cjs
           python3 - <<'PY'
-          from pathlib import Path
           from html.parser import HTMLParser
+          from pathlib import Path
           import re
-          s = Path("index.html").read_text(encoding="utf-8")
+          s=Path("index.html").read_text(encoding="utf-8")
+          j=Path("app.js").read_text(encoding="utf-8")
           assert '<html lang="sk">' in s
-          for marker in ['page-dnes','page-jedlo','page-plan','page-progres','page-nastavenia','foodForm','planForm','weightForm','workoutForm','lookupBarcode']:
-              assert marker in s, f"Missing {marker}"
+          assert 'src="app.js?v=3"' in s
+          assert Path("styles.css").exists()
+          assert Path("manifest.webmanifest").exists()
           class Check(HTMLParser):
-              def __init__(self): super().__init__();self.ids=set()
+              def __init__(self):
+                  super().__init__()
+                  self.ids=set()
               def handle_starttag(self,tag,attrs):
                   d=dict(attrs)
                   if "id" in d:
-                      assert d["id"] not in self.ids, f"Duplicate id {d['id']}"
+                      assert d["id"] not in self.ids, f"Duplicated id: {d['id']}"
                       self.ids.add(d["id"])
-          Check().feed(s)
-          inline = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,flags=re.S)
-          assert inline and 'function renderHome' in inline[-1]
-          Path("/tmp/forma-inline.js").write_text(inline[-1],encoding="utf-8")
+          parser=Check()
+          parser.feed(s)
+          used=set(re.findall(r'\$\("([^"]+)"\)',j))
+          missing=sorted(used-parser.ids)
+          assert not missing, f"Missing DOM IDs: {missing}"
+          print("HTML IDs:",len(parser.ids),"referenced:",len(used),"all present")
           PY
-          node --check /tmp/forma-inline.js
+      - name: Instalacia browser testov
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Spustenie lokalneho webu
+        run: |
+          nohup python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/forma-server.log 2>&1 &
+          sleep 2
+      - name: Mobilny browser smoke test
+        run: node tests/smoke.cjs
