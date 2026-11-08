@@ -319,9 +319,12 @@ const fs=require("node:fs");
   // Remote product search: live text entry, real serving_quantity_unit and label.
   await page.locator("#homeAdd").click();
   await page.locator("#foodName").fill("kakao");
-  await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible",timeout:15000});
-  assert((await page.locator("#foodSuggestions .food-suggestion-image").count())>=1,"Autocomplete must show images");
-  await page.locator("#foodSuggestions [data-suggest]").first().click();
+  // A local cocoa fallback now appears immediately. Wait for the exact online
+  // item rather than selecting the first (local) suggestion.
+  const onlineKakao=page.locator("#foodSuggestions [data-suggest]").filter({hasText:"Proteínové kakao"});
+  await onlineKakao.waitFor({state:"visible",timeout:18000});
+  await page.locator("#foodSuggestions .food-suggestion-image").first().waitFor({state:"visible",timeout:18000});
+  await onlineKakao.click();
   assert.equal(await page.locator("#foodName").inputValue(),"Proteínové kakao");
   assert.equal(await page.locator("#foodUnit").inputValue(),"ml");
   assert.equal(await page.locator("#foodGrams").inputValue(),"250");
