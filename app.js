@@ -83,7 +83,7 @@ const FOOD_SEARCH_CACHE_TTL_MS=24*60*60*1000;
 let remoteSearchPauseUntil=0;
 function getCachedFoodSearch(query){
  const item=searchCache.get(query);
- if(item&&Date.now()-item.ts<FOOD_SEARCH_CACHE_TTL_MS)return item.products;
+ if(item&&Date.now()-item.ts<(item.products.length?FOOD_SEARCH_CACHE_TTL_MS:5*60*1000))return item.products;
  return null;
 }
 function rememberFoodSearch(query,products){
@@ -307,7 +307,7 @@ async function remoteFoodSearch(query,token,local){
    renderFoodSuggestions(local,mapped,false);
  }catch(e){
   if(token!==searchGeneration)return;
-  if(e.name==="AbortError"&&ctrl.signal.aborted)return;
+  // If the request timed out (not user-initiated), show a fallback instead of leaving the spinner forever.
   // The legacy endpoint occasionally returns 503, and an IP shared by
   // multiple family devices may hit the OFF rate limit.
   if([429,500,502,503,504].includes(e.httpStatus))remoteSearchPauseUntil=Date.now()+45000;
