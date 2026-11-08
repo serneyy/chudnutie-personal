@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 22
+# FORMA. Personal · verzia 23
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -51,6 +51,12 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Dôležité:** nasadenie Cloudflare Worker robí vlastník ručne. Kým Worker nebeží a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
 - Prvá synchronizácia lokálne dáta nevymaže; profily sa zlúčia podľa času poslednej úpravy, pri zlyhaní servera sa zachovajú v `localStorage`. Mobilné testy simulujú dve zariadenia a nedostupný server.
 - Upozornenie: verejný GitHub repo umožňuje komukoľvek prezerať údaje v histórii commitov. Endpoint POST nie je autentifikovaný na strane používateľa (požiadavka na rodinný prototyp); CORS/Origin nie je bezpečnostné overenie klienta, takže endpoint nie je vhodný pre produkčné osobné údaje.
+
+## FORMA v23: detail potravín, makier a naberanie svalov
+
+- Ťuknutie na zapísané jedlo na domovskej stránke alebo v Denníku ukáže detail so 6 hodnotami pre jeho skutočnú porciu: kalórie, bielkoviny, sacharidy, tuky, cukry a vláknina. Neznáme hodnoty sa uvádzajú ako „Neznáme“ a neskrývajú pod nulu.
+- Ťuknutie na kruh bielkovín, sacharidov, tukov, cukrov a vlákniny alebo na kartu kalórií zobrazí všetky dnešné jedlá zoradené podľa príspevku k zvolenej metrike. Riadok je možné otvoriť pre podrobnejší detail. Pôvodné tlačidlo Pridať jedlo zostáva jediné.
+- Plán má nový cieľ **Nabrať svaly**. Orientačný príjem je TDEE + 250 kcal zaokrúhlených na 50 kcal, bielkoviny 1,8 g/kg aktuálnej hmotnosti, tuky približne 0,8 g/kg a zostávajúce kalórie zo sacharidov. Pri naberaní sa požaduje vyššia cieľová hmotnosť, tempo chudnutia sa nezobrazuje a kalorický rozdiel sa označí ako nadbytok. Výpočet je iba orientačný; budovanie svalov si vyžaduje progresívny silový tréning. Režim sa bezpečne ukladá v JSON, staré profily zostávajú nezmenené.
 
 ## FORMA v22: nastavenia a pridávanie jedla
 
