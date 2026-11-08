@@ -29,7 +29,7 @@ jobs:
           assert 'src="app.js?v=31"' in s
           assert 'href="styles.css?v=31"' in s
           assert 'src="slovak-foods.js?v=30"' in s
-          assert s.index('src="slovak-foods.js?v=30"')<s.index('src="app.js?v=30"')
+          assert s.index('src="slovak-foods.js?v=30"')<s.index('src="app.js?v=31"')
           assert Path("styles.css").exists()
           assert Path("manifest.webmanifest").exists()
           class Check(HTMLParser):
