@@ -1,6 +1,6 @@
-# FORMA. Personal · verzia 7
+# FORMA. Personal · verzia 8
 
-Mobilná osobná aplikácia v slovenčine. Bez účtu, bez backendu. GitHub Pages slúži iba na načítanie webových súborov; **záznamy zostávajú lokálne v tvojom prehliadači**.
+Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
 ## Odkazy
 
@@ -8,6 +8,15 @@ Mobilná osobná aplikácia v slovenčine. Bez účtu, bez backendu. GitHub Page
 - Repo: https://github.com/serneyy/chudnutie-personal
 
 Ak web nie je aktívny, v **Settings → Pages → Deploy from a branch → main / (root) → Save** zapni publikovanie.
+
+## Profily pre viac členov rodiny
+
+- Pri prvom otvorení zadaj meno, aktuálnu a cieľovú váhu, výšku, vek a pohlavie pre výpočet.
+- Každý profil si drží **vlastný denník jedál, históriu váhy, tréningy a kalorický plán**.
+- Vpravo hore klikni na písmeno mena a vyber iný profil. V Nastaveniach je aj premenovanie profilu.
+- Ak na tejto adrese v tomto prehliadači už boli údaje z predošlej verzie, automaticky sa nakopírujú do profilu **Môj pôvodný profil**. Je možné ho premenovať.
+- JSON záloha v Nastaveniach obsahuje **iba údaje práve otvoreného profilu**.
+- **Nie je to účet s heslom ani synchronizovaná databáza.** Profily nie sú súkromné pred iným človekom na tom istom telefóne a nebudú dostupné na inom zariadení bez exportu/importu. Na synchronizáciu medzi tvojím telefónom a maminým by bolo potrebné pridať autentifikovaný online backend.
 
 ## Funkcie
 
