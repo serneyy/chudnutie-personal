@@ -222,3 +222,23 @@ input,select,textarea{min-height:44px}
 .egg-fat-label{display:block;font-size:13px;font-weight:800;color:#31563d}
 .egg-fat-label select{width:100%;margin-top:8px;border:1px solid #cddfca;background:#fff;color:#22452e;border-radius:13px;padding:10px 13px;min-height:52px;font-size:16px;font-weight:700}
 .egg-recipe-note{font-size:12px;line-height:1.55;color:#6c826b;margin:11px 0 0}
+
+
+/* v13: referenčný príjem celkových cukrov a samostatný progress */
+.nutrient-card{align-items:flex-start;min-height:119px}
+.nutrient-card .nutrient-body{min-width:0;flex:1}
+.nutrient-card .nutrient-body strong{display:block;font-size:19px;letter-spacing:-.5px;white-space:normal}
+.nutrient-card .nutrient-body strong small{display:inline;font-size:12px;white-space:nowrap}
+.nutrient-progress{background:#edf0e8;border-radius:999px;height:6px;overflow:hidden;width:100%;margin:9px 0 7px}
+.nutrient-progress i{display:block;height:100%;background:#c98d82;border-radius:999px;transition:width .2s ease}
+.nutrient-card.fiber .nutrient-progress i{background:#8aaa61}
+.nutrient-card .nutrient-body>small{display:block;line-height:1.4;font-size:10.5px;color:#6f8274}
+.info-card #sugarAdvice{font-size:13px;line-height:1.7;color:#365345}
+.info-card #sugarAdvice strong{font-weight:800;color:#1e3d28}
+.info-card small{line-height:1.5}
+@media(max-width:350px){
+ .nutrient-card{gap:7px}
+ .nutrient-card .nutrient-body strong{font-size:16px}
+ .nutrient-card .nutrient-body strong small{font-size:10px}
+ .nutrient-card .nutrient-body>small{font-size:10px}
+}
