@@ -452,3 +452,73 @@ input,select,textarea{min-height:44px}
 .profile-unlock-form .profile-rename-actions button{min-height:44px;min-width:0}
 .profile-unlock-error{font-size:12px;color:#a64a44;line-height:1.3;margin:0;min-height:16px}
 .profile-entry:has(small){min-height:68px}
+
+
+/* FORMA v31: calm, search-first food picker */
+#foodOverlay .quick-foods{
+ background:#fff;
+ border:1px solid #e5ebe0;
+ padding:14px;
+ margin:11px 0 14px;
+}
+#foodOverlay .quick-foods-label{font-size:10px;letter-spacing:.09em;margin-bottom:11px;color:#637e63}
+#foodOverlay .quick-foods>.quick-foods-grid{gap:8px}
+#foodOverlay .quick-foods>.quick-foods-grid button{min-height:46px;border-radius:11px;font-size:13px;background:#f8faf6}
+#foodOverlay .recent-foods:not(:empty){border-top:1px solid #edf1eb;padding-top:13px;margin-top:14px}
+#foodOverlay .recent-foods .quick-foods-label{margin-bottom:9px}
+#foodOverlay .food-catalog{margin-top:13px;border-top:1px solid #edf1eb}
+#foodOverlay .food-catalog>summary{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;
+ list-style:none;cursor:pointer;padding:15px 2px 4px;color:#2c573d;
+}
+#foodOverlay .food-catalog>summary::-webkit-details-marker{display:none}
+#foodOverlay .food-catalog-prompt{display:flex;flex-direction:column;gap:3px;min-width:0}
+#foodOverlay .food-catalog-prompt strong{font-size:13px;font-weight:800}
+#foodOverlay .food-catalog-prompt small{font-size:11px;font-weight:500;color:#809184;line-height:1.45}
+#foodOverlay .food-catalog-arrow{
+ width:27px;height:27px;border-radius:9px;flex:none;
+ display:grid;place-items:center;background:#f0f6e9;color:#3f7748;
+ font-size:20px;line-height:1;transition:transform .18s ease
+}
+#foodOverlay .food-catalog[open]>.food-catalog-arrow,
+#foodOverlay .food-catalog[open]>summary .food-catalog-arrow{transform:rotate(180deg)}
+#foodOverlay .food-catalog-categories{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+ margin-top:13px;padding-bottom:3px
+}
+#foodOverlay .food-catalog-categories[hidden],
+#foodOverlay .food-catalog-active[hidden]{display:none!important}
+#foodOverlay .food-catalog-categories button{
+ display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+ gap:3px;text-align:left;background:#f8faf6;color:#264a34;
+ border:1px solid #e0e9dc;border-radius:12px;min-width:0;
+ min-height:65px;padding:11px 12px
+}
+#foodOverlay .food-catalog-categories button strong{font-size:12px;line-height:1.3}
+#foodOverlay .food-catalog-categories button small{
+ color:#809084;font-size:10px;line-height:1.35;font-weight:500;overflow-wrap:anywhere
+}
+#foodOverlay .food-catalog-categories button:active{background:#eaf4e4}
+#foodOverlay .food-catalog-active{margin-top:13px}
+#foodOverlay .food-catalog-back{
+ border:0;background:transparent;color:#477b4e;padding:5px 0;
+ font-size:11px;font-weight:800;text-align:left
+}
+#foodOverlay #foodCatalogTitle{
+ font:800 15px Manrope,sans-serif;letter-spacing:-.3px;margin:8px 0 9px
+}
+#foodOverlay .food-catalog-active .quick-dishes-expand{
+ border:0;padding:0;margin:0
+}
+#foodOverlay .food-catalog-active .quick-dishes-expand:not([open]){display:none}
+#foodOverlay .food-catalog-active .quick-dishes-expand>summary{display:none}
+#foodOverlay .food-catalog-active .quick-dishes-expand .quick-foods-grid{padding:0 0 5px;gap:8px}
+#foodOverlay .food-catalog-active .quick-dishes-grid button{
+ min-height:47px;font-size:12px;font-weight:700;padding:9px 8px;border-radius:11px
+}
+#foodOverlay .food-save{position:static;bottom:auto;margin:17px 0 0;box-shadow:none}
+#foodOverlay .food-save:disabled{display:none!important}
+@media(max-width:350px){
+ #foodOverlay .food-catalog-categories button{padding:10px 9px;min-height:62px}
+ #foodOverlay .food-catalog-categories button small{font-size:9px}
+}
