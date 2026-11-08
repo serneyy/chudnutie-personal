@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=22">
+<link rel="stylesheet" href="styles.css?v=23">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -52,13 +52,13 @@
       </div>
       
       <div class="section-heading"><h2>Kalorický rozpočet</h2><span class="date-chip" id="todayTag">Dnes</span></div>
-      <div class="card energy-card">
+      <div class="card energy-card" id="homeEnergyCard" data-nutrient="kcal" role="button" tabindex="0" aria-label="Zobraziť jedlá a ich kalórie">
         <div class="energy-main"><div class="energy-number"><span>DNES SI PRIJAL</span><strong id="homeCalories">0</strong><small>z <b id="homeCaloriesGoal">2 100</b> kcal</small></div><div class="energy-ring" id="energyRing"><div><strong id="homeRemaining">2 100</strong><small>zostáva kcal</small></div></div></div>
         <div class="calorie-meter"><div id="calorieFill"></div></div><p class="energy-note" id="calorieNote">Pridaj svoje prvé jedlo. Začínaš jednoducho.</p>
         <button class="primary-button stretch" id="homeAdd"><svg><use href="#ic-plus"/></svg> Pridať jedlo</button>
       </div>
       <div class="section-heading"><h2>Dnešné makrá</h2><span class="muted-mini">podľa jedál</span></div>
-      <div class="macros" id="homeMacros"></div><div class="nutrient-extras" id="homeExtras" aria-label="Cukry a vláknina"></div>
+      <div class="macros" id="homeMacros" aria-label="Ťuknutím zobrazíš jedlá podľa makra"></div><div class="nutrient-extras" id="homeExtras" aria-label="Cukry a vláknina"></div>
       <div class="section-heading"><h2>Čo si dnes jedol</h2><button class="text-button" data-nav="diary">Denník <svg><use href="#ic-forward"/></svg></button></div>
       <div class="card" id="homeMealList"></div>
       <div class="quote-card"><svg><use href="#ic-spark"/></svg><div><strong id="quoteTitle">Konzistentnosť je tvoja výhoda.</strong><p id="quoteText">Záznam jedla je malý krok, ktorý vieš zopakovať každý deň.</p></div></div>
@@ -75,7 +75,7 @@
       <div class="card plan-form-card">
         <div class="card-heading"><span class="round-icon"><svg><use href="#ic-target"/></svg></span><div><h2>Moje údaje</h2><p>Uprav a prepočítaj plán</p></div></div>
         <form id="planForm" class="form-grid">
-          <fieldset class="mode-field full-span"><legend>Čo chceš dosiahnuť?</legend><div class="mode-switch"><label><input type="radio" name="goalMode" id="modeLose" value="lose" checked><span>Schudnúť</span></label><label><input type="radio" name="goalMode" id="modeMaintain" value="maintain"><span>Udržať váhu</span></label></div></fieldset>
+          <fieldset class="mode-field full-span"><legend>Čo chceš dosiahnuť?</legend><div class="mode-switch"><label><input type="radio" name="goalMode" id="modeLose" value="lose" checked><span>Schudnúť</span></label><label><input type="radio" name="goalMode" id="modeMaintain" value="maintain"><span>Udržať váhu</span></label><label><input type="radio" name="goalMode" id="modeGain" value="gain"><span>Nabrať svaly</span></label></div></fieldset>
           <label>Aktuálna váha <small>kg</small><input id="pWeight" type="number" min="35" max="300" step="0.1" required></label>
           <label id="pTargetWrap">Cieľová váha <small>kg</small><input id="pTarget" type="number" min="35" max="300" step="0.1" required></label>
           <label>Výška <small>cm</small><input id="pHeight" type="number" min="120" max="230" required></label>
@@ -243,6 +243,12 @@
   </form>
  </div>
 </div>
+<div class="overlay insight-overlay" id="nutritionOverlay" aria-modal="true" role="dialog" aria-labelledby="nutritionTitle" hidden>
+  <div class="insight-sheet">
+    <div class="sheet-title"><div><span class="eyebrow" id="nutritionSubtitle">DENNÝ JEDÁLNIČEK</span><h2 id="nutritionTitle">Prehľad výživy</h2></div><button class="round-action" type="button" id="closeNutrition" aria-label="Zavrieť detail"><svg><use href="#ic-close"/></svg></button></div>
+    <div id="nutritionContent" class="nutrition-content"></div>
+  </div>
+</div>
 <div class="profile-overlay" id="profileOverlay" role="dialog" aria-modal="true" aria-labelledby="profileDialogTitle" hidden>
   <div class="profile-sheet">
     <div class="profile-mark">forma<span>.</span></div>
@@ -270,6 +276,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=22"></script>
+<script defer src="app.js?v=23"></script>
 </body>
 </html>
