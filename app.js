@@ -6,6 +6,28 @@ const PROFILE_STORE_KEY="forma-local-profiles-v1";
 const PROFILE_ACTIVE_KEY="forma-active-profile-v1";
 const GITHUB_REPO_KEY="forma-github-repository-v1";
 const PROFILE_LOGGED_OUT_KEY="forma-profile-logged-out-v1";
+const REMOVED_PROFILE_IDS=new Set(["02c947bf-dd36-4ddc-bf9d-2a0a055c0ac0"]);
+let pendingUnlockId=null,unlockedProfileId=null;
+const GAIN_SURPLUS={slow:150,moderate:250,fast:350};
+function validPasswordRecord(p){return p&&p.algorithm==="PBKDF2-SHA256"&&Number.isInteger(p.iterations)&&p.iterations>=100000&&p.iterations<=500000&&/^[0-9a-f]{32}$/.test(p.salt)&&/^[0-9a-f]{64}$/.test(p.hash)}
+function normalizePasswordRecord(p){return validPasswordRecord(p)?{algorithm:"PBKDF2-SHA256",iterations:p.iterations,salt:p.salt,hash:p.hash}:null}
+async function passwordHash(input,salt,iterations){
+ const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(input),"PBKDF2",false,["deriveBits"]);
+ const saltBytes=Uint8Array.from(salt.match(/.{2}/g),x=>parseInt(x,16));
+ const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt:saltBytes,iterations,hash:"SHA-256"},key,256);
+ return Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function createPasswordRecord(password){
+ const salt=Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join("");
+ return {algorithm:"PBKDF2-SHA256",iterations:210000,salt,hash:await passwordHash(password,salt,210000)};
+}
+async function verifyProfilePassword(password,record){
+ if(!validPasswordRecord(record))return false;
+ const candidate=await passwordHash(password,record.salt,record.iterations);
+ let diff=0;
+ for(let i=0;i<record.hash.length;i++)diff|=record.hash.charCodeAt(i)^candidate.charCodeAt(i);
+ return diff===0;
+}
 const GITHUB_SESSION_KEY="forma-github-session-v1";
 const GITHUB_JSON_PATH="data/forma-family.json";
 const GITHUB_DEFAULT_REPO="serneyy/chudnutie-personal";
@@ -509,7 +531,7 @@ function validDate(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(String(s)))return false;con
 function validProfile(p){return p&&validNum(p.weight,35,300)&&validNum(p.target,35,300)&&validNum(p.height,120,230)&&validNum(p.age,18,95)&&["male","female"].includes(p.sex)&&[1.2,1.375,1.55,1.725].includes(Number(p.activity))&&[.25,.3,.4,.5,.65,.75].includes(Number(p.rate))&&(!p.mode||["lose","maintain","gain"].includes(p.mode))}
 function normalize(input){
  if(!input||!validProfile(input.profile)||!Array.isArray(input.foods)||!Array.isArray(input.weights)||!Array.isArray(input.workouts))throw Error("Neplatný súbor údajov.");
- const p=input.profile;const obj={profile:{weight:+p.weight,target:+p.target,height:+p.height,age:+p.age,sex:p.sex,activity:+p.activity,rate:+p.rate,mode:["maintain","gain"].includes(p.mode)?p.mode:"lose",lossTarget:validNum(p.lossTarget,35,300)?+p.lossTarget:+p.target},foods:[],weights:[],workouts:[]};
+ const p=input.profile;const obj={profile:{weight:+p.weight,target:+p.target,height:+p.height,age:+p.age,sex:p.sex,activity:+p.activity,rate:+p.rate,mode:["maintain","gain"].includes(p.mode)?p.mode:"lose",gainRate:Object.hasOwn(GAIN_SURPLUS,p.gainRate)?p.gainRate:"moderate",lossTarget:validNum(p.lossTarget,35,300)?+p.lossTarget:+p.target},foods:[],weights:[],workouts:[]};
  obj.foods=input.foods.slice(0,20000).filter(x=>x&&typeof x.name==="string"&&x.name.length<=100&&validDate(x.date)&&MEALS.some(m=>m[0]===x.meal)&&validNum(x.grams,1,10000)&&["kcal","protein","carbs","fat","sugar"].every(k=>validNum(x[k],0,200000))).map(x=>({id:String(x.id||uid()).slice(0,100),name:x.name,date:x.date,meal:x.meal,grams:+x.grams,kcal:+x.kcal,protein:+x.protein,carbs:+x.carbs,fat:+x.fat,sugar:+x.sugar,fiber:validNum(x.fiber,0,200000)?+x.fiber:null,code:String(x.code||"").slice(0,16),image:safeFoodImage(x.image),unit:x.unit==="ml"?"ml":"g",dish:Boolean(x.dish),eggCount:validNum(x.eggCount,1,8)?Number(x.eggCount):null,eggFat:Object.hasOwn(EGG_EXTRA_FATS,x.eggFat)?x.eggFat:"none"}));
  obj.weights=input.weights.slice(0,10000).filter(x=>x&&validDate(x.date)&&validNum(x.kg,35,300)).map(x=>({date:x.date,kg:+x.kg}));
  obj.workouts=input.workouts.slice(0,10000).filter(x=>x&&validDate(x.date)&&EXERCISES[x.type]&&validNum(x.minutes,1,480)).map(x=>({id:String(x.id||uid()).slice(0,100),type:x.type,date:x.date,minutes:+x.minutes}));
@@ -534,8 +556,8 @@ function initializeProfiles(){
   if(raw){
    const parsed=JSON.parse(raw);
    if(!parsed||!Array.isArray(parsed.profiles))throw Error("Neplatná databáza profilov");
-   profileStore={version:1,profiles:parsed.profiles.slice(0,25).filter(p=>p&&typeof p.id==="string"&&typeof p.name==="string").map(p=>({
-    id:p.id.slice(0,100),name:sanitizeProfileName(p.name)||"Používateľ",createdAt:p.createdAt||today,updatedAt:typeof p.updatedAt==="string"?p.updatedAt:"",
+   profileStore={version:1,profiles:parsed.profiles.slice(0,25).filter(p=>p&&typeof p.id==="string"&&!REMOVED_PROFILE_IDS.has(p.id)&&typeof p.name==="string").map(p=>({
+    id:p.id.slice(0,100),name:sanitizeProfileName(p.name)||"Používateľ",createdAt:p.createdAt||today,updatedAt:typeof p.updatedAt==="string"?p.updatedAt:"",password:normalizePasswordRecord(p.password),
     data:normalize(p.data)
    }))};
    loaded=true;
@@ -552,7 +574,7 @@ function initializeProfiles(){
   }
  }
  const active=sessionStorage.getItem(PROFILE_LOGGED_OUT_KEY)==="1"?null:localStorage.getItem(PROFILE_ACTIVE_KEY);
- if(active&&profileStore.profiles.some(p=>p.id===active)){
+ if(active&&profileStore.profiles.some(p=>p.id===active&&!p.password)){
   activeProfileId=active;
   state=structuredCloneSafe(findActiveProfile().data);
   lossTargetDraft=state.profile.lossTarget||state.profile.target;
@@ -604,7 +626,7 @@ function createProfile(e){
  const target=Number($("newProfileTarget").value),age=Number($("newProfileAge").value),sex=$("newProfileSex").value;
  if(name.length<2||profileStore.profiles.some(x=>x.name.toLocaleLowerCase("sk-SK")===name.toLocaleLowerCase("sk-SK"))){notify("Zadaj jedinečné meno s aspoň 2 znakmi.");return}
  const data=structuredCloneSafe(DEFAULT);
- data.profile={weight,height,target,age,sex,activity:1.2,rate:.3,mode:weight===target?"maintain":"lose",lossTarget:target};
+ data.profile={weight,height,target,age,sex,activity:1.2,rate:.3,gainRate:"moderate",mode:weight===target?"maintain":"lose",lossTarget:target};
  if(!validProfile(data.profile)||target>weight){notify("Skontroluj údaje. Cieľ nesmie byť väčší než aktuálna váha.");return}
  if(profileStore.profiles.length>=25){notify("Maximum je 25 miestnych profilov.");return}
  const id=String(uid());
@@ -665,16 +687,17 @@ function githubStatus(message,level="neutral"){
 function parseGithubProfiles(value){
  if(!value||value.version!==1||!Array.isArray(value.profiles))throw Error("Neplatná cloud databáza");
  if(value.profiles.length>25)throw Error("Priveľa cloud profilov");
- return {version:1,profiles:value.profiles.map(p=>{
+ return {version:1,profiles:value.profiles.filter(p=>!REMOVED_PROFILE_IDS.has(p.id)).map(p=>{
   if(!p||typeof p.id!=="string"||typeof p.name!=="string")throw Error("Neplatný profil");
   return {id:p.id.slice(0,100),name:sanitizeProfileName(p.name)||"Používateľ",
-   createdAt:p.createdAt||today,updatedAt:typeof p.updatedAt==="string"?p.updatedAt:"",
+   createdAt:p.createdAt||today,updatedAt:typeof p.updatedAt==="string"?p.updatedAt:"",password:normalizePasswordRecord(p.password),
    data:normalize(p.data)};
  })};
 }
 function mergeGithubProfiles(remote,local){
- const merged=new Map(remote.profiles.map(p=>[p.id,p]));
+ const merged=new Map(remote.profiles.filter(p=>!REMOVED_PROFILE_IDS.has(p.id)).map(p=>[p.id,p]));
  for(const p of local.profiles){
+  if(REMOVED_PROFILE_IDS.has(p.id))continue;
   const old=merged.get(p.id);
   if(!old||Date.parse(p.updatedAt||0)>Date.parse(old.updatedAt||0))
    merged.set(p.id,p);
@@ -694,16 +717,17 @@ function applyGithubProfiles(remote){
  profileStore=merged;
  localStorage.setItem(PROFILE_STORE_KEY,JSON.stringify(merged));
  let selected=profileStore.profiles.find(p=>p.id===previousId);
- if(!selected&&profileStore.profiles.length&&sessionStorage.getItem(PROFILE_LOGGED_OUT_KEY)!=="1"){
+ if(!selected&&profileStore.profiles.length&&sessionStorage.getItem(PROFILE_LOGGED_OUT_KEY)!=="1"&&!profileStore.profiles[0].password){
   selected=profileStore.profiles[0];
   activeProfileId=selected.id;
   localStorage.setItem(PROFILE_ACTIVE_KEY,activeProfileId);
  }
- if(selected){
+ if(selected&&(!selected.password||unlockedProfileId===selected.id)){
   state=structuredCloneSafe(selected.data);
   lossTargetDraft=state.profile.lossTarget||state.profile.target;
   syncProfileBadge();render();
  }
+ if(selected?.password&&unlockedProfileId!==selected.id){activeProfileId=null;localStorage.removeItem(PROFILE_ACTIVE_KEY);openProfiles()}
  if(!$("profileOverlay").hidden)renderProfileList();
 }
 async function workerRequest(path,method="GET",payload){
@@ -796,7 +820,7 @@ function plan(){
  const bmr=10*p.weight+6.25*p.height-5*p.age+(p.sex==="male"?5:-161);
  const tdee=bmr*p.activity,floor=p.sex==="male"?1600:1400;
  // A modest surplus is an initial estimate, not a guarantee of muscle gain.
- const surplus=gain?250:0;
+ const surplus=gain?(GAIN_SURPLUS[p.gainRate]??250):0;
  const desired=gain?tdee+surplus:maintain?tdee:tdee-p.rate*7700/7;
  const calories=gain?Math.round(desired/50)*50:maintain?Math.round(tdee/50)*50:Math.max(floor,Math.round(Math.max(floor,desired)/50)*50);
  const activity=Number(p.activity);
@@ -963,6 +987,7 @@ function updatePlanModeUI(){
  const maintain=$("modeMaintain").checked;
  $("pTargetWrap").classList.toggle("hide",maintain);
  $("pRateWrap").classList.toggle("hide",maintain||$("modeGain").checked);
+ $("pGainRateWrap").hidden=!$("modeGain").checked;
  $("pTarget").disabled=maintain;$("pRate").disabled=maintain||$("modeGain").checked;
  $("pTarget").value=maintain?$("pWeight").value:lossTargetDraft;
 }
@@ -970,6 +995,7 @@ function renderPlan(){
  const c=plan(),p=state.profile;
  [["pWeight",p.weight],["pHeight",p.height],["pAge",p.age],["pSex",p.sex],["pActivity",p.activity],["pRate",p.rate]].forEach(x=>$(x[0]).value=x[1]);
  lossTargetDraft=p.lossTarget||p.target;$("pTarget").value=lossTargetDraft;
+ $("pGainRate").value=p.gainRate||"moderate";
  $("modeMaintain").checked=c.maintain;$("modeGain").checked=c.gain;$("modeLose").checked=!c.maintain&&!c.gain;updatePlanModeUI();
  $("planCalories").textContent=fmt(c.calories);$("planTdee").textContent=fmt(c.tdee);
  $("planDeficit").textContent=c.maintain?"0":c.gain?"+"+fmt(c.surplus):"−"+fmt(c.deficit);
@@ -1086,7 +1112,7 @@ function submitPlan(e){
  e.preventDefault();
  const maintain=$("modeMaintain").checked,gain=$("modeGain").checked,weight=Number($("pWeight").value),target=maintain?weight:Number($("pTarget").value);
  const p={weight,target,height:+$("pHeight").value,age:+$("pAge").value,sex:$("pSex").value,
-  activity:+$("pActivity").value,rate:maintain?state.profile.rate:+$("pRate").value,
+  activity:+$("pActivity").value,rate:maintain?state.profile.rate:+$("pRate").value,gainRate:$("pGainRate").value,
   mode:maintain?"maintain":gain?"gain":"lose",lossTarget:maintain?lossTargetDraft:target};
  if(!validProfile(p)||(!maintain&&!gain&&p.target>p.weight)||(gain&&p.target<=p.weight)){notify("Skontroluj cieľovú váhu: pri naberaní musí byť vyššia, pri chudnutí nižšia alebo rovnaká.");return}
  state.profile=p;save();render();notify(maintain?"Zapol si udržiavanie váhy.":gain?"Plán naberania svalov je pripravený.":"Plán chudnutia je prepočítaný.");
