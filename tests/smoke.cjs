@@ -339,12 +339,28 @@ const fs=require("node:fs");
   assert((await page.locator("#foodSuggestions").innerText()).includes("Biely rožok (bežný)"));
   await page.locator("#foodSuggestions [data-suggest]").first().click();
   assert.equal(await page.locator("#foodGrams").inputValue(),"50");
-  assert.equal(await page.locator("#fKcal").inputValue(),"275");
+  assert.equal(await page.locator("#fKcal").inputValue(),"286");
   await page.locator("#closeFood").click();
   await page.locator("#homeAdd").click();
   await page.locator('[data-quick-food="roll"]').click();
   assert.equal(await page.locator("#foodName").inputValue(),"Biely rožok (bežný)");
   assert.equal(await page.locator("#foodGrams").inputValue(),"50");
+  await page.locator("#closeFood").click();
+  // Lidl bakery and generic bread rolls must be found immediately even when text search is down.
+  await page.locator("#homeAdd").click();
+  await page.locator("#foodName").fill("kaiserka");
+  await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible"});
+  assert((await page.locator("#foodSuggestions").innerText()).includes("Kaiserka cereálna Lidl"));
+  await page.locator("#foodSuggestions [data-suggest]").first().click();
+  assert.equal(await page.locator("#fKcal").inputValue(),"293");
+  assert((await page.locator("#foodNutritionSource").getAttribute("href")).includes("kaloricketabulky.sk"));
+  assert((await page.locator("#selectedProductPhotoNote").innerText()).includes("Ilustračná"));
+  await page.locator("#closeFood").click();
+  await page.locator("#homeAdd").click();
+  await page.locator("#quickBakeryExpand summary").click();
+  await page.locator('[data-quick-food="bun_protein_lidl"]').click();
+  assert.equal(await page.locator("#fKcal").inputValue(),"274");
+  assert.equal(await page.locator("#foodGrams").inputValue(),"70");
   await page.locator("#closeFood").click();
   // Complete restaurant meals: "tikka masala" and versions with/without rice.
   await page.locator("#homeAdd").click();
@@ -382,7 +398,7 @@ const fs=require("node:fs");
   assert(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=2,"320px screen must not overflow");
   await page.locator("#homeAdd").click();
   assert(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=2,"320px food modal overflow");
-  assert((await page.locator("#quickFoods [data-quick-food]").count())===10);
+  assert((await page.locator("#quickFoods [data-quick-food]").count())===17);
   await page.locator("#closeFood").click();
   // Search-a-licious 503 should transparently fall back to legacy full-text search.
   await page.locator("#homeAdd").click();
