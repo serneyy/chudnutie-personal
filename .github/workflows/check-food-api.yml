@@ -19,6 +19,10 @@ jobs:
             ("legacy", "https://world.openfoodfacts.org/cgi/search.pl?search_terms=protein&search_simple=1&action=process&json=1&page_size=2"),
             ("searchalicious", "https://search.openfoodfacts.org/search?q=protein&page_size=2&langs=sk,en"),
             ("searchalicious_post", "https://search.openfoodfacts.org/search"),
+            ("searchalicious_choko", "https://search.openfoodfacts.org/search?q=choko&page_size=2&langs=sk,cs,en&fields=code,product_name,product_name_sk,product_name_en,brands,nutriments"),
+            ("searchalicious_coko", "https://search.openfoodfacts.org/search?q=%C4%8Doko&page_size=2&langs=sk,cs,en"),
+            ("legacy_coko", "https://world.openfoodfacts.org/cgi/search.pl?search_terms=%C4%8Doko&search_simple=1&action=process&json=1&page_size=2"),
+            ("v2_milka", "https://world.openfoodfacts.org/api/v2/search?brands_tags=milka&page_size=2&fields=code,product_name,brands,nutriments"),
             ("v2_category", "https://world.openfoodfacts.org/api/v2/search?categories_tags_en=protein-bars&page_size=2&fields=code,product_name,brands,nutriments"),
             ("barcode", "https://world.openfoodfacts.org/api/v3/product/3017624010701?fields=code,product_name,nutriments")
           ]
