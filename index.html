@@ -178,6 +178,15 @@
        <button type="button" data-quick-food="roll">Rožok</button>
        <button type="button" data-quick-food="cappuccino">Cappuccino</button>
       </div>
+      <details class="quick-dishes-expand" id="quickBakeryExpand"><summary>Pečivo z Lidla <span aria-hidden="true">⌄</span></summary><div class="quick-foods-grid quick-dishes-grid">
+       <button type="button" data-quick-food="roll_whole_lidl">Celozrnný rožok</button>
+       <button type="button" data-quick-food="kaiser_cereal_lidl">Cereálna kaiserka</button>
+       <button type="button" data-quick-food="bun_fitness_lidl">Fitness žemľa</button>
+       <button type="button" data-quick-food="bun_protein_lidl">Proteínová žemľa</button>
+       <button type="button" data-quick-food="kornbaguette_lidl">Kornbageta</button>
+       <button type="button" data-quick-food="croissant_butter_lidl">Croissant</button>
+       <button type="button" data-quick-food="pretzel_lidl">Praclík</button>
+      </div></details>
       <details class="quick-dishes-expand" id="quickDishesExpand"><summary>Ďalšie jedlá a hotové pokrmy <span aria-hidden="true">⌄</span></summary><div class="quick-foods-grid quick-dishes-grid">
        <button type="button" data-quick-food="tikka_rice">Tikka masala s ryžou</button>
        <button type="button" data-quick-food="spaghetti_bolo">Špagety bolognese</button>
@@ -186,7 +195,8 @@
       </div></details>
       <div id="recentFoods" class="recent-foods"></div>
     </div>
-    <div id="selectedProductVisual" class="selected-product-visual" hidden><div class="selected-product-picture" id="selectedProductPicture"></div><div class="selected-product-description"><strong id="selectedProductLabel">Vybraný výrobok</strong><small>Fotografia obalu z Open Food Facts, ak je dostupná</small></div></div>
+    <div id="selectedProductVisual" class="selected-product-visual" hidden><div class="selected-product-picture" id="selectedProductPicture"></div><div class="selected-product-description"><strong id="selectedProductLabel">Vybraný výrobok</strong><small id="selectedProductPhotoNote">Fotografia obalu z Open Food Facts.</small><a id="selectedProductPhotoCredit" href="#" target="_blank" rel="noopener noreferrer" hidden></a></div></div>
+    <a id="foodNutritionSource" class="food-nutrition-source" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
     <div class="food-choice">
      <label class="food-simple-label" for="foodMeal">Pridať do</label>
      <select id="foodMeal" aria-label="Typ jedla"><option value="ranajky">Raňajky</option><option value="desiata">Desiata</option><option value="obed">Obed</option><option value="olovrant">Olovrant</option><option value="vecera">Večera</option><option value="ine">Ostatné</option></select>
@@ -279,6 +289,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=25"></script>
+<script defer src="app.js?v=26"></script>
 </body>
 </html>
