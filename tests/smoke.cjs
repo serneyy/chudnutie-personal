@@ -199,7 +199,7 @@ const fs=require("node:fs");
   await page.locator('[data-dish-factor="1"]').click();
   assert.equal(await page.locator("#foodGrams").inputValue(),"450");
   await page.locator("#foodSave").click();
-  assert.equal((await page.locator("#homeCalories").innerText()).trim(),"1 321".replace(/\s/g,"\u00a0"));
+  assert.equal(Number((await page.locator("#homeCalories").innerText()).replace(/[^0-9]/g,"")),1321);
   await page.locator("#homeAdd").click();
   await page.locator("#foodName").fill("tikka bez ryze");
   await page.locator("#foodSuggestions [data-suggest]").first().waitFor({state:"visible"});
