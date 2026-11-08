@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 23
+# FORMA. Personal · verzia 24
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -51,6 +51,13 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Dôležité:** nasadenie Cloudflare Worker robí vlastník ručne. Kým Worker nebeží a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
 - Prvá synchronizácia lokálne dáta nevymaže; profily sa zlúčia podľa času poslednej úpravy, pri zlyhaní servera sa zachovajú v `localStorage`. Mobilné testy simulujú dve zariadenia a nedostupný server.
 - Upozornenie: verejný GitHub repo umožňuje komukoľvek prezerať údaje v histórii commitov. Endpoint POST nie je autentifikovaný na strane používateľa (požiadavka na rodinný prototyp); CORS/Origin nie je bezpečnostné overenie klienta, takže endpoint nie je vhodný pre produkčné osobné údaje.
+
+## FORMA v24: rýchlosť naberania, profilové heslá, odstránenie Dedko
+
+- Režim Nabrať svaly obsahuje voľbu pomaly (+150 kcal), stredne (+250 kcal) a rýchlejšie (+350 kcal) nad odhad TDEE, pred zaokrúhlením na 50 kcal. Nejde o sľúbený rast svalstva; rýchlejší nadbytok môže zvýšiť ukladanie tuku. Voľba sa ukladá samostatne v každom profile do JSON.
+- Každý člen rodiny môže v Nastaveniach nastaviť heslo aspoň 6 znakov, pri vytváraní nového profilu je voliteľné. Heslo sa nikdy neukladá ako čitateľný text, ale ako náhodne solený PBKDF2-SHA256 hash. Pri otvorení uzamknutého profilu sa vyžaduje heslo vrátane obnovenia stránky.
+- **Bezpečnostné obmedzenie:** Verejný GitHub JSON a Cloudflare Worker API nie sú autentifikované heslom. Zamykanie chráni len bežný prístup cez UI, **nie súkromie dát v GitHube** a nie je náhradou za serverovú autentifikáciu.
+- Profil Dedko identifikovaný podľa ID `02c947bf-dd36-4ddc-bf9d-2a0a055c0ac0` je blokovaný v novej verzii klienta a odstránený z aktuálneho GitHub JSON. Staršie klienty ho môžu znovu synchronizovať, pokým nie je aktualizovaný aj Cloudflare Worker.
 
 ## FORMA v23: detail potravín, makier a naberanie svalov
 
