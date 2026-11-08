@@ -181,7 +181,7 @@ const fs=require("node:fs");
   assert(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=2,"320px screen must not overflow");
   await page.locator("#homeAdd").click();
   assert(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=2,"320px food modal overflow");
-  assert((await page.locator("#quickFoods button").count())===4);
+  assert((await page.locator("#quickFoods [data-quick-food]").count())===4);
   await page.locator("#closeFood").click();
   assert.deepEqual(errors,[],"Browser errors (photo): "+errors.join(" | "));
   console.log("PASS: layout, calorie logging, diary, plan, weight, persistence, REAL EAN13 photo via WebAssembly");
