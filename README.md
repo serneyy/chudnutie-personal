@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 14
+# FORMA. Personal · verzia 15
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -8,6 +8,23 @@ Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily p
 - Repo: https://github.com/serneyy/chudnutie-personal
 
 Ak web nie je aktívny, v **Settings → Pages → Deploy from a branch → main / (root) → Save** zapni publikovanie.
+
+## GitHub JSON databáza rodinných profilov (voliteľná synchronizácia)
+
+FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je \`data/forma-family.json\` vo **zvolenom GitHub repozitári**. Prvý upload používateľ musí výslovne povoliť. Bez pripojenia zostáva aplikácia plne lokálna, staré záznamy sa nestratia.
+
+**Ako zapnúť:**
+
+1. Najbezpečnejšie je vytvoriť **samostatný súkromný repozitár** napríklad \`serneyy/forma-private-data\` na https://github.com/new. Existujúci \`serneyy/chudnutie-personal\` je verejný: všetky dáta nahrané doň, vrátane historických commitov, budú verejné.
+2. Na https://github.com/settings/personal-access-tokens/new vytvor GitHub **fine-grained Personal Access Token**, nastav **Repository access: Only select repositories** (iba konkrétny dátový repozitár) a **Repository permissions → Contents: Read and write**. Tento token umožňuje meniť všetky súbory vo vybranom repozitári, nie iba profilový JSON; preto ho nikdy neukladaj do súborov ani neposielaj ďalším osobám.
+3. V aplikácii otvor **Nastavenia → GitHub databáza**, vyplň repozitár a token. Ak je repozitár verejný, musíš explicitne potvrdiť zverejnenie osobných údajov a ďalšie potvrdenie pred uploadom.
+4. Po úspešnom pripojení sa profily a jedlá priebežne zapisujú na GitHub cez REST Contents API. Pri ďalšom zariadení v úvodnom výbere klikni **Načítať rodinné profily z GitHubu** a prepoj rovnaký repozitár.
+5. Načítanie z GitHubu sa vykoná pri pripojení, pri obnovení karty a po návrate do aplikácie. V Nastaveniach môžeš použiť **Načítať z GitHubu** aj manuálne.
+
+**Obmedzenia a bezpečnosť:** GitHub API vyžaduje token na zápis; FORMA ho ukladá iba v \`sessionStorage\` (v relácii prehliadača). Pri ukončení relácie môže byť potrebné token vložiť znova. Token nie je súčasťou GitHub JSON, uložených profilov ani zdrojového kódu. Pri súčasných zmenách na viacerých zariadeniach sa podľa času \`updatedAt\` zachová novšia verzia **celého profilu**, takže úpravy toho istého profilu na dvoch mobiloch naraz sa môžu vzájomne prepísať. GitHub história uchováva staršie verzie vrátane zmazaných údajov. Pre zabezpečenú produkčnú rodinnú aplikáciu je vhodnejšie použiť samostatný autentifikovaný backend namiesto PAT v klientskom prehliadači.
+
+**Dôležité:** prepojený GitHub connector v ChatGPT neprenáša automaticky lokálne dáta z telefónu. Súbor vytvorený v repozitári má zatiaľ prázdny zoznam profilov; osobné záznamy sa nahrajú iba po explicitnom pripojení v aplikácii.
+
 
 ## Profily pre viac členov rodiny
 
