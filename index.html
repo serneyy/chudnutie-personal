@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=12">
+<link rel="stylesheet" href="styles.css?v=13">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -57,7 +57,7 @@
         <button class="primary-button stretch" id="homeAdd"><svg><use href="#ic-plus"/></svg> Pridať jedlo</button>
       </div>
       <div class="section-heading"><h2>Dnešné makrá</h2><span class="muted-mini">podľa jedál</span></div>
-      <div class="macros" id="homeMacros"></div><div class="nutrient-extras" id="homeExtras" aria-label="Cukry a vláknina"></div><p class="nutrition-help">Cukry = všetky cukry z potravín, nielen pridané. Vláknina podporuje trávenie a sýtosť.</p>
+      <div class="macros" id="homeMacros"></div><div class="nutrient-extras" id="homeExtras" aria-label="Cukry a vláknina"></div><p class="nutrition-help">Celkové cukry zahŕňajú aj prirodzené cukry z ovocia a mlieka. Hodnota 90 g je európsky referenčný príjem, nie zdravotný limit. Pre voľné cukry platí prísnejšie odporúčanie (pozri Plán).</p>
       <div class="section-heading"><h2>Čo si dnes jedol</h2><button class="text-button" data-nav="diary">Denník <svg><use href="#ic-forward"/></svg></button></div>
       <div class="card" id="homeMealList"></div>
       <div class="quote-card"><svg><use href="#ic-spark"/></svg><div><strong id="quoteTitle">Konzistentnosť je tvoja výhoda.</strong><p id="quoteText">Záznam jedla je malý krok, ktorý vieš zopakovať každý deň.</p></div></div>
@@ -90,7 +90,7 @@
         <div class="stat-grid"><div class="stat-tile"><span>Udržanie váhy</span><strong id="planTdee">–</strong><small>kcal/deň</small></div><div class="stat-tile"><span>Denný deficit</span><strong id="planDeficit">–</strong><small id="planDeficitLabel">kcal/deň</small></div><div class="stat-tile"><span>Do cieľa</span><strong id="planWeeks">–</strong><small id="planDate">odhad</small></div></div>
       </div>
       <div class="section-heading"><h2>Odporúčané makrá</h2></div><div class="card" id="planMacroCard"></div><div class="card fiber-guidance"><h3>Vláknina</h3><p>Skús dosiahnuť aspoň <strong>25 g vlákniny denne</strong> z bežnej stravy (zelenina, ovocie, strukoviny, celozrnné výrobky). Nie všetky produkty uvádzajú vlákninu.</p></div>
-      <div class="card info-card"><h3>Cukry: dôležitý rozdiel</h3><p id="sugarAdvice"></p><small>Voľné cukry ≠ celkové cukry na etikete. Do celkových cukrov sa počítajú aj prirodzené cukry z ovocia a mlieka.</small></div>
+      <div class="card info-card"><h3>Cukry: dve odlišné hodnoty</h3><p id="sugarAdvice"></p><small>Na etiketách a v Open Food Facts sa väčšinou uvádzajú <strong>celkové cukry</strong>. Z týchto údajov sa nedá spoľahlivo vypočítať, koľko si prijal voľných cukrov. Červené číslo v denníku preto neposudzuj podľa odporúčania WHO pre voľné cukry.</small></div>
       <div class="section-heading"><h2>Pohybový plán</h2><span class="mini-badge">Odporúčanie</span></div>
       <div class="activity-grid"><div class="activity-tile"><div class="activity-icon">02</div><strong>2× fitko</strong><span>týždenne • celé telo</span><small id="gymBurn">45 min · odhad</small></div><div class="activity-tile"><div class="activity-icon">150</div><strong>150 min chôdze</strong><span>týždenne • postupne</span><small id="walkBurn">30 min · odhad</small></div></div>
       <div class="card workout-card"><div class="card-heading"><span class="round-icon"><svg><use href="#ic-bolt"/></svg></span><div><h2>Zapísať pohyb</h2><p id="exerciseWeek">Tvoj týždenný progres</p></div></div>
@@ -259,6 +259,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=12"></script>
+<script defer src="app.js?v=13"></script>
 </body>
 </html>
