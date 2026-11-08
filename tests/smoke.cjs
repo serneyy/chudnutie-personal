@@ -10,8 +10,9 @@ const fs=require("node:fs");
  const nodeResults=await zxing.readBarcodes(new Uint8Array(png),{formats:["AllReadable"],tryHarder:true});
  console.log("NODE BARCODE READ:",JSON.stringify(nodeResults.map(x=>({text:x.text,format:x.format}))));
  const browser=await chromium.launch({headless:true,args:["--use-fake-ui-for-media-stream","--use-fake-device-for-media-stream"]});
- const mockProduct=JSON.stringify({status:"success",product:{product_name:"Testovací jogurt",nutriments:{"energy-kcal_100g":180,"proteins_100g":8,"carbohydrates_100g":12,"fat_100g":9,"sugars_100g":7,"fiber_100g":1}}});
- const mockSearch=JSON.stringify({count:1,products:[{code:"9876543210123",product_name:"Proteínové kakao",brands:"Testová značka",serving_size:"250 ml",serving_quantity:"250",serving_quantity_unit:"ml",nutriments:{"energy-kcal_100g":62,"proteins_100g":6,"carbohydrates_100g":7,"fat_100g":1.4,"sugars_100g":6.2,"fiber_100g":0.6}}]});
+ const photoUrl="https://images.openfoodfacts.org/images/products/test-package.jpg";
+ const mockProduct=JSON.stringify({status:"success",product:{product_name:"Testovací jogurt",image_front_small_url:photoUrl,nutriments:{"energy-kcal_100g":180,"proteins_100g":8,"carbohydrates_100g":12,"fat_100g":9,"sugars_100g":7,"fiber_100g":1}}});
+ const mockSearch=JSON.stringify({count:1,products:[{code:"9876543210123",product_name:"Proteínové kakao",brands:"Testová značka",serving_size:"250 ml",serving_quantity:"250",serving_quantity_unit:"ml",image_front_small_url:photoUrl,nutriments:{"energy-kcal_100g":62,"proteins_100g":6,"carbohydrates_100g":7,"fat_100g":1.4,"sugars_100g":6.2,"fiber_100g":0.6}}]});
  async function setup(page){
   const errors=[];
   page.on("pageerror",e=>errors.push(e.message));
@@ -20,6 +21,7 @@ const fs=require("node:fs");
    const url=r.request().url(),broken=url.includes("serverfail");
    return r.fulfill({status:broken?503:200,contentType:"application/json",headers:{"Access-Control-Allow-Origin":"*"},body:broken?'{"error":"temporarily unavailable"}':url.includes("/cgi/search.pl")?mockSearch:mockProduct});
   });
+  await page.route("https://images.openfoodfacts.org/**",r=>r.fulfill({status:200,contentType:"image/png",body:png}));
   await page.route(/fonts\.googleapis\.com|fonts\.gstatic\.com/,r=>r.abort());
   return errors;
  }
@@ -146,12 +148,29 @@ const fs=require("node:fs");
   assert.equal(await page.locator("#foodName").inputValue(),"Testovací jogurt");
   assert.equal(await page.locator("#fKcal").inputValue(),"180");
   assert.equal(await page.locator("#foodEAN").inputValue(),"3017624010701");
+  assert(await page.locator("#selectedProductVisual").isVisible(),"A scanned product should have image");
+  assert((await page.locator("#selectedProductPicture img").getAttribute("src")).includes("images.openfoodfacts.org"));
+  assert(await page.locator("#selectedProductPicture img").evaluate(img=>img.complete&&img.naturalWidth>0),"Image should load in browser");
   assert.equal(await page.locator("#foodMeal").inputValue(),expected);
   assert(!await page.locator("#foodDetails").evaluate(el=>el.open),"Scanned food should hide advanced fields");
   await page.locator('[data-grams="150"]').click();
   assert.equal(await page.locator("#foodGrams").inputValue(),"150");
   assert((await page.locator("#foodPreviewCalories").innerText()).includes("270"));
+  const figures=await page.evaluate(()=>{
+    const g=Number(document.querySelector("#foodGrams").value);
+    const v=id=>Number(document.querySelector("#"+id).value)*g/100;
+    return {kcal:v("fKcal"),protein:v("fProtein"),carbs:v("fCarbs"),fat:v("fFat"),sugar:v("fSugar"),fiber:v("fFiber")};
+  });
+  assert.deepEqual(figures,{kcal:270,protein:12,carbs:18,fat:13.5,sugar:10.5,fiber:1.5},"Every nutrient must scale linearly from 100 g to 150 g");
   await page.locator("#foodSave").click();
+  const savedNumbers=await page.evaluate(()=>{
+    const id=localStorage.getItem("forma-active-profile-v1");
+    const profile=JSON.parse(localStorage.getItem("forma-local-profiles-v1")).profiles.find(p=>p.id===id);
+    return profile.data.foods.find(f=>f.code==="3017624010701");
+  });
+  for(const [key,value] of Object.entries(figures))assert.equal(savedNumbers[key],value,"Saved nutrient mismatch: "+key);
+  assert(savedNumbers.image?.startsWith("https://images.openfoodfacts.org/"),"Food photo must persist");
+  assert((await page.locator("#homeMealList .meal-image").count())>=1,"Diary summary should show product photo");
   assert(await page.locator("#foodOverlay").isHidden());
   assert.equal((await page.locator("#homeCalories").innerText()).trim(),"570");
   // Common drink: typo-tolerant autocomplete + realistic editable portion in ml.
@@ -195,6 +214,9 @@ const fs=require("node:fs");
   assert.equal(await page.locator("#foodGrams").inputValue(),"250");
   assert.equal(await page.locator("#fKcal").inputValue(),"62");
   assert((await page.locator("#foodPreviewCalories").innerText()).includes("155"));
+  assert((await page.locator("#foodSuggestions .food-suggestion-image").count())>=1,"Autocomplete must show images");
+  assert(await page.locator("#selectedProductVisual").isVisible(),"Selected online product should show front-of-pack photo");
+  assert((await page.locator("#portionHint").innerText()).includes("1 ml ≈ 1 g"),"ml must be identified as an approximation");
   await page.locator("#closeFood").click();
   // Complete restaurant meals: "tikka masala" and versions with/without rice.
   await page.locator("#homeAdd").click();
