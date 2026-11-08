@@ -1,0 +1,33 @@
+name: Overenie HTML aplikácie
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skontrolovať HTML a JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          import re
+          s = Path("index.html").read_text(encoding="utf-8")
+          assert '<html lang="sk">' in s
+          for marker in ['page-dnes','page-jedlo','page-plan','page-progres','page-nastavenia','foodForm','planForm','weightForm','workoutForm','lookupBarcode']:
+              assert marker in s, f"Missing {marker}"
+          class Check(HTMLParser):
+              def __init__(self): super().__init__();self.ids=set()
+              def handle_starttag(self,tag,attrs):
+                  d=dict(attrs)
+                  if "id" in d:
+                      assert d["id"] not in self.ids, f"Duplicate id {d['id']}"
+                      self.ids.add(d["id"])
+          Check().feed(s)
+          inline = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,flags=re.S)
+          assert inline and 'function renderHome' in inline[-1]
+          Path("/tmp/forma-inline.js").write_text(inline[-1],encoding="utf-8")
+          PY
+          node --check /tmp/forma-inline.js
