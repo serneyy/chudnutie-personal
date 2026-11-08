@@ -209,6 +209,7 @@ function setProductImage(url,name="",item=null){
  const image=safeFoodImage(url);
  const container=$("selectedProductVisual");
  container.hidden=!image;
+ if(!item)setFoodNutritionSource(null);
  $("selectedProductPicture").innerHTML=foodImageMarkup(image,"selected-product-img");
  $("selectedProductLabel").textContent=name||"Vybraný výrobok";
  const illustrative=image.includes("commons.wikimedia.org");
@@ -559,7 +560,7 @@ function foodNameChanged(){
  if(value.length<2){hideFoodSuggestions();$("foodSearchHelp").textContent="Začni písať a vyber jedlo z návrhov.";return}
  const local=findCommon(value),known=findKnownProducts(value);
  renderFoodSuggestions(local,known,normalizeTerm(value).length>=3&&!known.length);
- $("foodSearchHelp").textContent="Vyhľadávam: "+value+". Po výbere sa vyplnia kalórie a porcia.";
+ $("foodSearchHelp").textContent="Vyhľadávam: "+value+". Miestne jedlá sú dostupné ihneď aj bez internetu.";
  if(normalizeTerm(value).length<3)return;
  // Show known matches immediately; delay new requests until typing has stopped.
  const wait=850;
