@@ -44,7 +44,7 @@ jobs:
           PY
       - name: Instalacia browser testov
         run: |
-          npm install --no-save playwright@1.56.1 bwip-js@4
+          npm install --no-save playwright@1.56.1 bwip-js@4 zxing-wasm@3.1.6
           npx playwright install --with-deps chromium
       - name: Spustenie lokalneho webu
         run: |
