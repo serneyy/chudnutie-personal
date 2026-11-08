@@ -136,7 +136,7 @@ function applyFoodSuggestion(item){
  renderFoodPreview();
 }
 async function remoteFoodSearch(query,token,local){
- const q=normalizeTerm(query);if(q.length<3)return;
+ const typed=normalizeTerm(query);const q=/^(capucino|kapucino|cappucino|kapuccino)$/.test(typed)?"cappuccino":typed;if(q.length<3)return;
  if(searchCache.has(q)){if(token===searchGeneration)renderFoodSuggestions(local,searchCache.get(q),false);return}
  const now=Date.now();searchNetworkHistory=searchNetworkHistory.filter(t=>now-t<60000);
  if(searchNetworkHistory.length>=8){if(token===searchGeneration)renderFoodSuggestions(local,[],false,"Databáza má limit vyhľadávania. Skús to znova neskôr.");return}
@@ -160,7 +160,7 @@ async function remoteFoodSearch(query,token,local){
    .map(nutritionFromOFF).filter(p=>p.name&&p.kcal!==null&&validNum(p.kcal,0,2000)&&p.portion>0)
    .slice(0,6);
   searchCache.set(q,mapped);
-  if(token===searchGeneration&&!$("foodOverlay").hidden&&normalizeTerm($("foodName").value)===q)
+  if(token===searchGeneration&&!$("foodOverlay").hidden&&normalizeTerm($("foodName").value)===typed)
    renderFoodSuggestions(local,mapped,false);
  }catch(e){
   if(token!==searchGeneration)return;
