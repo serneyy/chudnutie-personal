@@ -53,7 +53,7 @@ const LIB_VERSION="3.1.6";
 /* Nutričné údaje všeobecných jedál sú orientačné na 100 g/ml.
    Veľkosť porcie nie je univerzálna: používateľ ju vždy môže upraviť. */
 const COMMON_FOODS=[
- ...window.SLOVAK_FOODS,
+ ...(Array.isArray(window.SLOVAK_FOODS)?window.SLOVAK_FOODS:[]),
 
  // HOTOVÉ JEDLÁ: hrubé orientačné hodnoty hotového jedla na 100 g.
  // Pri tikka masale existujú napr. balené varianty 130–173 kcal/100g s ryžou,
