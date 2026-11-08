@@ -372,6 +372,7 @@ const fs=require("node:fs");
   await page.locator("#githubRepo").fill("serneyy/chudnutie-personal");
   await page.locator("#githubToken").fill("github_pat_test_fake");
   await page.locator("#githubConnectBtn").click();
+  await page.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.textContent?.includes("VEREJNÝ"),{timeout:8000});
   assert((await page.locator("#githubSyncStatus").innerText()).includes("VEREJNÝ"),"Do not upload personal data before explicit consent");
   assert.equal(cloudWrites,0,"No uploads without consent");
   await page.locator("#githubPublicConsent").check();
