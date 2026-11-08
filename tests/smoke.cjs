@@ -434,7 +434,7 @@ const fs=require("node:fs");
   await momDevice.route("https://forma-github-sync.threadid.workers.dev/**",mockWorker);
   await momDevice.goto("http://127.0.0.1:8765/",{waitUntil:"domcontentloaded"});
   await momDevice.waitForFunction(()=>document.querySelector("#githubSyncStatus")?.dataset.level==="success",{timeout:10000});
-  await momDevice.locator("#profileHeaderBtn").click();
+  assert(await momDevice.locator("#profileOverlay").isVisible(),"Fresh phone should let user choose an imported profile");
   assert((await momDevice.locator("#profileList").innerText()).includes("Mama"),"Fresh phone loads Mom profile");
   await momDevice.locator('#profileList [data-profile-select]').filter({hasText:"Mama"}).click();
   await momDevice.locator("#homeAdd").click();
