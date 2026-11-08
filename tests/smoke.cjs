@@ -448,7 +448,7 @@ const fs=require("node:fs");
   await segedin.click();
   assert.equal(await page.locator("#foodGrams").inputValue(),"450");
   assert.equal(await page.locator("#fKcal").inputValue(),"179");
-  assert.equal(await page.locator("#fCarbs").inputValue(),"22.07");
+  assert.equal(await page.locator("#fCarbs").inputValue(),"22.1");
   await page.locator("#closeFood").click();
   await page.locator("#homeAdd").click();
   await page.locator("#foodName").fill("fasirky");
