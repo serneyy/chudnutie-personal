@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=19">
+<link rel="stylesheet" href="styles.css?v=20">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -111,28 +111,18 @@
 
     <section class="view" id="view-settings">
       <div class="intro"><span class="eyebrow">NASTAVENIA</span><h1>Tvoje dáta. Tvoje pravidlá.</h1><p>Rodinné profily a voliteľná synchronizácia cez GitHub.</p></div>
-      <div class="card" id="profilesSettings"><div class="card-heading"><span class="round-icon"><svg><use href="#ic-settings"/></svg></span><div><h2>Používateľské profily</h2><p>Osobné záznamy oddelené podľa mena</p></div></div><p class="card-sub">Aktívny profil: <strong id="currentProfileLabel">–</strong></p><div class="action-stack"><button class="secondary-button" id="changeProfileBtn">Zmeniť používateľa</button><button class="outline-button" id="renameProfileBtn">Premenovať môj profil</button></div><p class="card-sub">Profily nemajú heslá. Po prepojení s GitHubom môžete používať rovnaké JSON údaje na viacerých zariadeniach.</p></div>
+      <div class="card" id="profilesSettings"><div class="card-heading"><span class="round-icon"><svg><use href="#ic-settings"/></svg></span><div><h2>Používateľské profily</h2><p>Osobné záznamy oddelené podľa mena</p></div></div><p class="card-sub">Aktívny profil: <strong id="currentProfileLabel">–</strong></p><div class="action-stack"><button class="secondary-button" id="changeProfileBtn">Zmeniť používateľa</button><button class="outline-button" id="renameProfileBtn">Premenovať môj profil</button></div><p class="card-sub">Profily nemajú heslá. Keď je GitHub server aktívny, používajú rovnakú JSON databázu aj rôzne zariadenia.</p></div>
       <div class="card github-card" id="githubSyncSettings">
-        <div class="card-heading"><span class="round-icon"><svg><use href="#ic-upload"/></svg></span><div><h2>GitHub databáza</h2><p>Automatické ukladanie profilov do JSON</p></div></div>
-        <p class="card-sub">Po pripojení sa všetky rodinné profily, jedlá a hmotnosti synchronizujú cez súbor <strong>data/forma-family.json</strong> na GitHube.</p>
-        <form id="githubSyncForm" class="github-sync-form">
-          <label class="block-label" for="githubRepo">GitHub repozitár<input id="githubRepo" type="text" value="serneyy/chudnutie-personal" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="pouzivatel/sukromny-repozitar" required></label>
-          <label class="block-label" for="githubToken">GitHub prístupový token <input id="githubToken" type="password" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="github_pat_..." aria-describedby="githubTokenHint"></label>
-          <p class="github-help" id="githubTokenHint">Vlož fine-grained token s oprávnením <strong>Contents: Read and write</strong> iba pre tento repozitár. Token sa nikdy nenahráva do JSON súboru.</p>
-          <label class="github-remember"><input type="checkbox" id="githubRememberToken"><span><strong>Zostať pripojený na tomto zariadení</strong><small>Uloží token do tohto prehliadača, aby fungovalo automatické nahrávanie aj po zavretí aplikácie. Na zdieľanom zariadení to nezapínaj: token dáva právo meniť súbory v repozitári.</small></span></label>
-          <label class="github-consent"><input id="githubPublicConsent" type="checkbox"><span>Rozumiem, že ak je repozitár verejný, <strong>každý na internete môže vidieť našu váhu, vek a jedálničky</strong> aj v histórii GitHubu. Súhlasím s uložením týchto údajov.</span></label>
-          <button class="primary-button stretch" type="submit" id="githubConnectBtn">Pripojiť a synchronizovať</button>
-        </form>
-        <p class="github-sync-status" id="githubSyncStatus" role="status" aria-live="polite">Nepripojené. Údaje sú zatiaľ iba v tomto prehliadači.</p>
-        <p class="github-help">Záloha je hotová až vtedy, keď sa tu aj na úvodnej obrazovke zobrazí <strong>Uložené na GitHube</strong>. Ak je synchronizácia vypnutá, GitHub nové jedlá automaticky nedostane.</p>
-        <div class="github-sync-actions" id="githubSyncActions" hidden>
-          <button type="button" class="secondary-button" id="githubRefreshBtn">Načítať z GitHubu</button>
-          <button type="button" class="outline-button" id="githubDisconnectBtn">Odpojiť</button>
+        <div class="card-heading"><span class="round-icon"><svg><use href="#ic-upload"/></svg></span><div><h2>Automatická GitHub záloha</h2><p>Cloudflare Worker • data/forma-family.json</p></div></div>
+        <p class="card-sub">Jedlá, váhu a profily si aplikácia vždy najprv uloží do tohto zariadenia. Po aktivácii servera sa zálohujú aj do GitHubu. V aplikácii nie je potrebný žiadny GitHub token.</p>
+        <p class="github-sync-status" id="githubSyncStatus" role="status" aria-live="polite">Overujem dostupnosť servera…</p>
+        <div class="github-sync-actions" id="githubSyncActions">
+          <button type="button" class="secondary-button" id="githubRefreshBtn">Skontrolovať zálohu</button>
         </div>
-        <p class="github-help">Bez tokenu sa zápis do GitHubu nedá vykonať. Ak sa odpojíš alebo token vyprší, lokálne údaje zostanú zachované. Pri súčasných úpravách toho istého profilu na dvoch mobiloch môže vyhrať novšia verzia.</p>
+        <p class="github-help">Pozor: „Lokálne uložené“ ešte neznamená „Zálohované na GitHube“. Ak je server nepripravený, pôvodné údaje ostávajú v tomto prehliadači a môžeš si stiahnuť JSON zálohu nižšie.</p>
       </div>
       <div class="card"><h2>Zálohovanie</h2><p class="card-sub">Vždy máš aj lokálnu JSON zálohu každého profilu. Po pripojení k GitHubu sú údaje navyše synchronizované medzi zariadeniami.</p><div class="action-stack"><button class="secondary-button" id="exportBtn"><svg><use href="#ic-download"/></svg> Stiahnuť moje dáta (.json)</button><button class="outline-button" id="importBtn"><svg><use href="#ic-upload"/></svg> Obnoviť zo zálohy</button><input id="importFile" type="file" accept=".json,application/json" hidden></div></div>
-      <div class="card"><h2>Ochrana súkromia</h2><p class="card-sub">Pri zapnutej GitHub synchronizácii sa údaje ukladajú do zvoleného repozitára. Ak je verejný, údaje sú verejné aj v histórii commitov. Profil podľa mena nie je chránený heslom. Token ukladáme iba počas relácie v prehliadači. Pri skene sa EAN posiela do Open Food Facts.</p></div>
+      <div class="card"><h2>Ochrana súkromia</h2><p class="card-sub">Pri aktívnej synchronizácii sa profily ukladajú aj do verejného GitHub repozitára. Záznamy vrátane histórie zmien môžu byť verejne čitateľné. Pri skenovaní sa EAN posiela do Open Food Facts.</p></div>
       <div class="card"><h2>O projekte</h2><p class="card-sub">FORMA. je osobný nástroj na sledovanie návykov. Kalorické výpočty, termín cieľa a výdaj pri cvičení sú iba odhady pre dospelých.</p><a href="https://www.cdc.gov/physical-activity-basics/guidelines/adults.html" rel="noopener" target="_blank">Pohybové odporúčania CDC ↗</a><a href="https://www.who.int/news-room/fact-sheets/detail/healthy-diet" rel="noopener" target="_blank">WHO a cukry ↗</a><a href="https://openfoodfacts.github.io/documentation/docs/Product-Opener/api/" rel="noopener" target="_blank">Open Food Facts API ↗</a></div>
       <button class="danger-button" id="resetBtn">Vymazať záznamy v tomto profile</button>
     </section>
@@ -281,6 +271,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=19"></script>
+<script defer src="app.js?v=20"></script>
 </body>
 </html>
