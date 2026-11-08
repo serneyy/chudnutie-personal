@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=18">
+<link rel="stylesheet" href="styles.css?v=19">
 <title>FORMA. | Každý deň o krok ďalej</title>
 </head>
 <body>
@@ -50,6 +50,7 @@
         <div class="hero-track"><div id="heroTrack"></div></div><p class="hero-activity-note" id="heroActivityNote">Orientačne 25 min svižnej chôdze. Nie je to povinnosť ani kalórie navyše na jedenie.</p>
         <span class="hero-caption" id="heroCaption">Každý záznam ťa posúva ďalej.</span>
       </div>
+      <button type="button" class="cloud-home-status" id="cloudHomeStatus" data-level="neutral"><span class="cloud-home-dot"></span><span id="cloudHomeText">GitHub záloha nie je pripojená. Ťukni na nastavenie.</span><span aria-hidden="true">›</span></button>
       <div class="section-heading"><h2>Kalorický rozpočet</h2><span class="date-chip" id="todayTag">Dnes</span></div>
       <div class="card energy-card">
         <div class="energy-main"><div class="energy-number"><span>DNES SI PRIJAL</span><strong id="homeCalories">0</strong><small>z <b id="homeCaloriesGoal">2 100</b> kcal</small></div><div class="energy-ring" id="energyRing"><div><strong id="homeRemaining">2 100</strong><small>zostáva kcal</small></div></div></div>
@@ -117,11 +118,13 @@
         <form id="githubSyncForm" class="github-sync-form">
           <label class="block-label" for="githubRepo">GitHub repozitár<input id="githubRepo" type="text" value="serneyy/chudnutie-personal" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="pouzivatel/sukromny-repozitar" required></label>
           <label class="block-label" for="githubToken">GitHub prístupový token <input id="githubToken" type="password" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="github_pat_..." aria-describedby="githubTokenHint"></label>
-          <p class="github-help" id="githubTokenHint">Použi fine-grained token s oprávnením <strong>Contents: Read and write</strong>, iba pre zvolený repozitár. Token sa ukladá iba v aktuálnej relácii prehliadača, nie do GitHub JSON ani do kódu.</p>
+          <p class="github-help" id="githubTokenHint">Vlož fine-grained token s oprávnením <strong>Contents: Read and write</strong> iba pre tento repozitár. Token sa nikdy nenahráva do JSON súboru.</p>
+          <label class="github-remember"><input type="checkbox" id="githubRememberToken"><span><strong>Zostať pripojený na tomto zariadení</strong><small>Uloží token do tohto prehliadača, aby fungovalo automatické nahrávanie aj po zavretí aplikácie. Na zdieľanom zariadení to nezapínaj: token dáva právo meniť súbory v repozitári.</small></span></label>
           <label class="github-consent"><input id="githubPublicConsent" type="checkbox"><span>Rozumiem, že ak je repozitár verejný, <strong>každý na internete môže vidieť našu váhu, vek a jedálničky</strong> aj v histórii GitHubu. Súhlasím s uložením týchto údajov.</span></label>
           <button class="primary-button stretch" type="submit" id="githubConnectBtn">Pripojiť a synchronizovať</button>
         </form>
         <p class="github-sync-status" id="githubSyncStatus" role="status" aria-live="polite">Nepripojené. Údaje sú zatiaľ iba v tomto prehliadači.</p>
+        <p class="github-help">Záloha je hotová až vtedy, keď sa tu aj na úvodnej obrazovke zobrazí <strong>Uložené na GitHube</strong>. Ak je synchronizácia vypnutá, GitHub nové jedlá automaticky nedostane.</p>
         <div class="github-sync-actions" id="githubSyncActions" hidden>
           <button type="button" class="secondary-button" id="githubRefreshBtn">Načítať z GitHubu</button>
           <button type="button" class="outline-button" id="githubDisconnectBtn">Odpojiť</button>
@@ -278,6 +281,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script defer src="app.js?v=18"></script>
+<script defer src="app.js?v=19"></script>
 </body>
 </html>
