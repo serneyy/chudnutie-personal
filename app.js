@@ -1,7 +1,9 @@
 /* FORMA 3.0 | mobile-first personal tracker | no server-side account */
 (function(){
 "use strict";
-const KEY="forma-personal-v2";
+const KEY="forma-personal-v2"; // Legacy single-profile data, retained as a safety backup
+const PROFILE_STORE_KEY="forma-local-profiles-v1";
+const PROFILE_ACTIVE_KEY="forma-active-profile-v1";
 const $=id=>document.getElementById(id);
 const $all=(selector,root=document)=>Array.from(root.querySelectorAll(selector));
 const today=dateLocal(new Date());
@@ -9,6 +11,7 @@ const MEALS=[["ranajky","Raňajky"],["desiata","Desiata"],["obed","Obed"],["olov
 const EXERCISES={gym:{name:"Fitko / silový tréning",met:3.5},walk:{name:"Svižná chôdza",met:4.8},bike:{name:"Bicykel",met:6},run:{name:"Beh",met:8}};
 const DEFAULT={profile:{weight:94,height:189,target:88,age:22,sex:"male",activity:1.2,rate:.3,mode:"lose",lossTarget:88},foods:[],weights:[],workouts:[]};
 let state=structuredCloneSafe(DEFAULT);
+let profileStore={version:1,profiles:[]},activeProfileId=null;
 let selectedDay=today,foodContextMeal="ranajky",activeView="home",toastTimer,activeLookupNonce=0,lossTargetDraft=88;
 let nativeStream=null,nativeTimer=null,scanSession=0,barcodeBusy=false,frameInFlight=false;
 let cameraDevices=[],cameraIndex=0,requestedDeviceId=null,scanStartedAt=0,scanAttempts=0;
@@ -215,9 +218,110 @@ function normalize(input){
  obj.workouts=input.workouts.slice(0,10000).filter(x=>x&&validDate(x.date)&&EXERCISES[x.type]&&validNum(x.minutes,1,480)).map(x=>({id:String(x.id||uid()).slice(0,100),type:x.type,date:x.date,minutes:+x.minutes}));
  return obj;
 }
-try{let v=localStorage.getItem(KEY);if(v)state=normalize(JSON.parse(v))}catch(e){console.warn("Chyba pri čítaní uložených dát:",e)}
-lossTargetDraft=state.profile.lossTarget||state.profile.target;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){notify("Údaje sa neuložili. Skús zálohu.")}}
+function sanitizeProfileName(value){
+ return String(value||"").trim().replace(/\s+/g," ").slice(0,30);
+}
+function findActiveProfile(){return profileStore.profiles.find(p=>p.id===activeProfileId)||null}
+function saveProfiles(){
+ try{localStorage.setItem(PROFILE_STORE_KEY,JSON.stringify(profileStore));return true}
+ catch(e){console.error("Lokálna databáza sa neuložila",e);notify("Údaje sa nepodarilo uložiť. Urob JSON zálohu.");return false}
+}
+function initializeProfiles(){
+ let loaded=false;
+ try{
+  const raw=localStorage.getItem(PROFILE_STORE_KEY);
+  if(raw){
+   const parsed=JSON.parse(raw);
+   if(!parsed||!Array.isArray(parsed.profiles))throw Error("Neplatná databáza profilov");
+   profileStore={version:1,profiles:parsed.profiles.slice(0,25).filter(p=>p&&typeof p.id==="string"&&typeof p.name==="string").map(p=>({
+    id:p.id.slice(0,100),name:sanitizeProfileName(p.name)||"Používateľ",createdAt:p.createdAt||today,
+    data:normalize(p.data)
+   }))};
+   loaded=true;
+  }
+ }catch(e){console.error("Chyba pri čítaní profilov",e)}
+ if(!loaded){
+  const old=localStorage.getItem(KEY);
+  if(old){
+   try{
+    const data=normalize(JSON.parse(old));
+    profileStore.profiles.push({id:String(uid()),name:"Môj pôvodný profil",createdAt:today,data});
+    saveProfiles();
+   }catch(e){console.warn("Pôvodné údaje sa nepodarilo načítať",e)}
+  }
+ }
+ const active=localStorage.getItem(PROFILE_ACTIVE_KEY);
+ if(active&&profileStore.profiles.some(p=>p.id===active)){
+  activeProfileId=active;
+  state=structuredCloneSafe(findActiveProfile().data);
+  lossTargetDraft=state.profile.lossTarget||state.profile.target;
+ }
+}
+function renderProfileList(){
+ const list=$("profileList");
+ if(!profileStore.profiles.length){list.innerHTML='<div class="profile-empty">Ešte nemáš profil. Vytvor si ho podľa svojho mena.</div>'}
+ else list.innerHTML=profileStore.profiles.map(p=>
+  '<button type="button" class="profile-entry" data-profile-select="'+escapeHTML(p.id)+'"><span class="profile-initial">'+escapeHTML(p.name[0].toLocaleUpperCase("sk-SK"))+'</span><span><strong>'+escapeHTML(p.name)+'</strong><small>Otvoriť svoj denník</small></span>'+icon("forward")+'</button>'
+ ).join("");
+ $("closeProfile").hidden=!activeProfileId;
+}
+function openProfiles(){
+ if(!$("scanOverlay").hidden)closeScan();
+ if(!$("foodOverlay").hidden)closeFood();
+ renderProfileList();
+ $("newProfileForm").hidden=profileStore.profiles.length>0;
+ $("profileOverlay").hidden=false;
+ bodyLock();
+}
+function closeProfiles(){
+ if(!activeProfileId)return;
+ $("profileOverlay").hidden=true;
+ bodyUnlock();
+}
+function syncProfileBadge(){
+ const profile=findActiveProfile(),name=profile?.name||"";
+ $("profileHeaderBtn").textContent=name?name[0].toLocaleUpperCase("sk-SK"):"?";
+ $("profileHeaderBtn").title=name?"Profil: "+name:"Vybrať profil";
+ $("currentProfileLabel").textContent=name||"Žiadny";
+}
+function switchProfile(id){
+ const target=profileStore.profiles.find(p=>p.id===id);
+ if(!target)return;
+ activeProfileId=id;
+ localStorage.setItem(PROFILE_ACTIVE_KEY,id);
+ state=structuredCloneSafe(target.data);
+ lossTargetDraft=state.profile.lossTarget||state.profile.target;
+ selectedDay=today;
+ closeProfiles();
+ syncProfileBadge();render();setView("home");
+}
+function createProfile(e){
+ e.preventDefault();
+ const name=sanitizeProfileName($("newProfileName").value);
+ const weight=Number($("newProfileWeight").value),height=Number($("newProfileHeight").value);
+ const target=Number($("newProfileTarget").value),age=Number($("newProfileAge").value),sex=$("newProfileSex").value;
+ if(name.length<2||profileStore.profiles.some(x=>x.name.toLocaleLowerCase("sk-SK")===name.toLocaleLowerCase("sk-SK"))){notify("Zadaj jedinečné meno s aspoň 2 znakmi.");return}
+ const data=structuredCloneSafe(DEFAULT);
+ data.profile={weight,height,target,age,sex,activity:1.2,rate:.3,mode:weight===target?"maintain":"lose",lossTarget:target};
+ if(!validProfile(data.profile)||target>weight){notify("Skontroluj údaje. Cieľ nesmie byť väčší než aktuálna váha.");return}
+ if(profileStore.profiles.length>=25){notify("Maximum je 25 miestnych profilov.");return}
+ const id=String(uid());
+ profileStore.profiles.push({id,name,createdAt:today,data});
+ if(!saveProfiles()){profileStore.profiles.pop();return}
+ switchProfile(id);
+ notify("Profil "+name+" je pripravený.");
+}
+function renameProfile(){
+ const profile=findActiveProfile();
+ if(!profile)return;
+ const value=prompt("Nové meno profilu",profile.name);
+ if(value===null)return;
+ const name=sanitizeProfileName(value);
+ if(name.length<2||profileStore.profiles.some(x=>x.id!==profile.id&&x.name.toLocaleLowerCase("sk-SK")===name.toLocaleLowerCase("sk-SK"))){notify("Zadaj jedinečné meno s aspoň 2 znakmi.");return}
+ profile.name=name;saveProfiles();syncProfileBadge();notify("Meno profilu zmenené.");
+}
+initializeProfiles();
+function save(){const profile=findActiveProfile();if(!profile)return;profile.data=structuredCloneSafe(state);saveProfiles()}
 function notify(text){$("toast").textContent=text;$("toast").classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.remove("show"),3300)}
 function lastWeight(){const weights=state.weights.slice().sort((a,b)=>a.date.localeCompare(b.date));return weights.length?weights[weights.length-1].kg:state.profile.weight}
 function preferredMeal(hour=new Date().getHours()){
@@ -425,10 +529,10 @@ function submitWorkout(e){
  state.workouts.push({id:String(uid()),date,type,minutes});save();render();notify("Pohyb je zapísaný.");
 }
 function exportData(){
- const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2)],{type:"application/json"});
+ const blob=new Blob([JSON.stringify({...state,profileName:findActiveProfile()?.name||"Používateľ",exportedAt:new Date().toISOString()},null,2)],{type:"application/json"});
  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="forma-zaloha-"+today+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
-async function importData(file){if(!file)return;try{const data=normalize(JSON.parse(await file.text()));if(!confirm("Nahradiť všetky existujúce záznamy touto zálohou?"))return;state=data;save();render();notify("Záloha obnovená.")}catch(e){notify("Záloha je neplatná.")}}
+async function importData(file){if(!file)return;try{const data=normalize(JSON.parse(await file.text()));if(!confirm("Nahradiť VŠETKY záznamy iba v profile "+(findActiveProfile()?.name||"aktuálny")+" obsahom zálohy?"))return;state=data;save();render();notify("Záloha obnovená.")}catch(e){notify("Záloha je neplatná.")}}
 function scanMessage(message,isError=false){
  $("scanStatus").textContent=message;$("scanStatus").classList.toggle("error",isError);
 }
@@ -738,6 +842,20 @@ function delegatedClick(e){
  const ex=e.target.closest("[data-remove-workout]");if(ex){if(confirm("Vymazať túto aktivitu?")){state.workouts=state.workouts.filter(x=>x.id!==ex.dataset.removeWorkout);save();render()}return}
 }
 document.addEventListener("click",delegatedClick);
+$("profileHeaderBtn").addEventListener("click",openProfiles);
+$("changeProfileBtn").addEventListener("click",openProfiles);
+$("renameProfileBtn").addEventListener("click",renameProfile);
+$("closeProfile").addEventListener("click",closeProfiles);
+$("toggleNewProfile").addEventListener("click",()=>{
+ const form=$("newProfileForm");
+ form.hidden=!form.hidden;
+ if(!form.hidden)$("newProfileName").focus();
+});
+$("profileList").addEventListener("click",e=>{
+ const btn=e.target.closest("[data-profile-select]");
+ if(btn)switchProfile(btn.dataset.profileSelect);
+});
+$("newProfileForm").addEventListener("submit",createProfile);
 $("homeAdd").addEventListener("click",()=>{foodContextMeal=preferredMeal();foodModal({meal:foodContextMeal,date:today})});
 $("prevDay").addEventListener("click",()=>{selectedDay=addDays(selectedDay,-1);renderDiary()});
 $("nextDay").addEventListener("click",()=>{selectedDay=addDays(selectedDay,1);renderDiary()});
@@ -773,7 +891,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("scanOverlay"
 $("exportBtn").addEventListener("click",exportData);
 $("importBtn").addEventListener("click",()=>$("importFile").click());
 $("importFile").addEventListener("change",async e=>{await importData(e.target.files[0]);e.target.value=""});
-$("resetBtn").addEventListener("click",()=>{if(confirm("Naozaj odstrániť všetky lokálne záznamy? Bez zálohy ich neobnovíš.")){state=structuredCloneSafe(DEFAULT);selectedDay=today;save();render();notify("Všetky záznamy boli vymazané.")}});
+$("resetBtn").addEventListener("click",()=>{if(confirm("Naozaj odstrániť záznamy aktuálneho profilu? Bez zálohy ich neobnovíš.")){state=structuredCloneSafe(DEFAULT);selectedDay=today;save();render();notify("Všetky záznamy boli vymazané.")}});
 $("weightDate").value=today;$("wDate").value=today;
-render();setView("home");
+render();syncProfileBadge();setView("home");if(!activeProfileId)openProfiles();
 })();
