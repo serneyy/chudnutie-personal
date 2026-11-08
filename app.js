@@ -7,9 +7,9 @@ const $all=(selector,root=document)=>Array.from(root.querySelectorAll(selector))
 const today=dateLocal(new Date());
 const MEALS=[["ranajky","Raňajky"],["desiata","Desiata"],["obed","Obed"],["olovrant","Olovrant"],["vecera","Večera"],["ine","Ostatné"]];
 const EXERCISES={gym:{name:"Fitko / silový tréning",met:3.5},walk:{name:"Svižná chôdza",met:4.8},bike:{name:"Bicykel",met:6},run:{name:"Beh",met:8}};
-const DEFAULT={profile:{weight:94,height:189,target:88,age:22,sex:"male",activity:1.2,rate:.3},foods:[],weights:[],workouts:[]};
+const DEFAULT={profile:{weight:94,height:189,target:88,age:22,sex:"male",activity:1.2,rate:.3,mode:"lose",lossTarget:88},foods:[],weights:[],workouts:[]};
 let state=structuredCloneSafe(DEFAULT);
-let selectedDay=today,foodContextMeal="ranajky",activeView="home",toastTimer;
+let selectedDay=today,foodContextMeal="ranajky",activeView="home",toastTimer,activeLookupNonce=0,lossTargetDraft=88;
 let nativeStream=null,nativeTimer=null,scanSession=0,barcodeBusy=false,frameInFlight=false;
 let cameraDevices=[],cameraIndex=0,requestedDeviceId=null,scanStartedAt=0,scanAttempts=0;
 let nativeDetector=null,zxingPromise=null,zxingReady=false,photoProcessing=false;
@@ -29,32 +29,42 @@ function uid(){return crypto&&crypto.randomUUID?crypto.randomUUID():Date.now()+"
 function structuredCloneSafe(o){return JSON.parse(JSON.stringify(o))}
 function validNum(x,min,max){const n=Number(x);return x!==null&&x!==""&&Number.isFinite(n)&&n>=min&&n<=max}
 function validDate(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(String(s)))return false;const d=new Date(s+"T12:00:00");return !Number.isNaN(d.valueOf())&&dateLocal(d)===s}
-function validProfile(p){return p&&validNum(p.weight,35,300)&&validNum(p.target,35,300)&&validNum(p.height,120,230)&&validNum(p.age,18,95)&&["male","female"].includes(p.sex)&&[1.2,1.375,1.55,1.725].includes(Number(p.activity))&&[.25,.3,.4,.5,.65,.75].includes(Number(p.rate))}
+function validProfile(p){return p&&validNum(p.weight,35,300)&&validNum(p.target,35,300)&&validNum(p.height,120,230)&&validNum(p.age,18,95)&&["male","female"].includes(p.sex)&&[1.2,1.375,1.55,1.725].includes(Number(p.activity))&&[.25,.3,.4,.5,.65,.75].includes(Number(p.rate))&&(!p.mode||["lose","maintain"].includes(p.mode))}
 function normalize(input){
  if(!input||!validProfile(input.profile)||!Array.isArray(input.foods)||!Array.isArray(input.weights)||!Array.isArray(input.workouts))throw Error("Neplatný súbor údajov.");
- const p=input.profile;const obj={profile:{weight:+p.weight,target:+p.target,height:+p.height,age:+p.age,sex:p.sex,activity:+p.activity,rate:+p.rate},foods:[],weights:[],workouts:[]};
+ const p=input.profile;const obj={profile:{weight:+p.weight,target:+p.target,height:+p.height,age:+p.age,sex:p.sex,activity:+p.activity,rate:+p.rate,mode:p.mode==="maintain"?"maintain":"lose",lossTarget:validNum(p.lossTarget,35,300)?+p.lossTarget:+p.target},foods:[],weights:[],workouts:[]};
  obj.foods=input.foods.slice(0,20000).filter(x=>x&&typeof x.name==="string"&&x.name.length<=100&&validDate(x.date)&&MEALS.some(m=>m[0]===x.meal)&&validNum(x.grams,1,10000)&&["kcal","protein","carbs","fat","sugar"].every(k=>validNum(x[k],0,200000))).map(x=>({id:String(x.id||uid()).slice(0,100),name:x.name,date:x.date,meal:x.meal,grams:+x.grams,kcal:+x.kcal,protein:+x.protein,carbs:+x.carbs,fat:+x.fat,sugar:+x.sugar,fiber:validNum(x.fiber,0,200000)?+x.fiber:null,code:String(x.code||"").slice(0,16)}));
  obj.weights=input.weights.slice(0,10000).filter(x=>x&&validDate(x.date)&&validNum(x.kg,35,300)).map(x=>({date:x.date,kg:+x.kg}));
  obj.workouts=input.workouts.slice(0,10000).filter(x=>x&&validDate(x.date)&&EXERCISES[x.type]&&validNum(x.minutes,1,480)).map(x=>({id:String(x.id||uid()).slice(0,100),type:x.type,date:x.date,minutes:+x.minutes}));
  return obj;
 }
 try{let v=localStorage.getItem(KEY);if(v)state=normalize(JSON.parse(v))}catch(e){console.warn("Chyba pri čítaní uložených dát:",e)}
+lossTargetDraft=state.profile.lossTarget||state.profile.target;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){notify("Údaje sa neuložili. Skús zálohu.")}}
 function notify(text){$("toast").textContent=text;$("toast").classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.remove("show"),3300)}
 function lastWeight(){const weights=state.weights.slice().sort((a,b)=>a.date.localeCompare(b.date));return weights.length?weights[weights.length-1].kg:state.profile.weight}
+function preferredMeal(hour=new Date().getHours()){
+ if(hour>=5&&hour<10)return "ranajky";
+ if(hour>=10&&hour<12)return "desiata";
+ if(hour>=12&&hour<15)return "obed";
+ if(hour>=15&&hour<18)return "olovrant";
+ if(hour>=18&&hour<23)return "vecera";
+ return "ine";
+}
 function plan(){
- const p=state.profile;
+ const p=state.profile,maintain=p.mode==="maintain";
  const bmr=10*p.weight+6.25*p.height-5*p.age+(p.sex==="male"?5:-161);
- const tdee=bmr*p.activity;
- const desired=tdee-p.rate*7700/7;
- const floor=p.sex==="male"?1600:1400;
- const calories=Math.max(floor,Math.round(Math.max(floor,desired)/50)*50);
- const protein=Math.round(p.target*1.6),fat=Math.round(p.target*.8);
+ const tdee=bmr*p.activity,floor=p.sex==="male"?1600:1400;
+ const desired=maintain?tdee:tdee-p.rate*7700/7;
+ const calories=maintain?Math.round(tdee/50)*50:Math.max(floor,Math.round(Math.max(floor,desired)/50)*50);
+ const protein=Math.round((maintain?p.weight:p.target)*1.6);
+ const fat=Math.round((maintain?p.weight:p.target)*.8);
  const carbs=Math.max(0,Math.round((calories-protein*4-fat*9)/4));
- const deficit=Math.max(0,tdee-calories),rate=deficit*7/7700;
- const remaining=Math.max(0,lastWeight()-p.target);
- const weeks=remaining===0?0:rate>0?Math.ceil(remaining/rate):null;
- return {bmr,tdee,calories,protein,fat,carbs,deficit,rate,remaining,weeks,targetDate:weeks===null?null:addDays(today,weeks*7),floor,capped:desired<floor};
+ const deficit=maintain?0:Math.max(0,tdee-calories),rate=deficit*7/7700;
+ const remaining=maintain?0:Math.max(0,lastWeight()-p.target);
+ const weeks=maintain?null:remaining===0?0:rate>0?Math.ceil(remaining/rate):null;
+ return {bmr,tdee,calories,protein,fat,carbs,deficit,rate,remaining,weeks,maintain,fiber:25,
+ targetDate:weeks===null?null:addDays(today,weeks*7),floor,capped:!maintain&&desired<floor};
 }
 function foodsFor(day){return state.foods.filter(f=>f.date===day)}
 function daily(day){let o={kcal:0,protein:0,carbs:0,fat:0,sugar:0,fiber:0};foodsFor(day).forEach(f=>Object.keys(o).forEach(k=>o[k]+=Number(f[k])||0));return o}
@@ -69,12 +79,15 @@ function mealMarkup(f,mini=false){
 function renderHome(){
  const c=plan(),s=daily(today),sCount=streak(),start=state.profile.weight,target=state.profile.target;
  $("headerDate").textContent=formatDate(today);
- $("homeHeading").textContent=sCount>=3?"Len tak ďalej.":"Dnes sa počíta.";
- $("heroWeights").innerHTML=dec(start)+' <span>→</span> '+dec(target)+' <small>kg</small>';
+ $("heroWeights").innerHTML=c.maintain?'Udržať <span>'+dec(start)+'</span> <small>kg</small>':dec(start)+' <span>→</span> '+dec(target)+' <small>kg</small>';
  $("heroStreak").innerHTML=icon("bolt")+" "+(sCount?sCount+" dní v rytme":"Začíname");
- $("heroRemaining").textContent=dec(c.remaining)+" kg";$("heroWeeks").textContent=c.weeks===null?"–":c.weeks;
- let p=start<=target?100:capProgress(start-lastWeight(),start-target);
- $("heroTrack").style.width=p+"%";$("heroCaption").textContent=c.remaining===0?"Cieľ dosiahnutý. Teraz udržuj svoju formu.":p>0?"Už si prešiel "+fmt(p)+" % cesty.":"Prvý krok je začať.";
+ $("heroRemaining").textContent=c.maintain?"± 1 kg":dec(c.remaining)+" kg";
+ $("heroRemainingLabel").textContent=c.maintain?"približné rozpätie":"zostáva do cieľa";
+ $("heroWeeks").textContent=c.maintain?fmt(c.calories):c.weeks===null?"–":c.weeks;
+ $("heroWeeklyLabel").textContent=c.maintain?"kcal denne":"týždňov (odhad)";
+ let p=c.maintain?100:start<=target?100:capProgress(start-lastWeight(),start-target);
+ $("heroTrack").style.width=p+"%";
+ $("heroCaption").textContent=c.maintain?"Cieľ je stabilná váha. Sleduj trend, nie jednotlivý deň.":c.remaining===0?"Cieľ dosiahnutý. Prejdi na udržiavanie.":p>0?"Už si prešiel "+fmt(p)+" % cesty.":"Prvý krok je začať.";
  $("homeCalories").textContent=fmt(s.kcal);$("homeCaloriesGoal").textContent=fmt(c.calories);
  $("homeRemaining").textContent=fmt(c.calories-s.kcal);
  $("energyRing").style.setProperty("--fill",Math.min(360,s.kcal/c.calories*360)+"deg");
@@ -82,6 +95,9 @@ function renderHome(){
  $("calorieNote").textContent=s.kcal>c.calories?"Cieľ je prekročený. Zajtra pokračuj normálne, bez kompenzovania.":s.kcal?"Sleduj príjem a jedz pravidelne.":"Pridaj svoje prvé jedlo. Začínaš jednoducho.";
  const macro=[["protein","Bielkoviny",s.protein,c.protein],["carbs","Sacharidy",s.carbs,c.carbs],["fat","Tuky",s.fat,c.fat]];
  $("homeMacros").innerHTML=macro.map(x=>'<div class="macro-card '+x[0]+'"><span>'+x[1]+'</span><strong>'+fmt(x[2])+' <small>g</small></strong><small>z '+fmt(x[3])+' g</small><div class="macro-line"><div style="width:'+capProgress(x[2],x[3])+'%"></div></div></div>').join("");
+ const hasUnknown=foodsFor(today).some(f=>f.fiber===null);
+ $("homeExtras").innerHTML='<div class="nutrient-card sugar"><div class="nutrient-symbol">◈</div><div><span>Cukry celkom</span><strong>'+dec(s.sugar)+' g</strong><small>z dnešných jedál</small></div></div>'+
+ '<div class="nutrient-card fiber"><div class="nutrient-symbol">≋</div><div><span>Vláknina</span><strong>'+dec(s.fiber)+' <small>/ '+c.fiber+' g</small></strong><small>'+(hasUnknown?"minimum zo známych hodnôt":"orientačný denný cieľ")+'</small></div></div>';
  const items=foodsFor(today).slice().reverse();
  $("homeMealList").innerHTML=items.length?items.slice(0,5).map(x=>mealMarkup(x,true)).join(""):'<div class="empty-state">'+icon("list")+'Dnes ešte nič nezaznamenané.<br>Začni prvým jedlom.</div>';
  if(s.kcal>c.calories){$("quoteTitle").textContent="Jeden deň nie je celý výsledok.";$("quoteText").textContent="Netrestaj sa hladovaním. Ďalším jedlom sa vráť do bežného režimu."}
@@ -92,7 +108,8 @@ function renderDiary(){
  const s=daily(selectedDay),c=plan();
  $("diaryDate").textContent=selectedDay===today?"Dnes · "+formatDate(today):formatDate(selectedDay,"full");
  $("diaryCalories").textContent=fmt(s.kcal);$("diaryRemaining").textContent=fmt(c.calories-s.kcal);$("diaryFill").style.width=capProgress(s.kcal,c.calories)+"%";
- $("diaryMacroText").textContent="B "+dec(s.protein)+" g  ·  S "+dec(s.carbs)+" g  ·  T "+dec(s.fat)+" g  ·  Cukry "+dec(s.sugar)+" g";
+ $("diaryMacroText").textContent="Bielkoviny "+dec(s.protein)+" g  ·  Sacharidy "+dec(s.carbs)+" g  ·  Tuky "+dec(s.fat)+" g";
+ $("diaryExtrasText").textContent="Cukry "+dec(s.sugar)+" g  ·  Vláknina "+dec(s.fiber)+" g";
  $("diarySections").innerHTML=MEALS.map(([key,name])=>{
    const foods=foodsFor(selectedDay).filter(f=>f.meal===key),sum=foods.reduce((n,f)=>n+f.kcal,0);
    return '<section class="diary-group"><div class="diary-head"><div><h2>'+name+'</h2><small>'+fmt(sum)+' kcal</small></div><button data-add-meal="'+key+'">+ Pridať</button></div><div class="card">'+(foods.length?foods.map(f=>mealMarkup(f)).join(""):'<div class="empty-state">Zatiaľ žiadne jedlo.</div>')+'</div></section>';
@@ -101,14 +118,24 @@ function renderDiary(){
 function macroRow(key,name,g,show){return '<div class="macro-row '+key+'"><div class="row"><strong>'+name+'</strong><small>'+fmt(g)+' g / deň</small></div><div class="macro-line"><div style="width:'+show+'%"></div></div></div>'}
 function exerciseBurn(type,minutes){return Math.round(EXERCISES[type].met*3.5*lastWeight()/200*minutes)}
 function monday(date){let d=new Date(date+"T12:00:00");d.setDate(d.getDate()-((d.getDay()+6)%7));return dateLocal(d)}
+function updatePlanModeUI(){
+ const maintain=$("modeMaintain").checked;
+ $("pTargetWrap").classList.toggle("hide",maintain);
+ $("pRateWrap").classList.toggle("hide",maintain);
+ $("pTarget").disabled=maintain;$("pRate").disabled=maintain;
+ $("pTarget").value=maintain?$("pWeight").value:lossTargetDraft;
+}
 function renderPlan(){
  const c=plan(),p=state.profile;
- [["pWeight",p.weight],["pTarget",p.target],["pHeight",p.height],["pAge",p.age],["pSex",p.sex],["pActivity",p.activity],["pRate",p.rate]].forEach(x=>$(x[0]).value=x[1]);
- $("planCalories").textContent=fmt(c.calories);$("planTdee").textContent=fmt(c.tdee);$("planDeficit").textContent="−"+fmt(c.deficit);
- $("planWeeks").textContent=c.weeks===null?"–":c.weeks+" t.";
- $("planDate").textContent=c.targetDate?"cca "+formatDate(c.targetDate):"Odlišné tempo";
- $("planSubtitle").textContent=c.capped?"Tempo bolo zmiernené, aby príjem nebol extrémne nízky.":"Odhad pri zvolenej aktivite a tempe.";
- $("planMacroCard").innerHTML=macroRow("protein","Bielkoviny",c.protein,Math.round(c.protein*4/c.calories*100))+macroRow("carbs","Sacharidy",c.carbs,Math.round(c.carbs*4/c.calories*100))+macroRow("fat","Tuky",c.fat,Math.round(c.fat*9/c.calories*100))+'<p class="card-sub">Makrá sú orientačné. Bielkoviny cca 1,6 g/kg cieľovej váhy, tuky cca 0,8 g/kg a zvyšok sacharidy.</p>';
+ [["pWeight",p.weight],["pHeight",p.height],["pAge",p.age],["pSex",p.sex],["pActivity",p.activity],["pRate",p.rate]].forEach(x=>$(x[0]).value=x[1]);
+ lossTargetDraft=p.lossTarget||p.target;$("pTarget").value=lossTargetDraft;
+ $("modeMaintain").checked=c.maintain;$("modeLose").checked=!c.maintain;updatePlanModeUI();
+ $("planCalories").textContent=fmt(c.calories);$("planTdee").textContent=fmt(c.tdee);
+ $("planDeficit").textContent=c.maintain?"0":"−"+fmt(c.deficit);
+ $("planWeeks").textContent=c.maintain?"Stabilne":c.weeks===null?"–":c.weeks+" t.";
+ $("planDate").textContent=c.maintain?"bez termínu":c.targetDate?"cca "+formatDate(c.targetDate):"Odlišné tempo";
+ $("planSubtitle").textContent=c.maintain?"Približne toľko energie potrebuješ na udržiavanie váhy.":c.capped?"Tempo bolo zmiernené, aby príjem nebol extrémne nízky.":"Odhad pri zvolenej aktivite a tempe.";
+ $("planMacroCard").innerHTML=macroRow("protein","Bielkoviny",c.protein,Math.round(c.protein*4/c.calories*100))+macroRow("carbs","Sacharidy",c.carbs,Math.round(c.carbs*4/c.calories*100))+macroRow("fat","Tuky",c.fat,Math.round(c.fat*9/c.calories*100))+'<p class="card-sub">Bielkoviny cca 1,6 g/kg hmotnosti, tuky cca 0,8 g/kg, zvyšok sacharidy. Orientačný návrh.</p>';
  $("sugarAdvice").textContent="Orientačne pod "+dec(c.calories*.1/4)+" g voľných cukrov denne (10 % energie).";
  $("gymBurn").textContent="45 min ≈ "+fmt(exerciseBurn("gym",45))+" kcal";
  $("walkBurn").textContent="30 min ≈ "+fmt(exerciseBurn("walk",30))+" kcal";
@@ -123,7 +150,7 @@ function renderWorkouts(){
 }
 function renderProgress(){
  const c=plan(),arr=state.weights.slice().sort((a,b)=>a.date.localeCompare(b.date));
- $("weightStart").textContent=dec(state.profile.weight);$("weightNow").textContent=dec(lastWeight());$("weightLeft").textContent=dec(c.remaining);
+ $("weightStart").textContent=dec(state.profile.weight);$("weightNow").textContent=dec(lastWeight());$("weightLeft").textContent=c.maintain?"± 1":dec(c.remaining);$("weightLeftLabel").textContent=c.maintain?"kg rozpätie":"kg do cieľa";
  $("chartSummary").textContent=arr.length+" zapísaných vážení";
  const svg=$("weightChart"),w=340,h=198,left=33,right=330,top=17,bottom=175;
  if(!arr.length){svg.innerHTML='<text x="170" y="93" text-anchor="middle">Zatiaľ žiadna zaznamenaná váha.</text><text x="170" y="109" text-anchor="middle">Pridaj prvé váženie.</text>';$("chartFirst").textContent="";$("chartLast").textContent=""}
