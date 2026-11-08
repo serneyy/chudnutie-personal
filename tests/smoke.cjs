@@ -261,7 +261,7 @@ const fs=require("node:fs");
   assert.equal(Number((await page.locator("#homeCalories").innerText()).replace(/[^0-9]/g,"")),1573);
   await page.locator('[data-nav="diary"]').first().click();
   assert((await page.locator("#diarySections").innerText()).includes("Praženica z 3 vajec"));
-  await page.locator("#diarySections [data-edit-food]").first().click();
+  await page.locator("#diarySections .meal-item").filter({hasText:"Praženica z 3 vajec"}).locator("[data-edit-food]").click();
   assert(await page.locator("#eggRecipe").isVisible(),"Editing an egg recipe should preserve its controls");
   assert.equal(await page.locator("#eggFatSelect").inputValue(),"butter5");
   await page.locator("#closeFood").click();
