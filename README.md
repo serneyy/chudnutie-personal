@@ -45,10 +45,10 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 
 ## Cloudflare Worker a automatické GitHub zálohy
 
-- Source servera: `cloudflare/forma-github-sync.js`. Určený **výhradne** na nový Cloudflare Worker `forma-github-sync` v existujúcom účte s workers.dev subdoménou `threadid`. **Nemení** existujúce Workers, ich DNS, routes ani konfiguráciu.
-- Server používa URL `https://forma-github-sync.threadid.workers.dev`. GET `/health` vráti, či je nakonfigurovaný serverový GitHub token `GITHUB_TOKEN`. GET a POST `/profiles` načítavajú a ukladajú `data/forma-family.json` v repozitári `serneyy/chudnutie-personal`. Server zlúči profily podľa `updatedAt` a opakuje zápis pri konfliktoch GitHub SHA.
+- Source servera: `cloudflare/forma-github-sync.js`. Určený **výhradne** na nový Cloudflare Worker `forma-github-sync` v existujúcom účte s workers.dev subdoménou `teenwear-eu`. **Nemení** existujúce Workers, ich DNS, routes ani konfiguráciu.
+- Server používa URL `https://weathered-feather-e501.teenwear-eu.workers.dev`. GET `/health` vráti, či je nakonfigurovaný serverový GitHub token `GITHUB_TOKEN`. GET a POST `/profiles` načítavajú a ukladajú `data/forma-family.json` v repozitári `serneyy/chudnutie-personal`. Server zlúči profily podľa `updatedAt` a opakuje zápis pri konfliktoch GitHub SHA.
 - **V prehliadači nie je GitHub PAT**, žiadne prihlasovanie do GitHubu ani formulár s tokenom. Nastavenie secretu sa robí raz v Cloudflare Worker Settings → Variables and Secrets → Add secret. Hodnota: GitHub fine-grained PAT obmedzený na `serneyy/chudnutie-personal` s `Contents: Read and write`. Secret sa nesmie commitovať.
-- **Dôležité:** nasadenie Cloudflare Worker cez pripojený ChatGPT nástroj bolo odmietnuté bezpečnostnou kontrolou. Kým worker nie je manuálne nasadený a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
+- **Dôležité:** nasadenie Cloudflare Worker robí vlastník ručne. Kým Worker nebeží a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
 - Prvá synchronizácia lokálne dáta nevymaže; profily sa zlúčia podľa času poslednej úpravy, pri zlyhaní servera sa zachovajú v `localStorage`. Mobilné testy simulujú dve zariadenia a nedostupný server.
 - Upozornenie: verejný GitHub repo umožňuje komukoľvek prezerať údaje v histórii commitov. Endpoint POST nie je autentifikovaný na strane používateľa (požiadavka na rodinný prototyp); CORS/Origin nie je bezpečnostné overenie klienta, takže endpoint nie je vhodný pre produkčné osobné údaje.
 
