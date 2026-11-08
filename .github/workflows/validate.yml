@@ -16,6 +16,7 @@ jobs:
         run: |
           node --check app.js
           node --check tests/smoke.cjs
+          node --check tests/worker-smoke.cjs
           python3 - <<'PY'
           from html.parser import HTMLParser
           from pathlib import Path
@@ -42,6 +43,8 @@ jobs:
           assert not missing, f"Missing DOM IDs: {missing}"
           print("HTML IDs:",len(parser.ids),"referenced:",len(used),"all present")
           PY
+      - name: Test Cloudflare Worker REST API
+        run: node tests/worker-smoke.cjs
       - name: Instalacia browser testov
         run: |
           npm install --no-save playwright@1.56.1 bwip-js@4 zxing-wasm@3.1.6
