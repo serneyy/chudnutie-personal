@@ -126,18 +126,18 @@
       "id": "8f3fe7b7-81cd-4fce-8c88-b91ddb3e002e",
       "name": "Berny",
       "createdAt": "2026-11-08",
-      "updatedAt": "2026-11-08T21:44:59.878Z",
+      "updatedAt": "2026-11-08T21:45:26.821Z",
       "data": {
         "profile": {
           "weight": 90,
-          "target": 89,
+          "target": 100,
           "height": 205,
           "age": 21,
           "sex": "male",
-          "activity": 1.2,
+          "activity": 1.375,
           "rate": 0.3,
-          "mode": "lose",
-          "lossTarget": 89
+          "mode": "gain",
+          "lossTarget": 100
         },
         "foods": [],
         "weights": [],
