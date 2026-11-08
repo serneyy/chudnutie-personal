@@ -1,0 +1,66 @@
+name: FORMA - Slovak dish photo and nutrition validation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'slovak-foods.js'
+      - 'app.js'
+      - 'index.html'
+      - '.github/workflows/check-slovak-foods.yml'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify recipe records, photo URLs and representative nutrition
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, urllib.error
+          from concurrent.futures import ThreadPoolExecutor, as_completed
+          from urllib.parse import urlparse
+          s=open("slovak-foods.js",encoding="utf-8").read()
+          marker="window.SLOVAK_FOODS="
+          entries=json.loads(s.split(marker,1)[1].strip().rstrip(";"))
+          assert len(entries)>=75
+          assert sum(x["group"]=="soup" for x in entries)>=25
+          assert sum(x["group"]=="main" for x in entries)>=40
+          assert len({x["key"] for x in entries})==len(entries)
+          for x in entries:
+            assert x["key"].startswith("sk_")
+            assert x["portion"]>0 and 5<x["kcal"]<900
+            assert x["unit"]=="g"
+            assert x["protein"]>=0 and x["carbs"]>=0 and x["fat"]>=0
+            assert x["nutritionNote"]
+            if x.get("image"):
+              assert x["image"].startswith("https://commons.wikimedia.org/wiki/Special:FilePath/")
+              assert x.get("imageCredit") and x["imageCreditUrl"].startswith("https://commons.wikimedia.org/wiki/File:")
+            if x.get("sourceUrl"):
+              assert x["sourceUrl"].startswith("https://www.kaloricketabulky.sk/potraviny/")
+          u=next(x for x in entries if x["key"]=="sk_chicken_noodles")
+          assert u["kcal"]==47.3 and u["protein"]==2 and u["portion"]==300
+          urls={x["image"] for x in entries if x.get("image")}
+          print("FOODS",len(entries),"SOUPS",sum(x["group"]=="soup" for x in entries),
+                "MAINS",sum(x["group"]=="main" for x in entries),
+                "SOURCE-LINKED",sum(bool(x.get("sourceUrl")) for x in entries),
+                "IMAGE-ENABLED",sum(bool(x.get("image")) for x in entries),"UNIQUE IMAGES",len(urls))
+          def check(url):
+            try:
+              req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 (FORMA food illustration check)"})
+              with urllib.request.urlopen(req,timeout=10) as response:
+                return (url,response.status,response.headers.get("Content-Type",""),"")
+            except urllib.error.HTTPError as e:
+              return (url,e.code,"",str(e)[:180])
+            except Exception as e:
+              return (url,0,"",str(e)[:180])
+          matches=0; missing=[]
+          with ThreadPoolExecutor(max_workers=7) as pool:
+            for f in as_completed(pool.submit(check,u) for u in urls):
+              url,status,ctype,error=f.result()
+              print("PHOTO",status,ctype,url.split("/Special:FilePath/")[-1][:95],error)
+              if status==200 and ctype.startswith("image/"): matches+=1
+              if status==404: missing.append(url)
+          print("REMOTE VERIFIED IMAGES",matches,"/",len(urls))
+          assert not missing,"Commons photo 404: "+repr(missing)
+          PY
