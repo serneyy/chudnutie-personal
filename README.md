@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 24
+# FORMA. Personal · verzia 25
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -51,6 +51,12 @@ FORMA zostáva hostovaná na GitHub Pages. JSON súbor s rodinnými profilmi je 
 - **Dôležité:** nasadenie Cloudflare Worker robí vlastník ručne. Kým Worker nebeží a `GITHUB_TOKEN` nastavený, automatická GitHub záloha **nie je funkčná**. Aplikácia sa musí viditeľne prepnúť do režimu lokálneho ukladania a nikdy nesmie tvrdiť, že GitHub má aktuálne údaje.
 - Prvá synchronizácia lokálne dáta nevymaže; profily sa zlúčia podľa času poslednej úpravy, pri zlyhaní servera sa zachovajú v `localStorage`. Mobilné testy simulujú dve zariadenia a nedostupný server.
 - Upozornenie: verejný GitHub repo umožňuje komukoľvek prezerať údaje v histórii commitov. Endpoint POST nie je autentifikovaný na strane používateľa (požiadavka na rodinný prototyp); CORS/Origin nie je bezpečnostné overenie klienta, takže endpoint nie je vhodný pre produkčné osobné údaje.
+
+## FORMA v25: registrácia na naberanie a odolnejšie vyhľadávanie
+
+- Pri zakladaní profilu má používateľ voľbu Schudnúť / Udržať váhu / Nabrať svaly. Cieľ vyšší než aktuálna váha automaticky predvolí Nabrať svaly; cieľ rovný váhe predvolí Udržať váhu. Validácia kontroluje smer cieľa podľa režimu a existujúce profily zostávajú nezmenené.
+- Názvy zo starších vyhľadávaní Open Food Facts aj z vlastného denníka sa ponúkajú **okamžite** (aj pri zadaní časti názvu), bez čakania na API. Výsledky sa uchovávajú lokálne 7 dní a priebežne aktualizujú.
+- Nový dotaz na server sa spustí po 850 ms nečinnosti. Zachované je obmedzenie na najviac 8 dopytov za minútu kvôli limitom Open Food Facts (10 vyhľadávaní/min/IP). Pri preťažení alebo nedostupnosti servera zostanú dostupné miestne návrhy a zrozumiteľná možnosť opakovania. Pri online vyhľadávaní nemožno sľúbiť 100 % dostupnosť externého API.
 
 ## FORMA v24: rýchlosť naberania, profilové heslá, odstránenie Dedko
 
