@@ -261,3 +261,24 @@ input,select,textarea{min-height:44px}
  .selected-product-description strong{font-size:13px}
  .food-suggestion-image{border-radius:8px}
 }
+
+
+/* GitHub JSON synchronizácia: zachovaný vizuálny štýl FORMA */
+.github-sync-form{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.github-sync-form .block-label{font-size:13px;font-weight:800;color:#37523d}
+.github-sync-form input[type="text"],.github-sync-form input[type="password"]{display:block;width:100%;margin-top:6px;min-height:52px;background:#fff;border:1px solid #d7e4d5;border-radius:13px;font-size:16px!important;padding:12px;color:#243c2a}
+.github-sync-form input:focus{outline:2px solid #94c772;outline-offset:1px}
+.github-help{font-size:12px;line-height:1.6;color:#7a897c;margin:0}
+.github-consent{display:flex;align-items:flex-start;gap:11px;background:#fff8ec;border:1px solid #ead7b7;border-radius:13px;padding:13px;cursor:pointer}
+.github-consent input{width:22px;height:22px;min-height:22px;flex:none;accent-color:#537d4a;margin:2px 0 0}
+.github-consent span{font-size:12px;line-height:1.55;color:#614b32}
+.github-consent strong{font-weight:800}
+.github-sync-status{padding:12px 14px;margin:16px 0;border-radius:12px;font-size:12px;font-weight:700;line-height:1.5;background:#f1f3ef;color:#6b7a6d}
+.github-sync-status[data-level="success"]{background:#e7f4dd;color:#3e7344}
+.github-sync-status[data-level="error"]{background:#fff0e9;color:#ad6249}
+.github-sync-status[data-level="busy"]{background:#f0f5e8;color:#6b8a50}
+.github-sync-actions[hidden]{display:none!important}
+.github-sync-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px}
+.github-sync-actions button{min-width:0;min-height:50px;font-size:12px;padding:10px 7px}
+.github-sync-form .primary-button{min-height:54px}
+@media(max-width:360px){.github-sync-actions{grid-template-columns:1fr}}
