@@ -475,7 +475,7 @@ const fs=require("node:fs");
   await page.locator("#homeAdd").click();
   await page.locator("#foodCatalog > summary").click();
   await page.locator('[data-food-category="quickSlovakSoupExpand"]').click();
-  await page.locator('[data-quick-food="sk_chicken_noodles"]').click();
+  await page.locator('#quickSlovakSoupExpand [data-quick-food="sk_chicken_noodles"]').click();
   assert.equal(await page.locator("#foodName").inputValue(),"Slepačí vývar so zeleninou a rezancami");
   await page.locator("#closeFood").click();
   await page.locator("#homeAdd").click();
