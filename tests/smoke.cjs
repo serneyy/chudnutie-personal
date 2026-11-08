@@ -215,7 +215,7 @@ const fs=require("node:fs");
   assert(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=2,"320px screen must not overflow");
   await page.locator("#homeAdd").click();
   assert(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=2,"320px food modal overflow");
-  assert((await page.locator("#quickFoods [data-quick-food]").count())===8);
+  assert((await page.locator("#quickFoods [data-quick-food]").count())===9);
   await page.locator("#closeFood").click();
   // The remote provider may return 503. Local suggestions must still work.
   await page.locator("#homeAdd").click();
