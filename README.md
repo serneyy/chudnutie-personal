@@ -1,4 +1,4 @@
-# FORMA. Personal · verzia 12
+# FORMA. Personal · verzia 13
 
 Mobilná osobná aplikácia v slovenčine, na GitHub Pages. **Lokálne profily podľa mena**, bez backendu a bez serverového prihlásenia. GitHub Pages len načítava webové súbory; **záznamy sú uložené v `localStorage` ako JSON a nevstupujú do GitHub repozitára**.
 
@@ -17,6 +17,14 @@ Ak web nie je aktívny, v **Settings → Pages → Deploy from a branch → main
 - Ak na tejto adrese v tomto prehliadači už boli údaje z predošlej verzie, automaticky sa nakopírujú do profilu **Môj pôvodný profil**. Je možné ho premenovať.
 - JSON záloha v Nastaveniach obsahuje **iba údaje práve otvoreného profilu**.
 - **Nie je to účet s heslom ani synchronizovaná databáza.** Profily nie sú súkromné pred iným človekom na tom istom telefóne a nebudú dostupné na inom zariadení bez exportu/importu. Na synchronizáciu medzi tvojím telefónom a maminým by bolo potrebné pridať autentifikovaný online backend.
+
+## Ciele bielkovín a cukrov
+
+- **Bielkoviny sa teraz prispôsobujú bežnej aktivite.** Pri sedavej práci a chudnutí sa počíta 1,3 g/kg cieľovej hmotnosti (pri cieli 88 kg približne 114 g/deň); pri ľahkej aktivite 1,4 g/kg; pri strednej a vysokej 1,6 g/kg. Pri udržiavaní váhy je to 1,2 až 1,6 g/kg aktuálnej hmotnosti. Ide o orientačné čísla pre zdravého dospelého, nie individuálne medicínske odporúčanie. [ISSN 2026 pre chudnutie: 1,2–1,6 g/kg](https://pmc.ncbi.nlm.nih.gov/articles/PMC13665703/).
+- **Cukry celkom: 90 g/deň** je *referenčný príjem pre dospelých* podľa európskych pravidiel (pri 2 000 kcal), nie zdravotný bezpečný limit. Aplikácia ukazuje dnešný súčet a pomer k tomuto referenčnému číslu. [EÚ 1169/2011, príloha XIII](https://www.legislation.gov.uk/eur/2011/1169/annex/XIII).
+- **Voľné cukry:** podľa WHO menej než 10 % dennej energie, ideálne menej než 5 %; pri 2 100 kcal teda pod približne 52 g, ideálne 26 g. Medzi voľné cukry patria aj cukry pridané do kávy, med, sirupy a ovocné šťavy. [WHO](https://www.who.int/news-room/fact-sheets/detail/healthy-diet).
+- **Dôležité:** Open Food Facts uvádza najmä *celkové cukry*. Z tých sa nedá spoľahlivo rozlíšiť množstvo *voľných cukrov*, preto aplikácia nesmie porovnávať súčet celkových cukrov s limitom WHO.
+- Obe hodnoty sa rátajú pri každom otvorení denníka a Plánu bez zásahu do uložených potravín alebo rodinných profilov.
 
 ## Praženica a varenie podľa počtu kusov
 
