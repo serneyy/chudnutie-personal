@@ -5,7 +5,7 @@
       "id": "67389e4b-74d1-4736-9a2d-c1e0b1ecf02e",
       "name": "Suško",
       "createdAt": "2026-11-08",
-      "updatedAt": "2026-11-08T21:46:20.469Z",
+      "updatedAt": "2026-11-08T22:14:18.640Z",
       "password": {
         "algorithm": "PBKDF2-SHA256",
         "iterations": 210000,
