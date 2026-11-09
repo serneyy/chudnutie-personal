@@ -21,9 +21,9 @@ window.SLOVAK_FOODS=[
    "sugar": 0.8,
    "fiber": 0.2,
    "nutritionNote": "Orientačný odhad na 100 g hotového jedla vrátane ryže, nie overená receptúra. Počítané približne pre 150 g kuracích pŕs, 30 g šunky, 50 g hermelínu, 180 g varenej ryže a 10 g oleja (hmotnosti sú orientačné). Reštauračná porcia, množstvo syra, tuku a omáčky môžu kalórie výrazne zmeniť. Alergény (1,3) sú prevzaté z názvu jedla v menu, nie overené podľa receptúry.",
-   "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Ku%C5%99ec%C3%AD%20pl%C3%A1tek%20s%20hermel%C3%ADnem%2C%20hranolky%2C%20obloha.jpg?width=320",
-   "imageCredit": "Dezidor / Wikimedia Commons, CC BY 3.0 (ilustračná fotografia; na snímke sú hranolky namiesto ryže)",
-   "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:Ku%C5%99ec%C3%AD_pl%C3%A1tek_s_hermel%C3%ADnem,_hranolky,_obloha.jpg",
+   "image": "https://commons.wikimedia.org/wiki/Special:FilePath/McDonald%27s%20%22Chicken%20Fillet%20Italiana%22%20Meal.jpg?width=320",
+   "imageCredit": "RoyKabanlit / Wikimedia Commons, CC BY-SA 4.0 (ilustračná fotografia kuracieho plátku so syrom a ryžou; bez šunky a hermelínu)",
+   "imageCreditUrl": "https://commons.wikimedia.org/wiki/File:McDonald%27s_%22Chicken_Fillet_Italiana%22_Meal.jpg",
    "imageCategory": "dish"
  },
  {
