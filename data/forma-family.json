@@ -5,7 +5,7 @@
       "id": "67389e4b-74d1-4736-9a2d-c1e0b1ecf02e",
       "name": "Suško",
       "createdAt": "2026-11-08",
-      "updatedAt": "2026-11-09T14:46:01.941Z",
+      "updatedAt": "2026-11-09T16:00:46.915Z",
       "password": {
         "algorithm": "PBKDF2-SHA256",
         "iterations": 210000,
@@ -175,6 +175,25 @@
             "image": "",
             "unit": "g",
             "dish": false,
+            "eggCount": null,
+            "eggFat": "none"
+          },
+          {
+            "id": "4bad6abe-55f7-4b08-9968-3f6ed83c3d9f",
+            "name": "Chicken tikka masala s ryžou",
+            "date": "2026-11-09",
+            "meal": "vecera",
+            "grams": 450,
+            "kcal": 675,
+            "protein": 36,
+            "carbs": 72,
+            "fat": 27,
+            "sugar": 11.3,
+            "fiber": 5.9,
+            "code": "",
+            "image": "",
+            "unit": "g",
+            "dish": true,
             "eggCount": null,
             "eggFat": "none"
           }
