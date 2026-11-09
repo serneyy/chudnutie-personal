@@ -5,7 +5,7 @@
       "id": "67389e4b-74d1-4736-9a2d-c1e0b1ecf02e",
       "name": "Suško",
       "createdAt": "2026-11-08",
-      "updatedAt": "2026-11-09T16:00:46.915Z",
+      "updatedAt": "2026-11-09T20:48:17.847Z",
       "password": {
         "algorithm": "PBKDF2-SHA256",
         "iterations": 210000,
@@ -194,6 +194,25 @@
             "image": "",
             "unit": "g",
             "dish": true,
+            "eggCount": null,
+            "eggFat": "none"
+          },
+          {
+            "id": "969e831e-336f-4a25-a57e-90e7331114cb",
+            "name": "Zemiaky varené",
+            "date": "2026-11-09",
+            "meal": "vecera",
+            "grams": 75,
+            "kcal": 64.5,
+            "protein": 1.4,
+            "carbs": 15,
+            "fat": 0.1,
+            "sugar": 0.7,
+            "fiber": 1.4,
+            "code": "",
+            "image": "",
+            "unit": "g",
+            "dish": false,
             "eggCount": null,
             "eggFat": "none"
           }
