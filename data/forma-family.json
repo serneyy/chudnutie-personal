@@ -5,7 +5,7 @@
       "id": "67389e4b-74d1-4736-9a2d-c1e0b1ecf02e",
       "name": "Suško",
       "createdAt": "2026-11-08",
-      "updatedAt": "2026-11-08T22:39:02.425Z",
+      "updatedAt": "2026-11-09T10:27:40.420Z",
       "password": {
         "algorithm": "PBKDF2-SHA256",
         "iterations": 210000,
@@ -99,6 +99,25 @@
             "image": "https://images.openfoodfacts.org/images/products/400/840/082/8121/front_fr.192.200.jpg",
             "unit": "g",
             "dish": false,
+            "eggCount": null,
+            "eggFat": "none"
+          },
+          {
+            "id": "6531218d-a29e-4336-a7c2-a8d3a6d93b67",
+            "name": "Slepačí vývar so zeleninou a rezancami",
+            "date": "2026-11-09",
+            "meal": "desiata",
+            "grams": 250,
+            "kcal": 118.3,
+            "protein": 5,
+            "carbs": 12.5,
+            "fat": 5,
+            "sugar": 3.8,
+            "fiber": 0.8,
+            "code": "",
+            "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Chicken%20noodle%20soup.jpg?width=320",
+            "unit": "g",
+            "dish": true,
             "eggCount": null,
             "eggFat": "none"
           }
