@@ -5,7 +5,7 @@
       "id": "67389e4b-74d1-4736-9a2d-c1e0b1ecf02e",
       "name": "Suško",
       "createdAt": "2026-11-08",
-      "updatedAt": "2026-11-10T08:09:14.321Z",
+      "updatedAt": "2026-11-10T08:09:38.724Z",
       "password": {
         "algorithm": "PBKDF2-SHA256",
         "iterations": 210000,
@@ -233,6 +233,25 @@
             "unit": "g",
             "dish": false,
             "eggCount": 3,
+            "eggFat": "none"
+          },
+          {
+            "id": "ede22ff1-0eae-45f4-99c5-eb52f62c9745",
+            "name": "Celozrnný rožok Lidl",
+            "date": "2026-11-10",
+            "meal": "ranajky",
+            "grams": 60,
+            "kcal": 184.2,
+            "protein": 5.6,
+            "carbs": 30.6,
+            "fat": 3.7,
+            "sugar": 2.9,
+            "fiber": 2.2,
+            "code": "",
+            "image": "",
+            "unit": "g",
+            "dish": false,
+            "eggCount": null,
             "eggFat": "none"
           }
         ],
