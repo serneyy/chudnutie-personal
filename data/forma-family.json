@@ -5,7 +5,7 @@
       "id": "67389e4b-74d1-4736-9a2d-c1e0b1ecf02e",
       "name": "Suško",
       "createdAt": "2026-11-08",
-      "updatedAt": "2026-11-09T20:48:17.847Z",
+      "updatedAt": "2026-11-10T08:09:14.321Z",
       "password": {
         "algorithm": "PBKDF2-SHA256",
         "iterations": 210000,
@@ -214,6 +214,25 @@
             "unit": "g",
             "dish": false,
             "eggCount": null,
+            "eggFat": "none"
+          },
+          {
+            "id": "6bb98e67-4487-4238-877d-20005355f85b",
+            "name": "Praženica z 3 vajec",
+            "date": "2026-11-10",
+            "meal": "ranajky",
+            "grams": 150,
+            "kcal": 216,
+            "protein": 18.9,
+            "carbs": 1.2,
+            "fat": 14.4,
+            "sugar": 0.6,
+            "fiber": 0,
+            "code": "",
+            "image": "",
+            "unit": "g",
+            "dish": false,
+            "eggCount": 3,
             "eggFat": "none"
           }
         ],
